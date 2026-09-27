@@ -9,6 +9,7 @@ import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { Droplets, Type, Image as ImageIcon, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "../shared/I18nProvider";
 
 const tool = getTool("watermark-pdf")!;
 
@@ -28,15 +29,29 @@ const POSITIONS: Array<{ id: WatermarkOptions["position"]; label: string }> = [
   { id: "bottom-left", label: "Bottom Left" },
   { id: "bottom-right", label: "Bottom Right" },
 ];
+const POSITIONS_ZH: Record<WatermarkOptions["position"], string> = {
+  center: "居中",
+  tile: "平铺 (3×3)",
+  "top-left": "左上",
+  "top-right": "右上",
+  "bottom-left": "左下",
+  "bottom-right": "右下",
+};
 
 const TARGETS: Array<{ id: WatermarkOptions["target"]; label: string }> = [
   { id: "all", label: "All pages" },
   { id: "first", label: "First page only" },
   { id: "last", label: "Last page only" },
 ];
+const TARGETS_ZH: Record<"all" | "first" | "last", string> = {
+  all: "所有页面",
+  first: "仅首页",
+  last: "仅末页",
+};
 
 export function WatermarkPdf() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { t, lang } = useI18n();
   const [mode, setMode] = useState<"text" | "image">("text");
   const [text, setText] = useState("CONFIDENTIAL");
   const [fontSize, setFontSize] = useState(48);
@@ -53,17 +68,17 @@ export function WatermarkPdf() {
 
   const run = async () => {
     if (!target0) {
-      toast.error("Please add a PDF first.");
+      toast.error(lang === "zh" ? "请先添加一个 PDF。" : "Please add a PDF first.");
       return;
     }
     try {
-      startProgress("Applying watermark…", "determinate", 0);
+      startProgress(lang === "zh" ? "正在应用水印…" : "Applying watermark…", "determinate", 0);
       const beforeUrl = makePreviewUrl(target0.file);
       let bytes: Uint8Array;
       if (mode === "text") {
         if (!text.trim()) {
           stopProgress();
-          toast.error("Please enter watermark text.");
+          toast.error(lang === "zh" ? "请输入水印文字。" : "Please enter watermark text.");
           return;
         }
         bytes = await addTextWatermark(target0.file, {
@@ -72,7 +87,7 @@ export function WatermarkPdf() {
       } else {
         if (!imageBytes) {
           stopProgress();
-          toast.error("Please upload a watermark image first.");
+          toast.error(lang === "zh" ? "请先上传一张水印图片。" : "Please upload a watermark image first.");
           return;
         }
         bytes = await addImageWatermark(target0.file, imageBytes, imageFormat, {
@@ -91,15 +106,18 @@ export function WatermarkPdf() {
       });
       stopProgress();
       setView("result");
-      toast.success("Watermark applied");
+      toast.success(t("toast.watermarkApplied"));
     } catch (e) {
       stopProgress();
-      toast.error(e instanceof Error ? e.message : "Watermark failed");
+      toast.error(e instanceof Error ? e.message : (lang === "zh" ? "水印应用失败" : "Watermark failed"));
     }
   };
 
+  const positions = POSITIONS.map((p) => ({ ...p, label: lang === "zh" ? POSITIONS_ZH[p.id] : p.label }));
+  const targets = TARGETS.map((tg) => ({ ...tg, label: lang === "zh" ? TARGETS_ZH[tg.id as keyof typeof TARGETS_ZH] : tg.label }));
+
   return (
-    <ToolPageShell tool={tool} ctaLabel="Apply Watermark" ctaColor="var(--cat-edit)" onCtaClick={run}>
+    <ToolPageShell tool={tool} ctaLabel={t("tool.watermark.cta")} ctaColor="var(--cat-edit)" onCtaClick={run}>
       {target0 ? (
         <div className="mt-5 space-y-4">
           {/* Mode tabs */}
@@ -111,7 +129,7 @@ export function WatermarkPdf() {
                 mode === "text" ? "bg-[var(--card)] text-[#FF4B6E] shadow-sm" : "text-[var(--muted-foreground)]",
               )}
             >
-              <Type className="size-4" /> Text watermark
+              <Type className="size-4" /> {t("tool.watermark.textMode")}
             </button>
             <button
               onClick={() => setMode("image")}
@@ -120,7 +138,7 @@ export function WatermarkPdf() {
                 mode === "image" ? "bg-[var(--card)] text-[#FF4B6E] shadow-sm" : "text-[var(--muted-foreground)]",
               )}
             >
-              <ImageIcon className="size-4" /> Image watermark
+              <ImageIcon className="size-4" /> {t("tool.watermark.imageMode")}
             </button>
           </div>
 
@@ -130,7 +148,7 @@ export function WatermarkPdf() {
               {mode === "text" ? (
                 <>
                   <div>
-                    <label className="text-sm font-semibold text-[var(--foreground)]">Watermark text</label>
+                    <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.watermarkText")}</label>
                     <input
                       type="text"
                       value={text}
@@ -142,14 +160,14 @@ export function WatermarkPdf() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <div className="mb-1 flex items-center justify-between">
-                        <label className="text-sm font-semibold text-[var(--foreground)]">Font size</label>
+                        <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.fontSize")}</label>
                         <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{fontSize}pt</span>
                       </div>
                       <input type="range" min="12" max="120" step="2" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
                     </div>
                     <div>
                       <div className="mb-1 flex items-center justify-between">
-                        <label className="text-sm font-semibold text-[var(--foreground)]">Rotation</label>
+                        <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.rotation")}</label>
                         <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{rotation}°</span>
                       </div>
                       <input type="range" min="0" max="360" step="5" value={rotation} onChange={(e) => setRotation(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
@@ -159,9 +177,9 @@ export function WatermarkPdf() {
               ) : (
                 <>
                   <div>
-                    <label className="text-sm font-semibold text-[var(--foreground)]">Watermark image</label>
+                    <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.watermarkText")}</label>
                     <label className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--muted)] py-6 text-sm font-medium text-[var(--muted-foreground)] hover:border-[#FF4B6E] hover:text-[#FF4B6E]">
-                      <Upload className="size-4" /> {imageBytes ? "Image loaded — click to replace" : "Upload PNG or JPG"}
+                      <Upload className="size-4" /> {imageBytes ? t("tool.watermark.imageLoaded") : t("tool.watermark.uploadImage")}
                       <input
                         type="file"
                         accept=".png,.jpg,.jpeg"
@@ -172,14 +190,14 @@ export function WatermarkPdf() {
                           const buf = await f.arrayBuffer();
                           setImageBytes(new Uint8Array(buf));
                           setImageFormat(f.type === "image/png" || /\.png$/i.test(f.name) ? "png" : "jpg");
-                          toast.success(`Loaded ${f.name}`);
+                          toast.success(lang === "zh" ? `已加载 ${f.name}` : `Loaded ${f.name}`);
                         }}
                       />
                     </label>
                   </div>
                   <div>
                     <div className="mb-1 flex items-center justify-between">
-                      <label className="text-sm font-semibold text-[var(--foreground)]">Image scale</label>
+                      <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.imageScale")}</label>
                       <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{Math.round(imageScale * 100)}%</span>
                     </div>
                     <input type="range" min="0.05" max="1" step="0.05" value={imageScale} onChange={(e) => setImageScale(parseFloat(e.target.value))} className="w-full accent-[#FF4B6E]" />
@@ -189,7 +207,7 @@ export function WatermarkPdf() {
 
               <div>
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="text-sm font-semibold text-[var(--foreground)]">Opacity</label>
+                  <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.opacity")}</label>
                   <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{Math.round(opacity * 100)}%</span>
                 </div>
                 <input type="range" min="0.05" max="1" step="0.05" value={opacity} onChange={(e) => setOpacity(parseFloat(e.target.value))} className="w-full accent-[#FF4B6E]" />
@@ -197,7 +215,7 @@ export function WatermarkPdf() {
 
               {mode === "text" && (
                 <div>
-                  <label className="text-sm font-semibold text-[var(--foreground)]">Color</label>
+                  <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.color")}</label>
                   <div className="mt-1 flex gap-2">
                     {COLOR_PRESETS.map((c) => (
                       <button
@@ -216,9 +234,9 @@ export function WatermarkPdf() {
               )}
 
               <div>
-                <label className="text-sm font-semibold text-[var(--foreground)]">Position</label>
+                <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.position")}</label>
                 <div className="mt-1 grid grid-cols-3 gap-2">
-                  {POSITIONS.map((p) => (
+                  {positions.map((p) => (
                     <button
                       key={p.id}
                       onClick={() => setPosition(p.id)}
@@ -234,18 +252,18 @@ export function WatermarkPdf() {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[var(--foreground)]">Apply to</label>
+                <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.applyTo")}</label>
                 <div className="mt-1 flex gap-2">
-                  {TARGETS.map((t) => (
+                  {targets.map((tg) => (
                     <button
-                      key={String(t.id)}
-                      onClick={() => setTarget(t.id)}
+                      key={String(tg.id)}
+                      onClick={() => setTarget(tg.id)}
                       className={cn(
                         "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
-                        target === t.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
+                        target === tg.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
                       )}
                     >
-                      {t.label}
+                      {tg.label}
                     </button>
                   ))}
                 </div>
@@ -254,7 +272,7 @@ export function WatermarkPdf() {
 
             {/* Right: live preview mockup */}
             <div>
-              <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">Preview</p>
+              <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.preview")}</p>
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="size-24 rounded-lg bg-gradient-to-br from-[#23A6D5]/20 to-[#2FE0C6]/20" />
@@ -339,14 +357,14 @@ export function WatermarkPdf() {
               </div>
               <div className="mt-2 flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
                 <Droplets className="size-4 shrink-0 text-[#FF4B6E]" />
-                <p>Live preview is a mockup. The actual watermark will be baked into your PDF with exact coordinates using pdf-lib.</p>
+                <p>{t("tool.watermark.info")}</p>
               </div>
             </div>
           </div>
         </div>
       ) : (
         <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
-          Drop a PDF above to add a watermark.
+          {t("tool.watermark.empty")}
         </div>
       )}
     </ToolPageShell>

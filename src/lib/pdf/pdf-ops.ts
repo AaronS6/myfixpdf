@@ -393,6 +393,53 @@ export async function pdfToJpgImages(
   return out;
 }
 
+// ====== PDF → PNG images (one per page) ======
+export async function pdfToPngImages(
+  blob: Blob,
+  scale = 1.5,
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Array<{ bytes: Uint8Array; name: string; width: number; height: number; previewUrl: string }>> {
+  const { loadPdfFromBlob } = await import("./pdfjs");
+  const doc = await loadPdfFromBlob(blob);
+  const total = doc.numPages;
+  const out: Array<{ bytes: Uint8Array; name: string; width: number; height: number; previewUrl: string }> = [];
+  for (let i = 1; i <= total; i++) {
+    const page = await doc.getPage(i);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas 2D context unavailable");
+    // White background so transparent PDF regions don't end up as alpha-only
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // @ts-expect-error pdfjs legacy render context
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    const blob2: Blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("PNG encoding failed"))),
+        "image/png",
+      );
+    });
+    const url = URL.createObjectURL(blob2);
+    out.push({
+      bytes: new Uint8Array(await blob2.arrayBuffer()),
+      name: `page-${i}.png`,
+      width: canvas.width,
+      height: canvas.height,
+      previewUrl: url,
+    });
+    if (onProgress) onProgress(Math.round((i / total) * 100), `Rendering page ${i}…`);
+  }
+  try {
+    await (doc as any).cleanup?.();
+  } catch {
+    // ignore
+  }
+  return out;
+}
+
 // ====== Add a text watermark to every page ======
 export type WatermarkOptions = {
   text: string;

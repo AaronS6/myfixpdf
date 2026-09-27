@@ -15,12 +15,14 @@ type Props = {
   showToolbar?: boolean;
 };
 
-const SCALES = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
+const SCALES = [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
+const MIN_SCALE = 0.05;
+const MAX_SCALE = 8;
 
 export function PdfPreview({
   blob,
   className,
-  initialScale = 1,
+  initialScale = 0, // 0 = Fit (auto-compute best scale on mount)
   renderOverlay,
   onCanvasClick,
   showToolbar = true,
@@ -32,9 +34,16 @@ export function PdfPreview({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [zoomInput, setZoomInput] = useState(""); // user-typed zoom % string
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [pageSize, setPageSize] = useState<{ w: number; h: number } | null>(null);
+  // The actual rendered CSS dimensions (after Fit / zoom applied). Used to size
+  // the container so scrollbars & layout match the canvas exactly.
+  const [renderedSize, setRenderedSize] = useState<{ w: number; h: number } | null>(null);
+  // The effective scale used for the last render (when Fit is on, this is the
+  // computed best-fit scale, not 0).
+  const [effectiveScale, setEffectiveScale] = useState(1);
   const { t, tTool, lang } = useI18n();
 
   useEffect(() => {
@@ -76,28 +85,40 @@ export function PdfPreview({
     (async () => {
       try {
         const page = await doc.getPage(pageNum);
-        const renderScale = scale === 0 ? 0.5 : scale; // 0 = Fit, fallback to 0.5
-        // Render at 2x DPI for crisp retina output. The CSS size stays at the
-        // logical viewport size; the canvas backing store is 2x larger.
+        // Get intrinsic page dimensions at scale 1.
+        const baseViewport = page.getViewport({ scale: 1 });
+        const intrinsicW = baseViewport.width;
+        const intrinsicH = baseViewport.height;
+        // Compute Fit scale: smallest scale that fits the page in the container.
+        let renderScale = scale;
+        if (scale === 0) {
+          const container = containerRef.current;
+          if (container) {
+            const availW = container.clientWidth - 32;
+            const availH = container.clientHeight - 32;
+            renderScale = Math.min(availW / intrinsicW, availH / intrinsicH);
+            renderScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, renderScale));
+          } else {
+            renderScale = 1;
+          }
+        }
+        // Render at 2x DPI for crisp retina output.
         const dpiBoost = Math.max(2, Math.min(3, (typeof window !== "undefined" ? window.devicePixelRatio : 1) || 1));
         const viewport = page.getViewport({ scale: renderScale });
         const canvas = canvasRef.current!;
-        // Set the canvas backing store to 2x and use CSS width/height to display
-        // at the logical size. This gives crisp text on retina displays.
         canvas.width = Math.round(viewport.width * dpiBoost);
         canvas.height = Math.round(viewport.height * dpiBoost);
         canvas.style.width = `${viewport.width}px`;
         canvas.style.height = `${viewport.height}px`;
-        // Render at the boosted scale
         const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.scale(dpiBoost, dpiBoost);
         }
-        // Use the high-DPI render call directly — don't let the helper reset
-        // the backing store we just configured.
         await renderPdfPageToCanvas(doc, pageNum, canvas, renderScale, { keepBackingSize: true });
         if (!cancelled) {
-          setPageSize({ w: viewport.width / renderScale, h: viewport.height / renderScale });
+          setPageSize({ w: intrinsicW, h: intrinsicH });
+          setRenderedSize({ w: viewport.width, h: viewport.height });
+          setEffectiveScale(renderScale);
         }
         page.cleanup();
       } catch {
@@ -173,30 +194,68 @@ export function PdfPreview({
           </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setScale((s) => SCALES[Math.max(0, SCALES.findIndex((v) => v >= s) - 1)] ?? s)}
+              onClick={() => setScale((s) => {
+                const cur = s === 0 ? 1 : s;
+                const next = Math.max(MIN_SCALE, cur - 0.25);
+                return Math.round(next * 100) / 100;
+              })}
               className="flex size-8 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors"
               aria-label="Zoom out"
             >
               <ZoomOut className="size-4" />
             </button>
-            <select
-              value={scale}
-              onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-xs text-[var(--foreground)] outline-none"
-            >
-              {SCALES.map((s) => (
-                <option key={s} value={s}>
-                  {Math.round(s * 100)}%
-                </option>
-              ))}
-              <option value={0}>Fit</option>
-            </select>
+            {/* Numeric zoom input — user can type any % from 5 to 800 */}
+            <div className="flex items-center gap-1 rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1">
+              <input
+                type="number"
+                min={5}
+                max={800}
+                step={5}
+                value={zoomInput !== "" ? zoomInput : Math.round((scale === 0 ? 1 : scale) * 100)}
+                onChange={(e) => setZoomInput(e.target.value)}
+                onBlur={() => {
+                  const n = parseFloat(zoomInput);
+                  if (!isNaN(n) && n >= 5 && n <= 800) {
+                    setScale(n / 100);
+                  }
+                  setZoomInput("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const n = parseFloat(zoomInput);
+                    if (!isNaN(n) && n >= 5 && n <= 800) {
+                      setScale(n / 100);
+                    }
+                    setZoomInput("");
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                className="w-12 bg-transparent text-xs text-[var(--foreground)] outline-none"
+              />
+              <span className="text-xs text-[var(--muted-foreground)]">%</span>
+            </div>
             <button
-              onClick={() => setScale((s) => SCALES[Math.min(SCALES.length - 1, SCALES.findIndex((v) => v >= s) + 1)] ?? s)}
+              onClick={() => setScale((s) => {
+                const cur = s === 0 ? 1 : s;
+                const next = Math.min(MAX_SCALE, cur + 0.25);
+                return Math.round(next * 100) / 100;
+              })}
               className="flex size-8 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors"
               aria-label="Zoom in"
             >
               <ZoomIn className="size-4" />
+            </button>
+            <button
+              onClick={() => setScale(0)}
+              className={cn(
+                "ml-1 inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                scale === 0
+                  ? "border-[var(--brand)] bg-[var(--brand)]/10 text-[var(--brand)]"
+                  : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
+              )}
+              title="Fit to screen"
+            >
+              Fit
             </button>
             <button
               onClick={() => setFullscreen((v) => !v)}
@@ -217,7 +276,7 @@ export function PdfPreview({
           loading && "flex items-center justify-center",
         )}
       >
-        <div className="mx-auto" style={{ width: pageSize ? pageSize.w * (scale === 0 ? 0.5 : scale) : "auto" }}>
+        <div className="mx-auto" style={{ width: renderedSize ? renderedSize.w : "auto" }}>
           <div className="relative inline-block">
             <canvas
               ref={canvasRef}
@@ -228,15 +287,15 @@ export function PdfPreview({
               )}
               style={{ background: "#fff" }}
             />
-            {pageSize && renderOverlay && (
+            {pageSize && renderOverlay && renderedSize && (
               <div
                 className="pointer-events-auto absolute left-0 top-0"
                 style={{
-                  width: pageSize.w * (scale === 0 ? 0.5 : scale),
-                  height: pageSize.h * (scale === 0 ? 0.5 : scale),
+                  width: renderedSize.w,
+                  height: renderedSize.h,
                 }}
               >
-                {renderOverlay(pageNum - 1, pageSize.w, pageSize.h, scale === 0 ? 0.5 : scale)}
+                {renderOverlay(pageNum - 1, pageSize.w, pageSize.h, effectiveScale)}
               </div>
             )}
           </div>

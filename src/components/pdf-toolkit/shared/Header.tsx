@@ -45,6 +45,7 @@ export function Header() {
         { id: "pdf-to-word", label: tTool("pdf-to-word").name, desc: tTool("pdf-to-word").desc },
         { id: "word-to-pdf", label: tTool("word-to-pdf").name, desc: tTool("word-to-pdf").desc },
         { id: "pdf-to-jpg", label: tTool("pdf-to-jpg").name, desc: tTool("pdf-to-jpg").desc },
+        { id: "pdf-to-png", label: tTool("pdf-to-png").name, desc: tTool("pdf-to-png").desc },
         { id: "convert-to-pdf", label: tTool("convert-to-pdf").name, desc: tTool("convert-to-pdf").desc },
         { id: "extract-text", label: tTool("extract-text").name, desc: tTool("extract-text").desc },
       ],
@@ -103,7 +104,7 @@ export function Header() {
               </svg>
             </span>
             <div className="flex flex-col leading-none">
-              <span className="text-[16px] font-bold tracking-tight text-[var(--foreground)]">
+              <span className="text-[17px] font-bold tracking-tight text-[var(--foreground)]" style={{ fontFamily: "var(--font-display), var(--font-sans), system-ui, sans-serif" }}>
                 my<span className="brand-gradient-text">fixpdf</span>
               </span>
               <span className="text-[10px] font-medium text-[var(--muted-foreground)]">
@@ -245,6 +246,7 @@ function ToolIcon({ id, className }: { id: ToolId; className?: string }) {
     "pdf-to-word": <ConvertIcon className={className} />,
     "word-to-pdf": <ConvertIcon className={className} />,
     "pdf-to-jpg": <ImageIcon className={className} />,
+    "pdf-to-png": <ImageIcon className={className} />,
     "convert-to-pdf": <ConvertIcon className={className} />,
     "split-pdf": <SplitIcon className={className} />,
     "merge-pdf": <MergeIcon className={className} />,

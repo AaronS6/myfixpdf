@@ -17,6 +17,8 @@ import {
   Layers,
   Archive,
   RotateCcw,
+  RotateCw,
+  Pencil,
   Sparkles,
 } from "lucide-react";
 import { useDocumentSession, type ToolId } from "@/store/document-session";
@@ -27,13 +29,15 @@ import { SignaturePadModal } from "./SignaturePadModal";
 import { DescriptionModal } from "./DescriptionModal";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { embedImageOnPage, setPdfMetadata } from "@/lib/pdf/pdf-ops";
+import { embedImageOnPage, setPdfMetadata, rotatePdfPage } from "@/lib/pdf/pdf-ops";
+import { useI18n } from "./I18nProvider";
 
 const SIZE_WARNING_PDF_MB = 10;
 const SIZE_WARNING_IMG_MB = 5;
 
 export function ResultScreen() {
-  const { resultFile, setView, chainTo, setResult, reset, startProgress, stopProgress, pushHistory } = useDocumentSession();
+  const { resultFile, setView, chainTo, setResult, reset, startProgress, updateProgress, stopProgress, pushHistory } = useDocumentSession();
+  const { t, tt, lang } = useI18n();
   const [compareMode, setCompareMode] = useState(false);
   const [comparePos, setComparePos] = useState(50);
   const [rename, setRename] = useState<string>("");
@@ -73,9 +77,9 @@ export function ResultScreen() {
   if (!resultFile && !showMultiResults) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <p className="text-[var(--muted-foreground)]">No result yet. Run a tool first.</p>
+        <p className="text-[var(--muted-foreground)]">{t("result.noResult")}</p>
         <button onClick={() => setView("home")} className="mt-3 rounded-lg bg-[var(--brand)] px-4 py-2 text-white">
-          Back to home
+          {t("result.backHome")}
         </button>
       </div>
     );
@@ -89,7 +93,7 @@ export function ResultScreen() {
   const handleDownload = () => {
     if (!resultFile) return;
     downloadBlob(resultFile.blob, rename || resultFile.name);
-    toast.success("Download started", { description: rename || resultFile.name });
+    toast.success(t("result.downloadStarted"), { description: rename || resultFile.name });
   };
 
   const handleDownloadAllZip = async () => {
@@ -99,7 +103,45 @@ export function ResultScreen() {
       resultFile.results.map((r) => ({ blob: r.blob, name: r.name })),
       "pdf-toolkit-export.zip",
     );
-    toast.success("ZIP downloaded");
+    toast.success(t("result.zipDownloaded"));
+  };
+
+  // Rotate the current preview 90° clockwise.
+  // - PDF: bake rotation into the requested page via pdf-lib (rotatePdfPage).
+  // - Image: rotate the pixels via canvas and replace the result blob.
+  const handleRotate = async () => {
+    if (!resultFile) return;
+    try {
+      if (isPdf) {
+        const pageIndex = Math.max(0, sigOverlayInfoRef.current?.pageIndex ?? 0);
+        startProgress(lang === "zh" ? `正在旋转第 ${pageIndex + 1} 页…` : `Rotating page ${pageIndex + 1}…`, "determinate", 0);
+        const out = await rotatePdfPage(resultFile.blob, pageIndex, 90, (pct, msg) => updateProgress(msg, pct));
+        const newBlob = new Blob([out as unknown as BlobPart], { type: "application/pdf" });
+        setResult({ ...resultFile, blob: newBlob, size: newBlob.size, name: rename || resultFile.name });
+        stopProgress();
+        toast.success(lang === "zh" ? `已旋转第 ${pageIndex + 1} 页 90° 顺时针` : `Rotated page ${pageIndex + 1} 90° clockwise`);
+      } else if (isImage) {
+        startProgress(lang === "zh" ? "正在旋转图片…" : "Rotating image…", "determinate", 0);
+        const rotated = await rotateImageBlobCw(resultFile.blob);
+        // Preserve ext; mime may shift from jpeg to png if rotated blob becomes png.
+        const ext = resultFile.ext || (rotated.type === "image/png" ? ".png" : ".jpg");
+        const name = rename || resultFile.name;
+        const finalName = ext === resultFile.ext ? name : name.replace(/\.(png|jpe?g)$/i, "") + ext;
+        setResult({
+          ...resultFile,
+          blob: rotated,
+          type: rotated.type,
+          ext,
+          size: rotated.size,
+          name: finalName,
+        });
+        stopProgress();
+        toast.success(lang === "zh" ? "已旋转图片 90° 顺时针" : "Rotated image 90° clockwise");
+      }
+    } catch (e) {
+      stopProgress();
+      toast.error(e instanceof Error ? e.message : (lang === "zh" ? "旋转失败" : "Rotate failed"));
+    }
   };
 
   const handleAddSignature = async (sig: { dataUrl: string; format: "drawn" | "typed"; color: string }) => {
@@ -107,7 +149,7 @@ export function ResultScreen() {
     setSigModal(false);
     setSignaturePreview(sig.dataUrl);
     // The signature will be baked in when the user clicks "Apply signature" via the apply button below
-    toast.success("Signature ready — drag it on the page, then click Apply", { duration: 4000 });
+    toast.success(t("result.signatureReady"), { duration: 4000 });
   };
 
   const applySignature = async () => {
@@ -144,10 +186,10 @@ export function ResultScreen() {
       setResult({ ...resultFile, blob: newBlob, size: newBlob.size, name: rename || resultFile.name });
       setSignaturePreview(null);
       stopProgress();
-      toast.success("Signature applied to the PDF");
+      toast.success(t("result.signatureApplied"));
     } catch (e) {
       stopProgress();
-      toast.error(e instanceof Error ? e.message : "Failed to apply signature");
+      toast.error(e instanceof Error ? e.message : (lang === "zh" ? "应用签名失败" : "Failed to apply signature"));
     }
   };
 
@@ -201,14 +243,25 @@ export function ResultScreen() {
                   : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
               )}
             >
-              <Layers className="size-4" /> {compareMode ? "Exit compare" : "Compare before/after"}
+              <Layers className="size-4" /> {compareMode ? t("result.compare.exit") : t("result.compare")}
+            </button>
+          )}
+          {/* Rotate button — for PDF bakes rotation into the current page; for images rotates via canvas */}
+          {(isPdf || isImage) && (
+            <button
+              onClick={handleRotate}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-all hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+              aria-label={t("result.rotate")}
+              title={t("result.rotate")}
+            >
+              <RotateCw className="size-4" /> {t("result.rotate")}
             </button>
           )}
           <button
             onClick={handleDownload}
             className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.03]"
           >
-            <Download className="size-4" /> Download
+            <Download className="size-4" /> {t("result.download")}
           </button>
         </div>
       </div>
@@ -218,13 +271,13 @@ export function ResultScreen() {
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 p-3 text-sm text-[var(--warning)]">
           <AlertTriangle className="size-5 shrink-0 text-[#F5A623]" />
           <span className="flex-1">
-            This file is quite large ({formatBytes(resultFile!.size)}). Consider compressing it further before sharing.
+            {tt("result.oversize.body", { size: formatBytes(resultFile!.size) })}
           </span>
           <button
             onClick={() => chainTo("compress-pdf")}
             className="inline-flex items-center gap-1.5 rounded-md bg-[#F5A623] px-3 py-1.5 text-xs font-bold text-white hover:opacity-90"
           >
-            <Sparkles className="size-3.5" /> Compress More
+            <Sparkles className="size-3.5" /> {t("result.compressMore")}
           </button>
         </div>
       )}
@@ -263,43 +316,44 @@ export function ResultScreen() {
               <ImagePreview src={previewUrl} />
             </div>
           ) : (
-            <div className="flex h-64 items-center justify-center text-[var(--muted-foreground)]">No preview available</div>
+            <div className="flex h-64 items-center justify-center text-[var(--muted-foreground)]">{t("result.noPreview")}</div>
           )}
         </div>
 
         {/* Action toolbar */}
         <div className="space-y-4">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Continue working</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{t("result.continueWorking")}</p>
             <div className="grid grid-cols-2 gap-2">
               {isPdf && (
                 <>
-                  <ActionButton icon={Sparkles} label="Compress More" color="var(--cat-compress)" onClick={() => chainTo("compress-pdf")} />
-                  <ActionButton icon={Combine} label="Merge with another file" color="var(--cat-organize)" onClick={() => chainTo("merge-pdf")} />
-                  <ActionButton icon={Scissors} label="Split this file" color="var(--cat-organize)" onClick={() => chainTo("split-pdf")} />
-                  <ActionButton icon={PenLine} label="Sign / Annotate" color="var(--cat-edit)" onClick={() => setSigModal(true)} />
-                  <ActionButton icon={FileText} label="Add Description" color="var(--cat-edit)" onClick={() => setDescModal(true)} />
-                  <ActionButton icon={Layers} label="Edit Pages" color="var(--cat-edit)" onClick={() => chainTo("edit-pdf")} />
+                  <ActionButton icon={Sparkles} label={t("result.compressMore")} color="var(--cat-compress)" onClick={() => chainTo("compress-pdf")} />
+                  <ActionButton icon={Combine} label={t("result.mergeMore")} color="var(--cat-organize)" onClick={() => chainTo("merge-pdf")} />
+                  <ActionButton icon={Scissors} label={t("result.splitThis")} color="var(--cat-organize)" onClick={() => chainTo("split-pdf")} />
+                  <ActionButton icon={PenLine} label={t("result.signAnnotate")} color="var(--cat-edit)" onClick={() => setSigModal(true)} />
+                  <ActionButton icon={FileText} label={t("result.addDescription")} color="var(--cat-edit)" onClick={() => setDescModal(true)} />
+                  <ActionButton icon={Layers} label={t("result.editPages")} color="var(--cat-edit)" onClick={() => chainTo("edit-pdf")} />
                 </>
               )}
               {isImage && (
                 <>
-                  <ActionButton icon={Sparkles} label="Compress More" color="var(--cat-compress)" onClick={() => chainTo("compress-png")} />
-                  <ActionButton icon={Combine} label="Add to PDF merge" color="var(--cat-organize)" onClick={() => chainTo("merge-pdf")} />
-                  <ActionButton icon={FilePlus2} label="Add to Convert→PDF" color="var(--cat-convert)" onClick={() => chainTo("convert-to-pdf")} />
+                  <ActionButton icon={Sparkles} label={t("result.compressMore")} color="var(--cat-compress)" onClick={() => chainTo("compress-png")} />
+                  <ActionButton icon={Combine} label={t("result.addToMerge")} color="var(--cat-organize)" onClick={() => chainTo("merge-pdf")} />
+                  <ActionButton icon={FilePlus2} label={t("result.addToConvertPdf")} color="var(--cat-convert)" onClick={() => chainTo("convert-to-pdf")} />
+                  <ActionButton icon={Pencil} label={t("result.editImage")} color="var(--cat-compress)" onClick={() => chainTo("edit-png")} />
                 </>
               )}
-              <ActionButton icon={RotateCcw} label="Start Over" color="#5B6B79" onClick={reset} />
+              <ActionButton icon={RotateCcw} label={t("result.startOver")} color="#5B6B79" onClick={reset} />
             </div>
           </div>
 
           {/* Tips */}
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm shadow-sm">
             <p className="mb-1 flex items-center gap-1.5 font-semibold text-[var(--foreground)]">
-              <Info className="size-4 text-[var(--brand)]" /> Did you know?
+              <Info className="size-4 text-[var(--brand)]" /> {t("result.didYouKnow")}
             </p>
             <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
-              You can chain tools without downloading. The current file is held in your browser session until you press Download — feel free to compress again, sign, or merge it with another file.
+              {t("result.didYouKnow.body")}
             </p>
           </div>
 
@@ -307,10 +361,12 @@ export function ResultScreen() {
           {saved && (
             <div className="rounded-2xl border border-[var(--success)]/30 bg-[var(--success)]/8 p-4 text-sm shadow-sm">
               <p className="flex items-center gap-1.5 font-semibold text-[var(--success)]">
-                <CheckCircle2 className="size-4" /> You saved {savedPct}%
+                <CheckCircle2 className="size-4" /> {t("result.saved")} {savedPct}%
               </p>
               <p className="mt-1 text-xs text-[var(--foreground)]/70">
-                Original {formatBytes(resultFile!.beforeSize!)} → Now {formatBytes(resultFile!.size)}. Use the “Compare before/after” button above to visually confirm quality.
+                {lang === "zh"
+                  ? `原文件 ${formatBytes(resultFile!.beforeSize!)} → 现在 ${formatBytes(resultFile!.size)}。可用上方「对比前后效果」按钮查看质量。`
+                  : `Original ${formatBytes(resultFile!.beforeSize!)} → Now ${formatBytes(resultFile!.size)}. Use the “Compare before/after” button above to visually confirm quality.`}
               </p>
             </div>
           )}
@@ -324,7 +380,7 @@ export function ResultScreen() {
             onClick={handleDownloadAllZip}
             className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
           >
-            <Archive className="size-4" /> Download all as ZIP
+            <Archive className="size-4" /> {t("result.downloadAllZip")}
           </button>
         </div>
       )}
@@ -360,6 +416,7 @@ function ActionButton({
 }
 
 function MultiResultsGallery({ results }: { results: NonNullable<NonNullable<ReturnType<typeof useDocumentSession.getState>["resultFile"]>["results"]> }) {
+  const { t } = useI18n();
   return (
     <div className="bg-[var(--muted)] p-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
@@ -382,7 +439,7 @@ function MultiResultsGallery({ results }: { results: NonNullable<NonNullable<Ret
                 onClick={() => downloadBlob(r.blob, r.name)}
                 className="mt-1 inline-flex w-full items-center justify-center gap-1 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold text-white hover:opacity-90"
               >
-                <Download className="size-3" /> Download
+                <Download className="size-3" /> {t("result.download")}
               </button>
             </div>
           </div>
@@ -390,6 +447,60 @@ function MultiResultsGallery({ results }: { results: NonNullable<NonNullable<Ret
       </div>
     </div>
   );
+}
+
+/**
+ * Rotate an image blob 90° clockwise via canvas. Returns a fresh PNG blob to preserve quality across rotations.
+ */
+async function rotateImageBlobCw(src: Blob): Promise<Blob> {
+  const bitmap = await loadBitmap(src);
+  const w = bitmap.width;
+  const h = bitmap.height;
+  const canvas = document.createElement("canvas");
+  canvas.width = h;
+  canvas.height = w;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D context unavailable");
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Translate to the new center, rotate 90° CW, then draw centered.
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(bitmap as CanvasImageSource, -w / 2, -h / 2, w, h);
+  try {
+    if (bitmap instanceof ImageBitmap) bitmap.close?.();
+  } catch {
+    // ignore
+  }
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Failed to encode rotated image"))),
+      "image/png",
+    );
+  });
+}
+
+/** Load an image blob into either an ImageBitmap or an HTMLImageElement. */
+async function loadBitmap(src: Blob): Promise<ImageBitmap | HTMLImageElement> {
+  if (typeof createImageBitmap === "function") {
+    try {
+      return await createImageBitmap(src);
+    } catch {
+      // fall through to <img> path
+    }
+  }
+  const url = URL.createObjectURL(src);
+  try {
+    return await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Failed to load image for rotation"));
+      img.src = url;
+    });
+  } finally {
+    // Revoke later (after drawImage in caller). Slight leak acceptable.
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
 }
 
 function CompareSlider({
@@ -405,6 +516,7 @@ function CompareSlider({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
+  const { t } = useI18n();
   useEffect(() => {
     if (!containerRef.current) return;
     const update = () => setContainerWidth(containerRef.current?.clientWidth ?? null);
@@ -442,8 +554,8 @@ function CompareSlider({
           <ChevronLeft className="size-4 rotate-180" />
         </div>
       </div>
-      <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">Before</div>
-      <div className="absolute right-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">After</div>
+      <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{t("result.compare.before")}</div>
+      <div className="absolute right-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{t("result.compare.after")}</div>
     </div>
   );
 }
@@ -464,6 +576,7 @@ function SignatureOverlay({
   pageIndex: number;
 }) {
   const dragRef = useRef<{ kind: "move" | "resize"; startX: number; startY: number; start: typeof pos } | null>(null);
+  const { t, tt } = useI18n();
 
   // The overlay is always rendered on the page currently shown by PdfPreview.
   // Sync pos.page so applySignature bakes onto the right page.
@@ -535,12 +648,12 @@ function SignatureOverlay({
           }}
         />
         <div className="absolute -top-7 left-0 flex items-center gap-1 rounded-md bg-[var(--foreground)]/90 px-1.5 py-0.5 text-[10px] text-white">
-          <button onClick={onApply} className="rounded bg-[var(--brand)] px-1.5 py-0.5 font-semibold">Apply</button>
-          <button onClick={onRemove} className="px-1 hover:text-[var(--danger)]">Remove</button>
+          <button onClick={onApply} className="rounded bg-[var(--brand)] px-1.5 py-0.5 font-semibold">{t("result.applySignature")}</button>
+          <button onClick={onRemove} className="px-1 hover:text-[var(--danger)]">{t("result.removeSignature")}</button>
         </div>
       </div>
       <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-[var(--card)]/95 px-2 py-1 shadow-md">
-        <span className="text-[10px] text-[var(--muted-foreground)]">On page {pageIndex + 1}</span>
+        <span className="text-[10px] text-[var(--muted-foreground)]">{tt("result.onPage", { n: pageIndex + 1 })}</span>
       </div>
     </div>
   );

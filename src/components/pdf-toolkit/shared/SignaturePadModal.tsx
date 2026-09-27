@@ -33,7 +33,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
   const [stroke, setStroke] = useState(2.5);
   const [typedName, setTypedName] = useState("");
   const [typedFont, setTypedFont] = useState(TYPE_FONTS[0].value);
-  const { lang } = useI18n();
+  const { t } = useI18n();
 
   // Initialize the signature pad using requestAnimationFrame to ensure the
   // modal animation has finished and the canvas has its final dimensions.
@@ -98,12 +98,12 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
   const produceDataUrl = async (): Promise<string> => {
     if (mode === "drawn") {
       if (!padRef.current || padRef.current.isEmpty()) {
-        throw new Error(lang === "zh" ? "请先绘制签名" : "Please draw your signature first.");
+        throw new Error(t("modal.signature.errors.emptyDraw"));
       }
       const source = padRef.current.toDataURL("image/png");
       return await compositeWhite(source, color);
     } else {
-      if (!typedName.trim()) throw new Error(lang === "zh" ? "请输入你的姓名" : "Please type your name first.");
+      if (!typedName.trim()) throw new Error(t("modal.signature.errors.emptyType"));
       const canvas = document.createElement("canvas");
       const fontSize = 64;
       const ctx = canvas.getContext("2d");
@@ -149,7 +149,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
         <div className="border-b border-[var(--border)] p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-[var(--foreground)]">
-              {lang === "zh" ? "添加你的签名" : "Add your signature"}
+              {t("modal.signature.title")}
             </h3>
             <button
               onClick={onClose}
@@ -167,7 +167,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 mode === "drawn" ? "bg-[var(--card)] text-[var(--brand)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
               )}
             >
-              <PenLine className="size-4" /> {lang === "zh" ? "手绘" : "Draw"}
+              <PenLine className="size-4" /> {t("modal.signature.draw")}
             </button>
             <button
               onClick={() => setMode("typed")}
@@ -176,7 +176,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 mode === "typed" ? "bg-[var(--card)] text-[var(--brand)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
               )}
             >
-              <Check className="size-4" /> {lang === "zh" ? "输入" : "Type"}
+              <Check className="size-4" /> {t("modal.signature.type")}
             </button>
           </div>
         </div>
@@ -193,7 +193,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--muted-foreground)]">
-                    {lang === "zh" ? "笔色：" : "Pen color:"}
+                    {t("common.penColor")}
                   </span>
                   {PEN_COLORS.map((c) => (
                     <button
@@ -210,7 +210,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--muted-foreground)]">
-                    {lang === "zh" ? "粗细：" : "Stroke:"}
+                    {t("common.stroke")}
                   </span>
                   <input
                     type="range"
@@ -226,7 +226,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                   onClick={clear}
                   className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                 >
-                  <Eraser className="size-4" /> {lang === "zh" ? "清除" : "Clear"}
+                  <Eraser className="size-4" /> {t("common.clear")}
                 </button>
               </div>
             </div>
@@ -236,7 +236,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 type="text"
                 value={typedName}
                 onChange={(e) => setTypedName(e.target.value)}
-                placeholder={lang === "zh" ? "输入你的姓名" : "Type your full name"}
+                placeholder={t("modal.signature.placeholder")}
                 className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-base text-[var(--foreground)] outline-none focus:border-[var(--brand)]"
               />
               <div className="flex flex-wrap gap-2">
@@ -252,13 +252,13 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                     )}
                     style={{ fontFamily: f.value, color }}
                   >
-                    {typedName || (lang === "zh" ? "你的姓名" : "Your Name")}
+                    {typedName || t("modal.signature.yourName")}
                   </button>
                 ))}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-[var(--muted-foreground)]">
-                  {lang === "zh" ? "墨色：" : "Ink color:"}
+                  {t("common.inkColor")}
                 </span>
                 {PEN_COLORS.map((c) => (
                   <button
@@ -281,13 +281,13 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
             onClick={onClose}
             className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
           >
-            {lang === "zh" ? "取消" : "Cancel"}
+            {t("common.cancel")}
           </button>
           <button
             onClick={onConfirmClick}
             className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#60A5FA] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
           >
-            <Check className="size-4" /> {lang === "zh" ? "应用签名" : "Apply signature"}
+            <Check className="size-4" /> {t("modal.signature.apply")}
           </button>
         </div>
       </div>

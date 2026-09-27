@@ -16,7 +16,7 @@ export function HomeView() {
   const setSourceFiles = useSession((s) => s.setSourceFiles);
   const clearSourceFiles = useSession((s) => s.clearSourceFiles);
   const [busy, setBusy] = useState(false);
-  const { t, tTool, lang } = useI18n();
+  const { t, tTool, tt, lang } = useI18n();
 
   const handleFiles = async (files: File[]) => {
     setBusy(true);
@@ -39,18 +39,10 @@ export function HomeView() {
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             if (/encrypted/i.test(msg)) {
-              toast.error(
-                lang === "zh"
-                  ? `“${f.name}” 已加密，请先移除密码`
-                  : `“${f.name}” is password-protected. Please remove the password first.`,
-              );
+              toast.error(tt("toast.encryptedPdf", { name: f.name }));
               continue;
             }
-            toast.error(
-              lang === "zh"
-                ? `无法读取 PDF “${f.name}”：${msg}`
-                : `Could not read PDF “${f.name}”: ${msg}`,
-            );
+            toast.error(tt("toast.readPdfError", { name: f.name, msg }));
             continue;
           }
         } else if (f.type.startsWith("image/")) {
@@ -78,10 +70,7 @@ export function HomeView() {
         setView(toolkitFiles.length > 1 ? "convert-to-pdf" : "edit-png");
       } else if (allPdfs) {
         if (toolkitFiles.length === 1) {
-          toast.success(
-            lang === "zh" ? "PDF 已添加，请在下方选择一个工具。" : "PDF added. Pick a tool below.",
-            { duration: 3500 },
-          );
+          toast.success(t("toast.pdfAddedPickTool"), { duration: 3500 });
         } else {
           setView("merge-pdf");
         }
@@ -160,7 +149,7 @@ export function HomeView() {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
                   {CATEGORY_LABELS[cat]}
                 </h3>
-                <span className="ml-2 text-xs text-[var(--muted-foreground)]">· {tools.length} tools</span>
+                <span className="ml-2 text-xs text-[var(--muted-foreground)]">· {tools.length} {lang === "zh" ? "个工具" : "tools"}</span>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {tools.map((tool, i) => (
@@ -240,6 +229,7 @@ function ToolCard({
   onClick: () => void;
   delay?: number;
 }) {
+  const { t } = useI18n();
   return (
     <button
       onClick={onClick}
@@ -261,7 +251,7 @@ function ToolCard({
         <p className="mt-1 text-xs leading-relaxed text-[var(--muted-foreground)]">{desc}</p>
       </div>
       <div className="mt-auto flex items-center text-xs font-semibold" style={{ color: tool.color }}>
-        Open tool <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+        {t("common.openTool")} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
       </div>
     </button>
   );
@@ -290,6 +280,11 @@ function ToolGlyph({ id }: { id: string }) {
       </svg>
     ),
     "pdf-to-jpg": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" />
+      </svg>
+    ),
+    "pdf-to-png": (
       <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" />
       </svg>

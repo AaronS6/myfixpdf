@@ -6,7 +6,7 @@ import { useI18n } from "./I18nProvider";
 
 export function ProgressOverlay() {
   const progress = useDocumentSession((s) => s.progress);
-  const { lang } = useI18n();
+  const { t } = useI18n();
   if (!progress.active) return null;
   const pct = typeof progress.percent === "number" ? Math.max(0, Math.min(100, progress.percent)) : null;
   return (
@@ -44,11 +44,11 @@ export function ProgressOverlay() {
           )}
         </div>
         <p className="text-base font-semibold text-[var(--foreground)]">
-          {progress.message || (lang === "zh" ? "处理中…" : "Working…")}
+          {progress.message || t("progress.working")}
         </p>
         {pct === null && (
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {lang === "zh" ? "大文件可能需要一些时间，请稍候。" : "This may take a moment for large files."}
+            {t("progress.takeMoment")}
           </p>
         )}
       </div>

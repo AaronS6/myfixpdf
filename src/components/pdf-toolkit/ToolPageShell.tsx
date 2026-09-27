@@ -36,7 +36,7 @@ export function ToolPageShell({
   const { sourceFiles, addSourceFiles, removeSourceFile, clearSourceFiles, setView, pushHistory } = useDocumentSession();
   const [busy, setBusy] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const { t, tTool, lang } = useI18n();
+  const { t, tTool, tt, lang } = useI18n();
 
   // Show a reminder toast once when files first appear in a tool
   useEffect(() => {
@@ -44,7 +44,7 @@ export function ToolPageShell({
       // First file added — remind user about persistence
       const timer = setTimeout(() => {
         toast.info(
-          lang === "zh" ? "文件已加载" : "Files loaded",
+          t("toast.filesLoaded"),
           {
             description: t("tool.reminder"),
             duration: 5500,
@@ -76,18 +76,10 @@ export function ToolPageShell({
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             if (/encrypted/i.test(msg)) {
-              toast.error(
-                lang === "zh"
-                  ? `“${f.name}” 已加密，请先移除密码`
-                  : `“${f.name}” is password-protected. Please remove the password first.`,
-              );
+              toast.error(tt("toast.encryptedPdf", { name: f.name }));
               continue;
             }
-            toast.error(
-              lang === "zh"
-                ? `无法读取 PDF “${f.name}”：${msg}`
-                : `Could not read PDF “${f.name}”: ${msg}`,
-            );
+            toast.error(tt("toast.readPdfError", { name: f.name, msg }));
             continue;
           }
         } else if (f.type.startsWith("image/")) {
@@ -101,12 +93,7 @@ export function ToolPageShell({
       }
       if (arr.length) {
         addSourceFiles(arr);
-        toast.success(
-          lang === "zh"
-            ? `已添加 ${arr.length} 个文件`
-            : `Added ${arr.length} file${arr.length > 1 ? "s" : ""}`,
-          { duration: 1800 },
-        );
+        toast.success(tt("toast.addedFiles", { n: arr.length }), { duration: 1800 });
       }
     } finally {
       setBusy(false);
@@ -268,6 +255,11 @@ function ToolGlyph({ id }: { id: string }) {
       </svg>
     ),
     "pdf-to-jpg": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" />
+      </svg>
+    ),
+    "pdf-to-png": (
       <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" />
       </svg>

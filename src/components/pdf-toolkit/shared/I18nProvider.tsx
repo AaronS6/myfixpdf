@@ -7,6 +7,8 @@ type I18nContextValue = {
   lang: Lang;
   setLang: (l: Lang) => void;
   t: (key: StringKey) => string;
+  /** Translate with {placeholder} substitution. */
+  tt: (key: StringKey, params?: Record<string, string | number>) => string;
   /** Get tool display info for current language. */
   tTool: (toolId: string) => { name: string; short: string; desc: string };
 };
@@ -50,13 +52,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (key: StringKey) => DICTS[lang][key] ?? DICTS.en[key] ?? String(key);
+  const tt = (key: StringKey, params?: Record<string, string | number>) => {
+    const raw = DICTS[lang][key] ?? DICTS.en[key] ?? String(key);
+    if (!params) return raw;
+    return raw.replace(/\{(\w+)\}/g, (_, k: string) => (params[k] !== undefined ? String(params[k]) : `{${k}}`));
+  };
   const tTool = (toolId: string) => {
     const dict = TOOL_NAMES[lang][toolId] ?? TOOL_NAMES.en[toolId];
     return dict ?? { name: toolId, short: toolId, desc: "" };
   };
 
   return (
-    <I18nContext.Provider value={{ lang, setLang, t, tTool }}>
+    <I18nContext.Provider value={{ lang, setLang, t, tt, tTool }}>
       {children}
     </I18nContext.Provider>
   );
@@ -66,10 +73,16 @@ export function useI18n() {
   const ctx = useContext(I18nContext);
   if (!ctx) {
     // Fallback for components used outside provider (shouldn't happen in practice)
+    const tt = (key: StringKey, params?: Record<string, string | number>) => {
+      const raw = DICTS.en[key] ?? String(key);
+      if (!params) return raw;
+      return raw.replace(/\{(\w+)\}/g, (_, k: string) => (params[k] !== undefined ? String(params[k]) : `{${k}}`));
+    };
     return {
       lang: "en" as Lang,
       setLang: () => {},
       t: (k: StringKey) => DICTS.en[k] ?? String(k),
+      tt,
       tTool: (id: string) => TOOL_NAMES.en[id] ?? { name: id, short: id, desc: "" },
     };
   }

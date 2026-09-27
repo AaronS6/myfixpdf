@@ -20,6 +20,7 @@ export const TOOLS: ToolMeta[] = [
   { id: "pdf-to-word", name: "PDF to Word", short: "Convert", desc: "Turn a PDF into an editable Word document you can actually open and edit.", color: "var(--cat-convert)", category: "convert", accept: ".pdf", multiple: false },
   { id: "word-to-pdf", name: "Word to PDF", short: "Convert", desc: "Turn a Word document into a clean, shareable PDF.", color: "var(--cat-convert)", category: "convert", accept: ".docx", multiple: false },
   { id: "pdf-to-jpg", name: "PDF to JPG", short: "Convert", desc: "Turn each page of a PDF into a JPG image — download one or all as a ZIP.", color: "var(--cat-convert)", category: "convert", accept: ".pdf", multiple: false },
+  { id: "pdf-to-png", name: "PDF to PNG", short: "Convert", desc: "Turn each page of a PDF into a PNG image — download one or all as a ZIP.", color: "var(--cat-convert)", category: "convert", accept: ".pdf", multiple: false },
   { id: "convert-to-pdf", name: "Convert to PDF", short: "Convert", desc: "Turn any image or document into a PDF — JPG, PNG, even another PDF.", color: "var(--cat-convert)", category: "convert", accept: ".pdf,.png,.jpg,.jpeg", multiple: true },
   { id: "extract-text", name: "Extract Text", short: "Convert", desc: "Pull all the text out of a PDF into a plain text file.", color: "var(--cat-convert)", category: "convert", accept: ".pdf", multiple: false },
 

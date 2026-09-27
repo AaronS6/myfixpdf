@@ -711,3 +711,79 @@ Stage Summary:
   • Canvas backing store is 2x DPI (1191×1684 vs 595×841 CSS) ✓
 - Mobile menu scroll fix verified by code (CSS is correct: overflow-y-auto + maxHeight).
 - Dropdown menus are fully opaque white (blur kept only on the top bar).
+
+---
+Task ID: FIX-4
+Agent: feature-builder
+
+Task: Five features for the myfixpdf SPA — (1) new PDF→PNG tool, (2) expand Chinese i18n to cover all user-visible UI strings, (3) Rotate button on ResultScreen preview, (4) "Edit Image" button in the Continue Working sidebar for image results, (5) ImagePreview zoom UI modernized to match PdfPreview.
+
+Work Log:
+- Created `src/components/pdf-toolkit/tools/PdfToPng.tsx` mirroring PdfToJpg (without quality slider since PNG is lossless). Uses `useI18n()` + `tt("toast.exportedPng", {n})`.
+- Added `pdfToPngImages()` helper to `src/lib/pdf/pdf-ops.ts` that renders each PDF page to canvas via pdfjs then `canvas.toBlob(b, "image/png")`. White-fill background, rejects on null blob, defensive try/catch around doc cleanup.
+- Wired `pdf-to-png` into every required site:
+  - `ToolId` union in `src/store/document-session.ts` (+ "pdf-to-png")
+  - `TOOLS` array in `src/components/pdf-toolkit/tools/registry.tsx` (category "convert", color var(--cat-convert), accept ".pdf", multiple false)
+  - `TOOL_NAMES` EN + ZH in `i18n-strings.ts` (EN: "PDF to PNG" / "Turn each page of a PDF into a PNG image — download one or all as a ZIP.", ZH: "PDF 转 PNG" / "把 PDF 的每一页都转成 PNG 图片 — 可单独下载或打包成 ZIP。")
+  - `CATS` (under "convert") + `ToolIcon` map (ImageIcon glyph) in `Header.tsx`
+  - `toolLinks` in `Footer.tsx`
+  - `ToolGlyph` map in `HomeView.tsx` and `ToolPageShell.tsx`
+  - `valid` hash list + view switch + import in `src/app/page.tsx`
+  - Existing `ResultScreen` "Download all as ZIP" button already covers the multi-result gallery — verified it shows up when `showMultiResults` is true.
+- Expanded `i18n-strings.ts` EN + ZH dictionaries with ~70 new StringKeys covering:
+  - CTAs: `tool.compress.cta`, `tool.watermark.cta`, `tool.pageNumbers.cta`, `tool.rotate.saveCta`
+  - Empty-state messages: `tool.rotate.empty`, `tool.watermark.empty`, `tool.pageNumbers.empty`, `tool.pdfToPng.empty`, `result.noResult`
+  - Info banners: `tool.compress.info`, `tool.rotate.info`, `tool.watermark.info`, `tool.pageNumbers.info`, `tool.pdfToPng.info`, `tool.compress.batchWarning`
+  - ResultScreen strings: `result.rotate`, `result.editImage`, `result.addToMerge`, `result.addToConvertPdf`, `result.downloadAllZip`, `result.noPreview`, `result.downloadStarted`, `result.zipDownloaded`, `result.compare.before/after`, `result.oversize.body`, `result.signatureReady/Applied`, `result.applySignature/removeSignature`, `result.onPage`
+  - ProgressOverlay: `progress.working`, `progress.takeMoment`
+  - Modals: `modal.signature.title/draw/type/placeholder/yourName/apply/errors.*`, `modal.description.title/placeholder/metadata/metadataDesc/visible/visibleDesc/info/apply`
+  - Toasts (parameterized): `toast.addedFiles/filesLoaded/encryptedPdf/readPdfError/rotatedAll/rotatedPage/undone/rotatedSaved/watermarkApplied/pageNumbersAdded/compressed/compressedMinimal/exportedPng/exportedJpg/pdfAddedPickTool`
+  - Common: `common.fit`, `common.openTool`, `common.loading`, `common.penColor`, `common.stroke`, `common.inkColor`, `common.drawn`, `common.typed`
+  - Per-tool UI keys for Compress, Watermark, PageNumbers, Rotate, PdfToPng.
+- Added `tt(key, params)` template-translate helper to `I18nProvider` for `{placeholder}` substitution (e.g. `tt("toast.compressed", { before, after, pct })`).
+- Wired i18n into: `ProgressOverlay`, `SignaturePadModal`, `DescriptionModal`, `CompressPdf` (with inline ZH map for LEVEL_PRESETS labels/descs), `WatermarkPdf` (with POSITIONS_ZH + TARGETS_ZH inline maps), `PageNumbers` (FORMATS_ZH + POSITIONS_ZH inline maps), `RotatePdf`, `HomeView` ("Open tool"→`t("common.openTool")` + "tools"→count), `ToolPageShell` (toasts via `tt()`), `PdfToJpg` (full ZH translations), `PdfToPng` (full ZH translations), `ResultScreen` (every visible label translated).
+- Task 3 (Rotate button): Added `handleRotate` to `ResultScreen`. For PDFs: calls existing `rotatePdfPage(blob, pageIndex, 90)` from pdf-ops, with `pageIndex` read from `sigOverlayInfoRef.current.pageIndex` (the page PdfPreview is currently showing). For images: new `rotateImageBlobCw()` helper that loads the image (via `createImageBitmap` if available, else `<img>`), creates a square canvas rotated 90° CW, fills white BG, `translate+rotate+drawImage`, and returns a fresh PNG blob (preserves quality across repeated rotations). Button uses `RotateCw` icon from lucide-react and is placed next to the Download button in the header row.
+- Task 4 (Edit Image button): Added a new `ActionButton` to the `isImage` branch of the Continue Working sidebar with `icon={Pencil}`, `label={t("result.editImage")}`, `color="var(--cat-compress)"`, `onClick={() => chainTo("edit-png")}`.
+- Task 5 (ImagePreview zoom): Replaced the `<select>` dropdown with a numeric input (min 5, max 800, step 5) that accepts typed percentages + has the same blur/Enter pattern as `PdfPreview`. Added a "Fit" button (uses `t("common.fit")`) that auto-computes the best-fit scale from container size + image natural dims. Removed the old SCALES array. New constants: `MIN_SCALE = 0.05`, `MAX_SCALE = 8`. Default `initialScale = 0` (Fit), and the fit-scale is recomputed reactively via `ResizeObserver` on the container so resizing the panel re-fits the image. Refactored to avoid the "refs during render" lint error — moved the fit computation into an effect that stores container size in state, then computes `fitScale` in render from state (no ref access).
+- Lint result: `bun run lint` → 0 errors, 18 warnings (all "Unused eslint-disable directive" — pre-existing harmless noise on existing files).
+- Verified with `agent-browser` against http://localhost:3000:
+  (a) PDF to PNG appears in nav dropdown + HomeView tool grid + Footer tool links + direct hash `#pdf-to-png`; clicking the home card renders the tool page (H1 = "PDF to PNG") ✓
+  (b) Chinese toggle (`Toggle language` button @e6) translated every sampled spot: HomeView nav ("压缩/转换/整理/编辑与签名"), ToolCard CTA ("打开工具"), compress level labels ("最佳质量/推荐/最小体积"), empty state ("在上方拖入 PDF 即可选择要导出的页面。"), ResultScreen sidebar ("继续压缩/与其他文件合并/拆分此文件/签名 / 标注/添加描述/编辑页面/重新开始"), PdfPreview pagination ("第 1 页，共 2 页"), SignaturePadModal ("添加你的签名/手绘/输入/笔色：/粗细：/清除/取消/应用签名") ✓
+  (c) Result screen for the compressed PDF has a "旋转" (Rotate) button next to "下载" (Download) in the header row — verified at ref @e115 ✓
+  (d) Result screen for the compressed PNG has "编辑图片" (Edit Image) button in the Continue Working sidebar — verified at ref @e195 ✓
+  (e) ImagePreview toolbar on the PNG result has: Zoom out (@e197 "缩小"), numeric spinbutton showing 68 (@e198 — Fit computed), Zoom in (@e199 "放大"), Fit button (@e200 "适合"), Expand (@e201 "全屏查看") ✓
+
+Stage Summary:
+- All 5 tasks done. New file `PdfToPng.tsx`, new helper `pdfToPngImages` in `pdf-ops.ts`, ~70 new i18n StringKeys wired into 11 components, Rotate button on ResultScreen (PDF + image), Edit Image button on image Continue-Working sidebar, ImagePreview rewritten with numeric zoom input + Fit + 5–800% range.
+- Lint: 0 errors / 18 warnings (all pre-existing unused-disable comments).
+- No new routes — SPA hash routing via the `valid` array in `page.tsx`.
+- All new code uses CSS variables (no hardcoded hex outside pre-existing brand-gradient utilities) and `useI18n()` for user-visible text.
+- Defensive try/catch around all new async ops, null-checks on canvas contexts, blob rejection, and bitmap close.
+
+---
+Task ID: OVERHAUL-4
+Agent: Orchestrator (Z.ai) + FIX-4 subagent
+Task: Better background blobs, switch font to Bricolage Grotesque + Inter, numeric zoom input + Fit, PDF to PNG tool, expanded Chinese i18n, rotate button on Result, Edit Image in sidebar, ImagePreview zoom UI.
+
+Work Log:
+- Background blobs: redesigned `.page-blobs` to use 4 DOM children (.blob-1 through .blob-4) with different colors (light blue #60A5FA, indigo #818CF8, sky #0EA5E9, purple #A78BFA), different positions, different animation delays. Increased opacity from 0.55 → 0.85 for visibility. Added a `.page-bg` solid base layer at z-index 0, with blobs at z-index 1. Made html + body transparent so the blobs show through. Made the hero's `.mesh-bg` transparent (was solid var(--background)). Wrapped all content in a `relative z-10` div so it sits above the blobs. Verified via VLM: "subtle, soft-edged colored blobs clearly visible behind the hero content".
+- Font: switched from Plus Jakarta Sans → Bricolage Grotesque (display, for headings) + Inter (body). Both loaded via next/font/google. Updated globals.css: `--font-sans: var(--font-inter)`, `--font-display: var(--font-bricolage)`. Body uses var(--font-sans), h1-h6 use var(--font-display). Brand wordmark "myfixpdf" uses the display font explicitly.
+- Zoom controls (PdfPreview): replaced the fixed-step dropdown with a numeric input (5%–800% range, step 5) + Fit button + zoom in/out buttons (step 0.25). Added proper Fit calculation: computes the best scale to fit the page in the container using `Math.min(availW / intrinsicW, availH / intrinsicH)`. Default initialScale changed from 1 → 0 (Fit on mount). Added `effectiveScale` state so the renderOverlay callback gets the actual computed scale (not 0). Added `renderedSize` state for the actual CSS dimensions (so the container sizes correctly).
+- ImagePreview zoom UI: same numeric input + Fit button pattern. Default to Fit on mount. ResizeObserver re-fits on container resize. Range 5%–800%.
+- PDF to PNG tool (new): created PdfToPng.tsx + pdfToPngImages() helper. Wired into store type, registry, i18n (EN+ZH), Header CATS + ToolIcon, Footer, HomeView glyph, ToolPageShell glyph, page.tsx. Result screen's existing "Download all as ZIP" button covers the multi-result gallery.
+- Chinese i18n expansion: added ~70 new StringKeys to EN + ZH dictionaries covering CTAs, empty states, info banners, modal text, ProgressOverlay, all ResultScreen labels, parameterized toasts. Added `tt(key, params)` helper for {placeholder} substitution. Wired into 11 components.
+- Rotate button on ResultScreen: added handleRotate (uses rotatePdfPage for PDFs, rotateImageBlobCw for images). RotateCw button placed next to Download in the header row.
+- Edit Image in Continue Working sidebar: added ActionButton (icon=Pencil, label="Edit Image") in the isImage branch — chains to edit-png.
+
+Stage Summary:
+- 0 lint errors, 18 warnings (unused eslint-disable — non-blocking).
+- Dev server compiles cleanly, page returns 200.
+- Verified via agent-browser + VLM:
+  • 4 background blobs visible (light blue, indigo, sky, purple) ✓
+  • Bricolage Grotesque font on headings ✓
+  • PDF to PNG tool renders at #pdf-to-png ✓
+  • Chinese i18n: 压缩 / 返回工具列表 / 把 pdf 文件拖到这里 / 选择文件 all visible ✓
+  • Rotate button on Result screen next to Download ✓
+  • Numeric zoom input (value 100) + Fit button present ✓
+  • Fit button works: canvas CSS 288×408 (fit to container), backing 577×816 (2x DPI) ✓
+- All previously-fixed bugs remain fixed (drawing crash, signature placement, expand button, mobile menu scroll, dropdown opacity).

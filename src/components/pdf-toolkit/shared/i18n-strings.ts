@@ -69,7 +69,108 @@ export type StringKey =
   | "common.done"
   | "common.remove"
   | "common.include"
-  | "common.exclude";
+  | "common.exclude"
+  | "common.fit"
+  | "common.openTool"
+  | "common.loading"
+  | "common.penColor"
+  | "common.stroke"
+  | "common.inkColor"
+  | "common.drawn"
+  | "common.typed"
+  | "tool.compress.cta"
+  | "tool.compress.chooseLevel"
+  | "tool.compress.info"
+  | "tool.compress.alreadyOptimized"
+  | "tool.compress.batchWarning"
+  | "tool.rotate.saveCta"
+  | "tool.rotate.quickRotate"
+  | "tool.rotate.rotateAllCw"
+  | "tool.rotate.rotateAllCcw"
+  | "tool.rotate.undo"
+  | "tool.rotate.empty"
+  | "tool.rotate.info"
+  | "tool.rotate.loadingPages"
+  | "tool.rotate.undoEmpty"
+  | "tool.watermark.cta"
+  | "tool.watermark.textMode"
+  | "tool.watermark.imageMode"
+  | "tool.watermark.watermarkText"
+  | "tool.watermark.fontSize"
+  | "tool.watermark.rotation"
+  | "tool.watermark.imageScale"
+  | "tool.watermark.opacity"
+  | "tool.watermark.color"
+  | "tool.watermark.position"
+  | "tool.watermark.applyTo"
+  | "tool.watermark.preview"
+  | "tool.watermark.empty"
+  | "tool.watermark.info"
+  | "tool.watermark.imageLoaded"
+  | "tool.watermark.uploadImage"
+  | "tool.pageNumbers.cta"
+  | "tool.pageNumbers.format"
+  | "tool.pageNumbers.position"
+  | "tool.pageNumbers.fontSize"
+  | "tool.pageNumbers.startFrom"
+  | "tool.pageNumbers.empty"
+  | "tool.pageNumbers.info"
+  | "tool.pageNumbers.previewLabel"
+  | "tool.pdfToPng.renderScale"
+  | "tool.pdfToPng.scaleHint"
+  | "tool.pdfToPng.selectPages"
+  | "tool.pdfToPng.selectPagesHint"
+  | "tool.pdfToPng.info"
+  | "tool.pdfToPng.empty"
+  | "result.noPreview"
+  | "result.downloadAllZip"
+  | "result.rotate"
+  | "result.editImage"
+  | "result.addToMerge"
+  | "result.addToConvertPdf"
+  | "result.downloadStarted"
+  | "result.zipDownloaded"
+  | "result.compare.before"
+  | "result.compare.after"
+  | "result.oversize.body"
+  | "result.signatureReady"
+  | "result.signatureApplied"
+  | "result.applySignature"
+  | "result.removeSignature"
+  | "result.onPage"
+  | "progress.working"
+  | "progress.takeMoment"
+  | "modal.signature.title"
+  | "modal.signature.draw"
+  | "modal.signature.type"
+  | "modal.signature.placeholder"
+  | "modal.signature.yourName"
+  | "modal.signature.apply"
+  | "modal.signature.errors.emptyDraw"
+  | "modal.signature.errors.emptyType"
+  | "modal.description.title"
+  | "modal.description.placeholder"
+  | "modal.description.metadata"
+  | "modal.description.metadataDesc"
+  | "modal.description.visible"
+  | "modal.description.visibleDesc"
+  | "modal.description.info"
+  | "modal.description.apply"
+  | "toast.addedFiles"
+  | "toast.filesLoaded"
+  | "toast.encryptedPdf"
+  | "toast.readPdfError"
+  | "toast.rotatedAll"
+  | "toast.rotatedPage"
+  | "toast.undone"
+  | "toast.rotatedSaved"
+  | "toast.watermarkApplied"
+  | "toast.pageNumbersAdded"
+  | "toast.compressed"
+  | "toast.compressedMinimal"
+  | "toast.exportedPng"
+  | "toast.exportedJpg"
+  | "toast.pdfAddedPickTool";
 
 type Dict = Record<StringKey, string>;
 
@@ -144,6 +245,107 @@ const en: Dict = {
   "common.remove": "Remove",
   "common.include": "Include",
   "common.exclude": "Exclude",
+  "common.fit": "Fit",
+  "common.openTool": "Open tool",
+  "common.loading": "Loading…",
+  "common.penColor": "Pen color:",
+  "common.stroke": "Stroke:",
+  "common.inkColor": "Ink color:",
+  "common.drawn": "Drawn",
+  "common.typed": "Typed",
+  "tool.compress.cta": "Compress PDF",
+  "tool.compress.chooseLevel": "Choose a compression level",
+  "tool.compress.info": "Pick a quality level — smaller files reduce quality slightly, larger files keep it crisp.",
+  "tool.compress.alreadyOptimized": "This PDF is already well-optimized. Savings were minimal.",
+  "tool.compress.batchWarning": "Batch mode: the first included file will be compressed first. After compressing it, run again for the next file from the result screen.",
+  "tool.rotate.saveCta": "Save Rotated PDF",
+  "tool.rotate.quickRotate": "Quick rotate",
+  "tool.rotate.rotateAllCw": "Rotate all 90° CW",
+  "tool.rotate.rotateAllCcw": "Rotate all 90° CCW",
+  "tool.rotate.undo": "Undo",
+  "tool.rotate.empty": "Drop a PDF above to start rotating pages.",
+  "tool.rotate.info": "Per-page rotation only touches the page you click — other pages stay exactly as they are. The toolbar buttons rotate every page in one pass. Live preview reflects the current state of your PDF.",
+  "tool.rotate.loadingPages": "Loading pages…",
+  "tool.rotate.undoEmpty": "Nothing to undo.",
+  "tool.watermark.cta": "Apply Watermark",
+  "tool.watermark.textMode": "Text watermark",
+  "tool.watermark.imageMode": "Image watermark",
+  "tool.watermark.watermarkText": "Watermark text",
+  "tool.watermark.fontSize": "Font size",
+  "tool.watermark.rotation": "Rotation",
+  "tool.watermark.imageScale": "Image scale",
+  "tool.watermark.opacity": "Opacity",
+  "tool.watermark.color": "Color",
+  "tool.watermark.position": "Position",
+  "tool.watermark.applyTo": "Apply to",
+  "tool.watermark.preview": "Preview",
+  "tool.watermark.empty": "Drop a PDF above to add a watermark.",
+  "tool.watermark.info": "Live preview is a mockup. The actual watermark will be baked into your PDF with exact coordinates using pdf-lib.",
+  "tool.watermark.imageLoaded": "Image loaded — click to replace",
+  "tool.watermark.uploadImage": "Upload PNG or JPG",
+  "tool.pageNumbers.cta": "Add Page Numbers",
+  "tool.pageNumbers.format": "Format",
+  "tool.pageNumbers.position": "Position",
+  "tool.pageNumbers.fontSize": "Font size",
+  "tool.pageNumbers.startFrom": "Start from",
+  "tool.pageNumbers.empty": "Drop a PDF above to add page numbers.",
+  "tool.pageNumbers.info": "Page numbers are baked into the PDF using pdf-lib's drawText with the Helvetica font.",
+  "tool.pageNumbers.previewLabel": "Preview (page 2 of 5)",
+  "tool.pdfToPng.renderScale": "Render scale",
+  "tool.pdfToPng.scaleHint": "Higher = sharper but larger files.",
+  "tool.pdfToPng.selectPages": "Select pages (optional)",
+  "tool.pdfToPng.selectPagesHint": "Leave empty to export every page. Check the boxes to export only specific pages.",
+  "tool.pdfToPng.info": "Every selected page becomes a PNG. The result screen shows a gallery — download them one-by-one or all as a ZIP.",
+  "tool.pdfToPng.empty": "Drop a PDF above to pick which pages to export.",
+  "result.noPreview": "No preview available",
+  "result.downloadAllZip": "Download all as ZIP",
+  "result.rotate": "Rotate",
+  "result.editImage": "Edit Image",
+  "result.addToMerge": "Add to PDF merge",
+  "result.addToConvertPdf": "Add to Convert→PDF",
+  "result.downloadStarted": "Download started",
+  "result.zipDownloaded": "ZIP downloaded",
+  "result.compare.before": "Before",
+  "result.compare.after": "After",
+  "result.oversize.body": "This file is quite large ({size}). Consider compressing it further before sharing.",
+  "result.signatureReady": "Signature ready — drag it on the page, then click Apply",
+  "result.signatureApplied": "Signature applied to the PDF",
+  "result.applySignature": "Apply",
+  "result.removeSignature": "Remove",
+  "result.onPage": "On page {n}",
+  "progress.working": "Working…",
+  "progress.takeMoment": "This may take a moment for large files.",
+  "modal.signature.title": "Add your signature",
+  "modal.signature.draw": "Draw",
+  "modal.signature.type": "Type",
+  "modal.signature.placeholder": "Type your full name",
+  "modal.signature.yourName": "Your Name",
+  "modal.signature.apply": "Apply signature",
+  "modal.signature.errors.emptyDraw": "Please draw your signature first.",
+  "modal.signature.errors.emptyType": "Please type your name first.",
+  "modal.description.title": "Add description / note",
+  "modal.description.placeholder": "Type a note, description, or annotation here…",
+  "modal.description.metadata": "Metadata only",
+  "modal.description.metadataDesc": "Stored in the PDF's Subject / Keywords. Not visible on the page.",
+  "modal.description.visible": "Visible text",
+  "modal.description.visibleDesc": "Renders as text on page 1.",
+  "modal.description.info": "Visible-text mode places the description as a footer note on page 1. For full drag-and-drop text annotations, use the Edit PDF tool.",
+  "modal.description.apply": "Apply description",
+  "toast.addedFiles": "Added {n} file(s)",
+  "toast.filesLoaded": "Files loaded",
+  "toast.encryptedPdf": "\u201c{name}\u201d is password-protected. Please remove the password first.",
+  "toast.readPdfError": "Could not read PDF \u201c{name}\u201d: {msg}",
+  "toast.rotatedAll": "Rotated all pages {dir}",
+  "toast.rotatedPage": "Rotated page {n} {dir}",
+  "toast.undone": "Undid last rotation",
+  "toast.rotatedSaved": "Rotated PDF saved",
+  "toast.watermarkApplied": "Watermark applied",
+  "toast.pageNumbersAdded": "Page numbers added",
+  "toast.compressed": "Compressed: {before} → {after} (−{pct}%)",
+  "toast.compressedMinimal": "This PDF is already well-optimized. Savings were minimal.",
+  "toast.exportedPng": "Exported {n} page(s) as PNG",
+  "toast.exportedJpg": "Exported {n} page(s) as JPG",
+  "toast.pdfAddedPickTool": "PDF added. Pick a tool below.",
 };
 
 const zh: Dict = {
@@ -215,6 +417,107 @@ const zh: Dict = {
   "common.remove": "移除",
   "common.include": "包含",
   "common.exclude": "排除",
+  "common.fit": "适合",
+  "common.openTool": "打开工具",
+  "common.loading": "加载中…",
+  "common.penColor": "笔色：",
+  "common.stroke": "粗细：",
+  "common.inkColor": "墨色：",
+  "common.drawn": "手绘",
+  "common.typed": "输入",
+  "tool.compress.cta": "压缩 PDF",
+  "tool.compress.chooseLevel": "选择压缩级别",
+  "tool.compress.info": "选择质量级别 — 文件越小质量略降，文件越大越清晰。",
+  "tool.compress.alreadyOptimized": "此 PDF 已经优化得很好，节省空间有限。",
+  "tool.compress.batchWarning": "批量模式：会先压缩第一个包含的文件。压缩完成后，可在结果页继续压缩下一个文件。",
+  "tool.rotate.saveCta": "保存旋转后的 PDF",
+  "tool.rotate.quickRotate": "快速旋转",
+  "tool.rotate.rotateAllCw": "全部顺时针 90°",
+  "tool.rotate.rotateAllCcw": "全部逆时针 90°",
+  "tool.rotate.undo": "撤销",
+  "tool.rotate.empty": "在上方拖入 PDF 即可开始旋转页面。",
+  "tool.rotate.info": "单页旋转只会影响你点击的那一页，其它页面保持不变。工具栏按钮可一次性旋转所有页面。预览实时反映当前 PDF 的状态。",
+  "tool.rotate.loadingPages": "正在加载页面…",
+  "tool.rotate.undoEmpty": "没有可撤销的操作。",
+  "tool.watermark.cta": "应用水印",
+  "tool.watermark.textMode": "文字水印",
+  "tool.watermark.imageMode": "图片水印",
+  "tool.watermark.watermarkText": "水印文字",
+  "tool.watermark.fontSize": "字号",
+  "tool.watermark.rotation": "旋转角度",
+  "tool.watermark.imageScale": "图片比例",
+  "tool.watermark.opacity": "不透明度",
+  "tool.watermark.color": "颜色",
+  "tool.watermark.position": "位置",
+  "tool.watermark.applyTo": "应用至",
+  "tool.watermark.preview": "预览",
+  "tool.watermark.empty": "在上方拖入 PDF 即可添加水印。",
+  "tool.watermark.info": "此处预览仅为示意。实际水印将通过 pdf-lib 按精确坐标嵌入到 PDF 中。",
+  "tool.watermark.imageLoaded": "图片已加载 — 点击重新上传",
+  "tool.watermark.uploadImage": "上传 PNG 或 JPG",
+  "tool.pageNumbers.cta": "添加页码",
+  "tool.pageNumbers.format": "格式",
+  "tool.pageNumbers.position": "位置",
+  "tool.pageNumbers.fontSize": "字号",
+  "tool.pageNumbers.startFrom": "起始页码",
+  "tool.pageNumbers.empty": "在上方拖入 PDF 即可添加页码。",
+  "tool.pageNumbers.info": "页码通过 pdf-lib 的 drawText 与 Helvetica 字体嵌入到 PDF 中。",
+  "tool.pageNumbers.previewLabel": "预览（第 2 页，共 5 页）",
+  "tool.pdfToPng.renderScale": "渲染缩放",
+  "tool.pdfToPng.scaleHint": "数值越大越清晰，但文件也越大。",
+  "tool.pdfToPng.selectPages": "选择页面（可选）",
+  "tool.pdfToPng.selectPagesHint": "留空则导出所有页面。勾选复选框可仅导出指定页面。",
+  "tool.pdfToPng.info": "所选每一页都将转成 PNG。结果页会以画廊形式展示 — 可逐一下载或全部打包成 ZIP。",
+  "tool.pdfToPng.empty": "在上方拖入 PDF 即可选择要导出的页面。",
+  "result.noPreview": "暂无预览",
+  "result.downloadAllZip": "全部打包为 ZIP 下载",
+  "result.rotate": "旋转",
+  "result.editImage": "编辑图片",
+  "result.addToMerge": "添加到 PDF 合并",
+  "result.addToConvertPdf": "添加到「转 PDF」",
+  "result.downloadStarted": "已开始下载",
+  "result.zipDownloaded": "ZIP 已下载",
+  "result.compare.before": "之前",
+  "result.compare.after": "之后",
+  "result.oversize.body": "文件较大（{size}）。建议在分享前进一步压缩。",
+  "result.signatureReady": "签名已就绪 — 拖到页面上合适位置后点击「应用」",
+  "result.signatureApplied": "签名已应用到 PDF",
+  "result.applySignature": "应用",
+  "result.removeSignature": "移除",
+  "result.onPage": "第 {n} 页",
+  "progress.working": "处理中…",
+  "progress.takeMoment": "大文件可能需要一些时间，请稍候。",
+  "modal.signature.title": "添加你的签名",
+  "modal.signature.draw": "手绘",
+  "modal.signature.type": "输入",
+  "modal.signature.placeholder": "输入你的姓名",
+  "modal.signature.yourName": "你的姓名",
+  "modal.signature.apply": "应用签名",
+  "modal.signature.errors.emptyDraw": "请先绘制签名。",
+  "modal.signature.errors.emptyType": "请先输入你的姓名。",
+  "modal.description.title": "添加描述 / 备注",
+  "modal.description.placeholder": "在此输入备注、描述或标注…",
+  "modal.description.metadata": "仅元数据",
+  "modal.description.metadataDesc": "保存在 PDF 的 Subject / Keywords 字段，页面上不可见。",
+  "modal.description.visible": "可见文字",
+  "modal.description.visibleDesc": "作为第 1 页上的文字渲染。",
+  "modal.description.info": "「可见文字」模式会将描述作为页脚备注放在第 1 页。如需完整的拖放式文字标注，请使用「编辑 PDF」工具。",
+  "modal.description.apply": "应用描述",
+  "toast.addedFiles": "已添加 {n} 个文件",
+  "toast.filesLoaded": "文件已加载",
+  "toast.encryptedPdf": "\u201c{name}\u201d 已加密，请先移除密码。",
+  "toast.readPdfError": "无法读取 PDF \u201c{name}\u201d：{msg}",
+  "toast.rotatedAll": "已旋转所有页面 {dir}",
+  "toast.rotatedPage": "已旋转第 {n} 页 {dir}",
+  "toast.undone": "已撤销上一次旋转",
+  "toast.rotatedSaved": "已保存旋转后的 PDF",
+  "toast.watermarkApplied": "水印已应用",
+  "toast.pageNumbersAdded": "页码已添加",
+  "toast.compressed": "已压缩：{before} → {after} (−{pct}%)",
+  "toast.compressedMinimal": "此 PDF 已经优化得很好，节省空间有限。",
+  "toast.exportedPng": "已导出 {n} 页为 PNG",
+  "toast.exportedJpg": "已导出 {n} 页为 JPG",
+  "toast.pdfAddedPickTool": "PDF 已添加，请在下方选择一个工具。",
 };
 
 export const DICTS: Record<Lang, Dict> = { en, zh };
@@ -229,6 +532,7 @@ export const TOOL_NAMES: Record<Lang, Record<string, { name: string; short: stri
     "pdf-to-word": { name: "PDF to Word", short: "Convert", desc: "Turn a PDF into an editable Word document you can actually open and edit." },
     "word-to-pdf": { name: "Word to PDF", short: "Convert", desc: "Turn a Word document into a clean, shareable PDF." },
     "pdf-to-jpg": { name: "PDF to JPG", short: "Convert", desc: "Turn each page of a PDF into a JPG image — download one or all as a ZIP." },
+    "pdf-to-png": { name: "PDF to PNG", short: "Convert", desc: "Turn each page of a PDF into a PNG image — download one or all as a ZIP." },
     "convert-to-pdf": { name: "Convert to PDF", short: "Convert", desc: "Turn any image or document into a PDF — JPG, PNG, even another PDF." },
     "split-pdf": { name: "Split PDF", short: "Organize", desc: "Pick exactly which pages to keep — by checkbox or by typing page numbers." },
     "merge-pdf": { name: "Merge PDF", short: "Organize", desc: "Mix PDFs and images into one PDF. Choose which pages to include from each file." },
@@ -249,6 +553,7 @@ export const TOOL_NAMES: Record<Lang, Record<string, { name: string; short: stri
     "pdf-to-word": { name: "PDF 转 Word", short: "转换", desc: "把 PDF 转成可编辑的 Word 文档，能直接打开并修改。" },
     "word-to-pdf": { name: "Word 转 PDF", short: "转换", desc: "把 Word 文档转成清晰、易分享的 PDF。" },
     "pdf-to-jpg": { name: "PDF 转 JPG", short: "转换", desc: "把 PDF 的每一页都转成 JPG 图片 — 可单独下载或打包成 ZIP。" },
+    "pdf-to-png": { name: "PDF 转 PNG", short: "转换", desc: "把 PDF 的每一页都转成 PNG 图片 — 可单独下载或打包成 ZIP。" },
     "convert-to-pdf": { name: "转为 PDF", short: "转换", desc: "把任何图片或文档转成 PDF — 支持 JPG、PNG，甚至另一个 PDF。" },
     "split-pdf": { name: "拆分 PDF", short: "整理", desc: "精确选择要保留的页面 — 用复选框或输入页码。" },
     "merge-pdf": { name: "合并 PDF", short: "整理", desc: "把 PDF 和图片混搭成一个 PDF。可从每个文件中挑选要包含的页面。" },

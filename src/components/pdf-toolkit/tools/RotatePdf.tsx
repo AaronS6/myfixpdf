@@ -10,12 +10,14 @@ import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { RotateCw, RotateCcw, Undo2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "../shared/I18nProvider";
 
 const tool = getTool("rotate-pdf")!;
 
 export function RotatePdf() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
     useDocumentSession();
+  const { t, tt, lang } = useI18n();
   const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
 
   // Live working blob — starts as the original, mutated by each rotate op.
@@ -64,16 +66,16 @@ export function RotatePdf() {
     const rotation: 90 | 180 | 270 = direction === "cw" ? 90 : 270;
     setBusy(true);
     try {
-      startProgress(`Rotating all pages ${direction === "cw" ? "90° CW" : "90° CCW"}…`, "determinate", 0);
+      startProgress(lang === "zh" ? `正在旋转所有页面 ${direction === "cw" ? "90° 顺时针" : "90° 逆时针"}…` : `Rotating all pages ${direction === "cw" ? "90° CW" : "90° CCW"}…`, "determinate", 0);
       const bytes = await rotateAllPages(liveBlob, rotation, (pct, msg) =>
         updateProgress(msg, pct),
       );
       applyBlob(bytes);
       stopProgress();
-      toast.success(`Rotated all pages ${direction === "cw" ? "90° clockwise" : "90° counter-clockwise"}`);
+      toast.success(tt("toast.rotatedAll", { dir: direction === "cw" ? (lang === "zh" ? "90° 顺时针" : "90° clockwise") : (lang === "zh" ? "90° 逆时针" : "90° counter-clockwise") }));
     } catch (e) {
       stopProgress();
-      toast.error(e instanceof Error ? e.message : "Rotate failed");
+      toast.error(e instanceof Error ? e.message : (lang === "zh" ? "旋转失败" : "Rotate failed"));
     } finally {
       setBusy(false);
     }
@@ -84,17 +86,17 @@ export function RotatePdf() {
     const rotation: 90 | 180 | 270 = direction === "cw" ? 90 : 270;
     setBusy(true);
     try {
-      startProgress(`Rotating page ${pageIndex + 1}…`, "determinate", 0);
+      startProgress(lang === "zh" ? `正在旋转第 ${pageIndex + 1} 页…` : `Rotating page ${pageIndex + 1}…`, "determinate", 0);
       // rotatePdfPage only touches the requested index — other pages stay put.
       const bytes = await rotatePdfPage(liveBlob, pageIndex, rotation, (pct, msg) =>
         updateProgress(msg, pct),
       );
       applyBlob(bytes);
       stopProgress();
-      toast.success(`Rotated page ${pageIndex + 1} ${direction === "cw" ? "90° CW" : "90° CCW"}`);
+      toast.success(tt("toast.rotatedPage", { n: pageIndex + 1, dir: direction === "cw" ? (lang === "zh" ? "90° 顺时针" : "90° CW") : (lang === "zh" ? "90° 逆时针" : "90° CCW") }));
     } catch (e) {
       stopProgress();
-      toast.error(e instanceof Error ? e.message : "Rotate failed");
+      toast.error(e instanceof Error ? e.message : (lang === "zh" ? "旋转失败" : "Rotate failed"));
     } finally {
       setBusy(false);
     }
@@ -102,7 +104,7 @@ export function RotatePdf() {
 
   const undo = () => {
     if (history.length < 2 || !liveBlob) {
-      toast.info("Nothing to undo.");
+      toast.info(t("tool.rotate.undoEmpty"));
       return;
     }
     const prev = history[history.length - 2];
@@ -111,12 +113,12 @@ export function RotatePdf() {
     setLiveBlob(blob);
     setHistory((h) => h.slice(0, -1));
     setRotationCount((c) => Math.max(0, c - 1));
-    toast.success("Undid last rotation");
+    toast.success(t("toast.undone"));
   };
 
   const save = async () => {
     if (!liveBlob || !target) {
-      toast.error("Please add a PDF first.");
+      toast.error(lang === "zh" ? "请先添加一个 PDF。" : "Please add a PDF first.");
       return;
     }
     setResult({
@@ -129,7 +131,7 @@ export function RotatePdf() {
       beforePreviewUrl: makePreviewUrl(target.file),
     });
     setView("result");
-    toast.success("Rotated PDF saved");
+    toast.success(t("toast.rotatedSaved"));
   };
 
   // PageThumbnailGrid calls onToggle — we don't actually need selection here,
@@ -139,7 +141,7 @@ export function RotatePdf() {
   return (
     <ToolPageShell
       tool={tool}
-      ctaLabel="Save Rotated PDF"
+      ctaLabel={t("tool.rotate.saveCta")}
       ctaColor="var(--cat-organize)"
       onCtaClick={save}
       ctaDisabled={!liveBlob || rotationCount === 0}
@@ -153,10 +155,10 @@ export function RotatePdf() {
           >
             <RotateCw className="size-4" style={{ color: "var(--cat-organize)" }} />
             <span className="font-semibold" style={{ color: "var(--foreground)" }}>
-              Quick rotate
+              {t("tool.rotate.quickRotate")}
             </span>
             <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-              · {pageCount || "—"} pages · {rotationCount} rotation{rotationCount === 1 ? "" : "s"} applied
+              · {pageCount || "—"} {lang === "zh" ? "页" : "pages"} · {rotationCount} {lang === "zh" ? "次旋转已应用" : `rotation${rotationCount === 1 ? "" : "s"} applied`}
             </span>
             <div className="ml-auto flex flex-wrap gap-2">
               <button
@@ -168,7 +170,7 @@ export function RotatePdf() {
                 )}
                 style={{ background: "var(--cat-organize)" }}
               >
-                <RotateCw className="size-3.5" /> Rotate all 90° CW
+                <RotateCw className="size-3.5" /> {t("tool.rotate.rotateAllCw")}
               </button>
               <button
                 onClick={() => rotateAll("ccw")}
@@ -179,7 +181,7 @@ export function RotatePdf() {
                 )}
                 style={{ background: "var(--cat-organize)" }}
               >
-                <RotateCcw className="size-3.5" /> Rotate all 90° CCW
+                <RotateCcw className="size-3.5" /> {t("tool.rotate.rotateAllCcw")}
               </button>
               <button
                 onClick={undo}
@@ -194,7 +196,7 @@ export function RotatePdf() {
                   background: "transparent",
                 }}
               >
-                <Undo2 className="size-3.5" /> Undo
+                <Undo2 className="size-3.5" /> {t("tool.rotate.undo")}
               </button>
             </div>
           </div>
@@ -219,8 +221,8 @@ export function RotatePdf() {
                       color: "var(--muted-foreground)",
                       background: "var(--card)",
                     }}
-                    title={`Rotate page ${index + 1} 90° CCW`}
-                    aria-label={`Rotate page ${index + 1} 90° CCW`}
+                    title={lang === "zh" ? `旋转第 ${index + 1} 页 90° 逆时针` : `Rotate page ${index + 1} 90° CCW`}
+                    aria-label={lang === "zh" ? `旋转第 ${index + 1} 页 90° 逆时针` : `Rotate page ${index + 1} 90° CCW`}
                   >
                     <RotateCcw className="size-3.5" />
                   </button>
@@ -236,8 +238,8 @@ export function RotatePdf() {
                       color: "var(--muted-foreground)",
                       background: "var(--card)",
                     }}
-                    title={`Rotate page ${index + 1} 90° CW`}
-                    aria-label={`Rotate page ${index + 1} 90° CW`}
+                    title={lang === "zh" ? `旋转第 ${index + 1} 页 90° 顺时针` : `Rotate page ${index + 1} 90° CW`}
+                    aria-label={lang === "zh" ? `旋转第 ${index + 1} 页 90° 顺时针` : `Rotate page ${index + 1} 90° CW`}
                   >
                     <RotateCw className="size-3.5" />
                   </button>
@@ -253,7 +255,7 @@ export function RotatePdf() {
                 color: "var(--muted-foreground)",
               }}
             >
-              Loading pages…
+              {t("tool.rotate.loadingPages")}
             </div>
           )}
 
@@ -267,9 +269,7 @@ export function RotatePdf() {
           >
             <Save className="size-4 shrink-0" style={{ color: "var(--cat-organize)" }} />
             <p>
-              Per-page rotation only touches the page you click — other pages stay exactly as they
-              are. The toolbar buttons rotate every page in one pass. Live preview reflects the
-              current state of your PDF.
+              {t("tool.rotate.info")}
             </p>
           </div>
         </div>
@@ -282,7 +282,7 @@ export function RotatePdf() {
             color: "var(--muted-foreground)",
           }}
         >
-          Drop a PDF above to start rotating pages.
+          {t("tool.rotate.empty")}
         </div>
       )}
     </ToolPageShell>

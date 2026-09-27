@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { FileDropzone } from "./shared/FileDropzone";
 import { useDocumentSession, newFileId, type ToolkitFile } from "@/store/document-session";
 import { TOOLS, CATEGORY_LABELS, CATEGORY_COLORS, type ToolMeta } from "./tools/registry";
@@ -201,35 +201,165 @@ export function HomeView() {
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
       </div>
 
-      {/* ===== TRUST SECTION — compact, 3 columns ===== */}
-      <section className="mx-auto mb-20 max-w-6xl px-4 py-16 sm:px-6">
-        <div className="grid gap-6 sm:grid-cols-3">
-          {[
-            { icon: ShieldCheck, color: "var(--success)", title: t("hero.why.title.private"), text: t("hero.why.text.private"), stat: "0", statLabel: lang === "zh" ? "上传" : "uploads" },
-            { icon: Zap, color: "var(--brand)", title: t("hero.why.title.real"), text: t("hero.why.text.real"), stat: String(TOOLS.length), statLabel: lang === "zh" ? "个工具" : "tools" },
-            { icon: Layers, color: "var(--cat-organize)", title: t("hero.why.title.chain"), text: t("hero.why.text.chain"), stat: "∞", statLabel: lang === "zh" ? "串联" : "chaining" },
-          ].map((card, i) => (
-            <div
-              key={i}
-              className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-7 card-shadow transition-all hover:-translate-y-1 hover:card-shadow-lg animate-fade-up"
-              style={{ animationDelay: `${i * 80}ms` }}
+      {/* ===== TRUST SECTION — animated count-up, scroll-triggered entrance ===== */}
+      <TrustSection />
+
+      {/* Subtle animated gradient line at the very bottom */}
+      <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent animate-gradient-shift" />
+        <p className="mt-4 text-center text-xs text-[var(--muted-foreground)]">
+          {lang === "zh"
+            ? "由 Aaron Shan (温哥华 11 年级学生) 用 pdf-lib、pdf.js 和你的浏览器构建"
+            : "Built with pdf-lib, pdf.js, and your browser — by Aaron Shan, Vancouver BC Grade 11 Student"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Count-up hook: animates from 0 to `target` when `active` becomes true. */
+function useCountUp(target: number, active: boolean, duration = 1400): number {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    let raf: number;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      setVal(Math.round(eased * target));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, active, duration]);
+  return val;
+}
+
+/** Intersection Observer hook — returns true once the element enters the viewport. */
+function useInView<T extends HTMLElement>(): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); ro.disconnect(); } },
+      { threshold: 0.2 },
+    );
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, inView];
+}
+
+function TrustSection() {
+  const { t, lang } = useI18n();
+  const [ref, inView] = useInView<HTMLDivElement>();
+
+  const cards = [
+    { icon: ShieldCheck, color: "var(--success)", title: t("hero.why.title.private"), text: t("hero.why.text.private"), stat: 0, statLabel: lang === "zh" ? "上传" : "uploads", anim: "count" as const, delay: 0 },
+    { icon: Zap, color: "var(--brand)", title: t("hero.why.title.real"), text: t("hero.why.text.real"), stat: TOOLS.length, statLabel: lang === "zh" ? "个工具" : "tools", anim: "count" as const, delay: 200 },
+    { icon: Layers, color: "var(--cat-organize)", title: t("hero.why.title.chain"), text: t("hero.why.text.chain"), stat: 0, statLabel: lang === "zh" ? "串联" : "chaining", anim: "infinity" as const, delay: 400 },
+  ];
+
+  return (
+    <section className="mx-auto mb-8 max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+      <div ref={ref} className="grid gap-6 sm:grid-cols-3">
+        {cards.map((card, i) => (
+          <TrustCard key={i} {...card} inView={inView} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TrustCard({
+  icon: Icon, color, title, text, stat, statLabel, anim, delay, inView,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  color: string; title: string; text: string; stat: number; statLabel: string;
+  anim: "count" | "infinity"; delay: number; inView: boolean;
+}) {
+  const count = useCountUp(stat, inView, 1400);
+  const showInfinity = anim === "infinity";
+
+  return (
+    <div
+      className={cn(
+        "group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 card-shadow transition-all duration-500 hover:-translate-y-1.5 hover:card-shadow-lg",
+        inView
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-12",
+      )}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {/* Animated gradient orb — scales on hover */}
+      <div
+        className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-700 group-hover:scale-[2] group-hover:opacity-20"
+        style={{ background: color }}
+      />
+      {/* Pulsing ring behind the icon */}
+      <div
+        className={cn(
+          "absolute left-8 top-8 size-10 rounded-xl opacity-0 transition-opacity duration-500",
+          inView && "opacity-20 group-hover:animate-ping",
+        )}
+        style={{ background: color }}
+      />
+
+      <div className="relative z-10 flex items-center gap-4">
+        <span
+          className={cn(
+            "flex size-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg transition-transform duration-500",
+            inView ? "scale-100 rotate-0" : "scale-50 -rotate-12",
+          )}
+          style={{ background: color, transitionDelay: `${delay + 100}ms` }}
+        >
+          <Icon className="size-6" />
+        </span>
+        <div>
+          {showInfinity ? (
+            <p
+              className={cn(
+                "text-3xl font-bold text-[var(--foreground)] leading-none transition-transform duration-700",
+                inView ? "scale-100 opacity-100" : "scale-0 opacity-0",
+              )}
+              style={{ transitionDelay: `${delay + 200}ms` }}
             >
-              <div className="absolute -right-6 -top-6 size-20 rounded-full opacity-10 transition-all duration-500 group-hover:scale-125 group-hover:opacity-20" style={{ background: card.color }} />
-              <div className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-110" style={{ background: card.color }}>
-                  <card.icon className="size-5" />
-                </span>
-                <div>
-                  <p className="text-lg font-bold text-[var(--foreground)] leading-none">{card.stat}</p>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{card.statLabel}</p>
-                </div>
-              </div>
-              <p className="mt-3 text-sm font-semibold text-[var(--foreground)]">{card.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-[var(--muted-foreground)]">{card.text}</p>
-            </div>
-          ))}
+              ∞
+            </p>
+          ) : (
+            <p className="text-3xl font-bold text-[var(--foreground)] leading-none tabular-nums">
+              {count}
+            </p>
+          )}
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">{statLabel}</p>
         </div>
-      </section>
+      </div>
+
+      {/* Title + description — slides in from the left */}
+      <div
+        className={cn(
+          "relative z-10 mt-5 transition-all duration-500",
+          inView ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0",
+        )}
+        style={{ transitionDelay: `${delay + 300}ms` }}
+      >
+        <p className="text-base font-semibold text-[var(--foreground)]">{title}</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">{text}</p>
+      </div>
+
+      {/* Animated bottom border line — draws in from left */}
+      <div
+        className="absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-1000 ease-out"
+        style={{
+          background: color,
+          width: inView ? "100%" : "0%",
+          transitionDelay: `${delay + 400}ms`,
+        }}
+      />
     </div>
   );
 }

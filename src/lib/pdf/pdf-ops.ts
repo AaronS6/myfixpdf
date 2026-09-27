@@ -326,10 +326,12 @@ export async function mergeItemsToPdf(
   onProgress?: (pct: number, message: string) => void,
 ): Promise<Uint8Array> {
   const out = await PDFDocument.create();
-  // Cache source PDF documents by blob reference
   const pdfCache = new Map<Blob, PDFDocument>();
+  const MAX_IMG_DIM = 2000; // downscale large images to keep the PDF small + fast
+
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+
     if (item.kind === "pdf-page") {
       let src = pdfCache.get(item.blob);
       if (!src) {
@@ -339,13 +341,64 @@ export async function mergeItemsToPdf(
       const [copied] = await out.copyPages(src, [item.pageIndex]);
       out.addPage(copied);
     } else {
-      const img = item.format === "png" ? await out.embedPng(item.bytes) : await out.embedJpg(item.bytes);
-      // Page sized to image
-      const page = out.addPage([item.width, item.height]);
-      page.drawImage(img, { x: 0, y: 0, width: item.width, height: item.height });
+      // For images: if the image is very large, downscale it via canvas first
+      // to keep the PDF small and the embedding fast. pdf-lib's embedPng/embedJpg
+      // has to process the full image data — a 4000×3000 PNG is ~48MB of raw
+      // pixel data that slows everything down.
+      let embedBytes = item.bytes;
+      let embedW = item.width;
+      let embedH = item.height;
+      const longest = Math.max(item.width, item.height);
+      if (longest > MAX_IMG_DIM) {
+        const scale = MAX_IMG_DIM / longest;
+        embedW = Math.round(item.width * scale);
+        embedH = Math.round(item.height * scale);
+        // Downscale via canvas
+        const blob = new Blob([item.bytes as unknown as BlobPart], { type: item.format === "png" ? "image/png" : "image/jpeg" });
+        const url = URL.createObjectURL(blob);
+        try {
+          const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const im = new Image();
+            im.onload = () => resolve(im);
+            im.onerror = () => reject(new Error("Failed to load image for downscaling"));
+            im.src = url;
+          });
+          const canvas = document.createElement("canvas");
+          canvas.width = embedW;
+          canvas.height = embedH;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, embedW, embedH);
+            const reencoded: Blob = await new Promise((resolve, reject) =>
+              canvas.toBlob(
+                (b) => (b ? resolve(b) : reject(new Error("Re-encode failed"))),
+                item.format === "png" ? "image/png" : "image/jpeg",
+                0.9,
+              ),
+            );
+            embedBytes = new Uint8Array(await reencoded.arrayBuffer());
+          }
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      const img = item.format === "png"
+        ? await out.embedPng(embedBytes)
+        : await out.embedJpg(embedBytes);
+      const page = out.addPage([embedW, embedH]);
+      page.drawImage(img, { x: 0, y: 0, width: embedW, height: embedH });
     }
-    if (onProgress) onProgress(Math.round(((i + 1) / items.length) * 100), `Merging page ${i + 1}…`);
+
+    if (onProgress) onProgress(Math.round(((i + 1) / items.length) * 100), `Merging ${i + 1} of ${items.length}…`);
+
+    // Yield to the event loop every 3 items so the UI doesn't freeze.
+    // This lets the ProgressOverlay update and the browser stay responsive.
+    if (i % 3 === 2) {
+      await new Promise((r) => setTimeout(r, 0));
+    }
   }
+
   return out.save({ useObjectStreams: true });
 }
 

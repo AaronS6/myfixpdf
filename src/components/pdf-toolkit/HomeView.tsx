@@ -6,6 +6,7 @@ import { useDocumentSession, newFileId, type ToolkitFile } from "@/store/documen
 import { TOOLS, CATEGORY_LABELS, CATEGORY_COLORS, type ToolMeta } from "./tools/registry";
 import { imageThumbnail, isPdf, getExt, formatBytes } from "@/lib/pdf/file-helpers";
 import { getPageCount } from "@/lib/pdf/pdfjs";
+import { isHeic, convertHeicToPng } from "@/lib/pdf/heic";
 import { toast } from "sonner";
 import { ArrowRight, ShieldCheck, Zap, Layers, FileStack } from "lucide-react";
 import { useDocumentSession as useSession } from "@/store/document-session";
@@ -28,7 +29,19 @@ export function HomeView() {
     setBusy(true);
     try {
       const toolkitFiles: ToolkitFile[] = [];
-      for (const f of files) {
+      for (let fi = 0; fi < files.length; fi++) {
+        let f = files[fi];
+        // Auto-convert HEIC → PNG so the browser can render + process it
+        if (isHeic(f)) {
+          try {
+            toast.info(lang === "zh" ? `正在转换 HEIC → PNG: ${f.name}` : `Converting HEIC → PNG: ${f.name}`, { duration: 3000 });
+            f = await convertHeicToPng(f);
+            toast.success(lang === "zh" ? `已转换: ${f.name}` : `Converted: ${f.name}`);
+          } catch {
+            toast.error(lang === "zh" ? `无法转换 HEIC 文件: ${files[fi].name}` : `Could not convert HEIC file: ${files[fi].name}`);
+            continue;
+          }
+        }
         const ext = getExt(f.name);
         const tf: ToolkitFile = {
           id: newFileId(), file: f, name: f.name,
@@ -109,7 +122,7 @@ export function HomeView() {
             {/* Dropzone — prominent, centered, max-width constrained */}
             <div className="mx-auto mt-10 max-w-xl animate-fade-up" style={{ animationDelay: "180ms" }}>
               <FileDropzone
-                accept=".pdf,.png,.jpg,.jpeg,.docx"
+                accept=".pdf,.png,.jpg,.jpeg,.docx,.heic,.heif"
                 multiple
                 onFiles={handleFiles}
                 accentColor="var(--brand)"
@@ -177,24 +190,6 @@ export function HomeView() {
                 </div>
               </div>
             )}
-
-            {/* Quick action: Merge button — prominent, always visible */}
-            <div className="mt-6 flex items-center justify-center gap-3 animate-fade-up" style={{ animationDelay: "200ms" }}>
-              <button
-                onClick={() => setView("merge-pdf")}
-                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
-              >
-                <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 6 4 4 4-4" /><path d="M12 10v8" /><path d="M5 22h14" /></svg>
-                {lang === "zh" ? "合并文件" : "Merge Files"}
-                <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold">
-                  {sourceFiles.length > 0 ? sourceFiles.length : ""}
-                </span>
-                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-              </button>
-              <span className="text-xs text-[var(--muted-foreground)]">
-                {lang === "zh" ? "PDF + 图片 → 一个 PDF" : "PDF + images → one PDF"}
-              </span>
-            </div>
 
             {/* Popular tools quick-access pills */}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-2 animate-fade-up" style={{ animationDelay: "240ms" }}>

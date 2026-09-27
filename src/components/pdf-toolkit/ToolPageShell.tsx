@@ -7,6 +7,7 @@ import { useDocumentSession, newFileId, type ToolkitFile } from "@/store/documen
 import { FileDropzone } from "./shared/FileDropzone";
 import { FileListItem } from "./shared/FileListItem";
 import { imageThumbnail, getExt, isPdf, formatBytes } from "@/lib/pdf/file-helpers";
+import { isHeic, convertHeicToPng } from "@/lib/pdf/heic";
 import { getPageCount } from "@/lib/pdf/pdfjs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -59,7 +60,19 @@ export function ToolPageShell({
     setBusy(true);
     try {
       const arr: ToolkitFile[] = [];
-      for (const f of files) {
+      for (let fi = 0; fi < files.length; fi++) {
+        let f = files[fi];
+        // Auto-convert HEIC → PNG
+        if (isHeic(f)) {
+          try {
+            toast.info(lang === "zh" ? `正在转换 HEIC → PNG: ${f.name}` : `Converting HEIC → PNG: ${f.name}`, { duration: 3000 });
+            f = await convertHeicToPng(f);
+            toast.success(lang === "zh" ? `已转换: ${f.name}` : `Converted: ${f.name}`);
+          } catch {
+            toast.error(lang === "zh" ? `无法转换 HEIC: ${files[fi].name}` : `Could not convert HEIC: ${files[fi].name}`);
+            continue;
+          }
+        }
         const ext = getExt(f.name);
         const tf: ToolkitFile = {
           id: newFileId(),

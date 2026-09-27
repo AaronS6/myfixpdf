@@ -62,7 +62,7 @@
   --radius: 0.875rem;
 
   /* Surfaces — pure white with very subtle blue-tinted neutrals */
-  --background: #FFFFFF;
+  --background: #F8FAFC;             /* slate-50 — subtle cool gray so white cards pop */
   --foreground: #0F172A;             /* slate-900 — near-black ink */
   --card: #FFFFFF;
   --card-foreground: #0F172A;
@@ -212,10 +212,17 @@
   box-shadow: 0 16px 40px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 .card-shadow {
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  /* Layered shadow: tight low-opacity + soft wide-radius for depth */
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+.card-shadow-lg {
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.04), 0 20px 40px rgba(15, 23, 42, 0.06);
 }
 .dark .card-shadow {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.dark .card-shadow-lg {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 .dark .brand-shadow {
   box-shadow: 0 4px 14px rgba(96, 165, 250, 0.10);

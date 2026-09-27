@@ -90,27 +90,27 @@ export function HomeView() {
         <div className="absolute -right-20 -top-5 -z-10 size-96 rounded-full bg-gradient-to-br from-[var(--cat-organize)]/8 to-[var(--brand)]/6 blur-3xl animate-float" />
         <div className="absolute bottom-0 left-1/3 -z-10 size-64 rounded-full bg-gradient-to-br from-[var(--cat-edit)]/6 to-[var(--cat-convert)]/6 blur-3xl animate-float-slow" style={{ animationDelay: "-4s" }} />
 
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-32">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)]/80 px-3.5 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)] px-3.5 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm">
               <ShieldCheck className="size-3.5 text-[var(--success)]" />
               {t("hero.badge")}
             </div>
 
             {/* Headline — big, bold, two-tone */}
-            <h1 className="text-4xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.05]" style={{ animationDelay: "60ms" }}>
+            <h1 className="text-4xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.1]" style={{ animationDelay: "60ms" }}>
               {t("hero.title1")}{" "}
               <span className="brand-gradient-text">{t("hero.titleAccent")}</span>
             </h1>
 
-            {/* Subtitle */}
-            <p className="mx-auto mt-5 max-w-xl text-base text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms" }}>
+            {/* Subtitle — lighter weight, more breathing room */}
+            <p className="mx-auto mt-6 max-w-xl text-base font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.6" }}>
               {t("hero.subtitle")}
             </p>
 
             {/* Dropzone — prominent, centered, max-width constrained */}
-            <div className="mx-auto mt-8 max-w-xl animate-fade-up" style={{ animationDelay: "180ms" }}>
+            <div className="mx-auto mt-10 max-w-xl animate-fade-up" style={{ animationDelay: "180ms" }}>
               <FileDropzone
                 accept=".pdf,.png,.jpg,.jpeg,.docx"
                 multiple
@@ -123,7 +123,7 @@ export function HomeView() {
             </div>
 
             {/* Popular tools quick-access pills */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 animate-fade-up" style={{ animationDelay: "240ms" }}>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 animate-fade-up" style={{ animationDelay: "240ms" }}>
               <span className="text-xs font-medium text-[var(--muted-foreground)] mr-1">{lang === "zh" ? "常用:" : "Popular:"}</span>
               {popularTools.map((tool) => (
                 <button
@@ -147,17 +147,17 @@ export function HomeView() {
       </div>
 
       {/* ===== TOOL GRID with category filter pills ===== */}
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         {/* Header + filter pills */}
-        <div className="mb-8 flex flex-col items-center gap-4 animate-fade-up">
+        <div className="mb-10 flex flex-col items-center gap-5 animate-fade-up">
           <div className="text-center">
             <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
               {t("hero.allTools")}
             </h2>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
           </div>
           {/* Filter pills */}
-          <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm">
+          <div className="flex flex-wrap items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -182,7 +182,7 @@ export function HomeView() {
         </div>
 
         {/* Cards grid — single unified grid, filtered by the pills */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredTools.map((tool, i) => (
             <ToolCard
               key={tool.id}
@@ -202,7 +202,7 @@ export function HomeView() {
       </div>
 
       {/* ===== TRUST SECTION — compact, 3 columns ===== */}
-      <section className="mx-auto mb-16 max-w-6xl px-4 py-12 sm:px-6">
+      <section className="mx-auto mb-20 max-w-6xl px-4 py-16 sm:px-6">
         <div className="grid gap-6 sm:grid-cols-3">
           {[
             { icon: ShieldCheck, color: "var(--success)", title: t("hero.why.title.private"), text: t("hero.why.text.private"), stat: "0", statLabel: lang === "zh" ? "上传" : "uploads" },
@@ -211,7 +211,7 @@ export function HomeView() {
           ].map((card, i) => (
             <div
               key={i}
-              className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl animate-fade-up"
+              className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-7 card-shadow transition-all hover:-translate-y-1 hover:card-shadow-lg animate-fade-up"
               style={{ animationDelay: `${i * 80}ms` }}
             >
               <div className="absolute -right-6 -top-6 size-20 rounded-full opacity-10 transition-all duration-500 group-hover:scale-125 group-hover:opacity-20" style={{ background: card.color }} />
@@ -243,8 +243,8 @@ function ToolCard({
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover-ring animate-fade-up"
-      style={{ animationDelay: `${delay}ms`, minHeight: "180px" }}
+      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 text-left card-shadow transition-all hover:-translate-y-1 hover:card-shadow-lg hover-ring animate-fade-up"
+      style={{ animationDelay: `${delay}ms`, minHeight: "200px" }}
     >
       {/* Category-colored top accent bar */}
       <div className="absolute inset-x-0 top-0 h-1 opacity-60 transition-opacity group-hover:opacity-100" style={{ background: tool.color }} />

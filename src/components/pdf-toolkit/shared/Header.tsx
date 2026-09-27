@@ -122,7 +122,7 @@ export function Header() {
             >
               <button
                 onClick={() => setOpenMenu(openMenu === cat.id ? null : cat.id)}
-                className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                className="flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--foreground)] transition-all duration-200 hover:bg-[var(--muted)]"
               >
                 {t(cat.labelKey)}
                 <ChevronDown className={cn("size-3.5 transition-transform", openMenu === cat.id && "rotate-180")} />
@@ -171,9 +171,9 @@ export function Header() {
           <button
             onClick={() => setView("home")}
             className={cn(
-              "hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+              "hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
               view === "home"
-                ? "bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-sm"
+                ? "bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-md"
                 : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
             )}
           >

@@ -103,19 +103,19 @@ export function HomeView() {
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-32">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card)] px-3.5 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm border border-[var(--border)]/50">
               <ShieldCheck className="size-3.5 text-[var(--success)]" />
               {t("hero.badge")}
             </div>
 
             {/* Headline — big, bold, two-tone */}
-            <h1 className="text-4xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.1]" style={{ animationDelay: "60ms" }}>
+            <h1 className="text-4xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.15]" style={{ animationDelay: "60ms" }}>
               {t("hero.title1")}{" "}
               <span className="brand-gradient-text">{t("hero.titleAccent")}</span>
             </h1>
 
             {/* Subtitle — lighter weight, more breathing room */}
-            <p className="mx-auto mt-6 max-w-xl text-base font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.6" }}>
+            <p className="mx-auto mt-7 max-w-xl text-base font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.65" }}>
               {t("hero.subtitle")}
             </p>
 
@@ -192,13 +192,13 @@ export function HomeView() {
             )}
 
             {/* Popular tools quick-access pills */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 animate-fade-up" style={{ animationDelay: "240ms" }}>
-              <span className="text-xs font-medium text-[var(--muted-foreground)] mr-1">{lang === "zh" ? "常用:" : "Popular:"}</span>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-1.5 animate-fade-up" style={{ animationDelay: "240ms" }}>
+              <span className="text-xs font-medium text-[var(--muted-foreground)] mr-0.5">{lang === "zh" ? "常用:" : "Popular:"}</span>
               {popularTools.map((tool) => (
                 <button
                   key={tool.id}
                   onClick={() => setView(tool.id)}
-                  className="group inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-all hover:border-[var(--brand)] hover:shadow-sm hover:scale-105"
+                  className="group inline-flex items-center gap-1.5 rounded-full border border-[var(--border)]/60 bg-[var(--card)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)] transition-all duration-200 hover:border-[var(--brand)] hover:bg-[var(--brand)]/5 hover:shadow-sm hover:scale-105"
                 >
                   <span className="size-1.5 rounded-full" style={{ background: tool.color }} />
                   {tTool(tool.id).name}
@@ -232,7 +232,7 @@ export function HomeView() {
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all",
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200",
                   filter === tab.id
                     ? "bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-sm"
                     : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]",
@@ -240,7 +240,7 @@ export function HomeView() {
               >
                 {tab.label}
                 <span className={cn(
-                  "rounded-full px-1.5 py-0 text-[10px] font-bold",
+                  "inline-flex items-center justify-center rounded-full px-1.5 py-0 text-[10px] font-bold leading-4",
                   filter === tab.id ? "bg-white/20 text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)]",
                 )}>
                   {tab.count}
@@ -357,7 +357,7 @@ function ToolCard({
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 text-left card-shadow transition-all hover:-translate-y-1 hover:card-shadow-lg hover-ring animate-fade-up"
+      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)]/60 bg-[var(--card)] p-6 text-left card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:card-shadow-lg hover-ring animate-fade-up"
       style={{ animationDelay: `${delay}ms`, minHeight: "200px" }}
     >
       {/* Category-colored top accent bar */}

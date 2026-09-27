@@ -931,3 +931,46 @@ Stage Summary:
 - EditPng and EditPdf both use a vertical sidebar (56-64px wide) + large preview that fills `calc(100vh - 200px)`.
 - Dropzone has fluid animations: gradient overlay, floating particles, pulsing ring, bouncing icon, rotating Plus icon, smooth transitions.
 - No previously-fixed bugs regressed (drawingRef capture, degrees shadowing, per-page rotation, hash navigation, pdfjs cleanup all intact).
+
+---
+Task ID: HOMEPAGE-OVERHAUL
+Agent: Orchestrator (Z.ai)
+Task: Overhaul the homepage design to look 10x more premium.
+
+Work Log:
+
+=== HERO ===
+- Bigger, bolder headline with single-line layout (was two-line with `<br>`). Uses `leading-[1.05]` for tight line height.
+- Added 3 floating decorative orbs (was 2) — larger sizes, different category colors (brand/organize/edit), staggered animation delays.
+- Dropzone constrained to `max-w-xl` so it doesn't stretch too wide on desktop — looks more focused and intentional.
+- Added "Popular:" quick-access pills below the dropzone — 6 most-used tools (Compress PDF, Merge PDF, PDF to Word, Edit PDF, Split PDF, Convert to PDF) as compact pill buttons with a category-colored dot + tool name + arrow.
+- Removed the 3 feature pills (Instant/Private/Chain) from the hero — they were redundant with the trust section below. Keeps the hero clean and focused.
+
+=== TOOL GRID ===
+- Replaced 4 separate category sections (each with its own header + grid) with a SINGLE unified grid.
+- Added category filter pills at the top: All (19) / Compress (3) / Convert (6) / Organize (6) / Edit (4). Each pill shows the count. Active pill has a gradient background (brand → brand-accent) with white text + shadow.
+- Clicking a filter instantly shows/hides tools — verified: clicking "Convert" shows only the 6 convert tools.
+- Cards now have: `minHeight: 180px` for consistent height, a category-colored top accent bar (`h-1` at the top), a larger gradient orb that scales 150% on hover, icon that rotates 3° on hover, and the "Open tool →" text is hidden by default and fades in on hover (`opacity-0 group-hover:opacity-100`).
+- Grid is `xl:grid-cols-4` (was `lg:grid-cols-4`) so on large screens all 19 tools fit in fewer rows.
+- Staggered entrance animation: 30ms delay per card (was 40ms).
+
+=== TRUST SECTION ===
+- Redesigned with a horizontal icon + stat layout: each card has an icon box on the left, with the stat number (large, bold) and stat label (uppercase, tiny) to its right, then title + description below.
+- Added real stats: "0 uploads" (with shield icon, green), "19 tools" (with zap icon, brand blue), "∞ chaining" (with layers icon, purple).
+- Cards have hover lift (`-translate-y-1`) + shadow expansion.
+
+=== DIVIDERS ===
+- Added gradient dividers between sections (`h-px bg-gradient-to-r from-transparent via-[var(--border)] to-transparent`) for visual rhythm.
+
+Verification (via agent-browser + VLM):
+- Hero: "premium and modern... clean, soft gradient background, ample white space, bold high-contrast typography"
+- Filter pills: "Yes" — category filter bar visible with All/Compress/Convert/Organize/Edit
+- Tool cards: "Yes" — unified grid, colored top accent bar confirmed
+- Filter functionality: clicking Convert → only 6 convert tools visible (verified)
+- Trust section: 3 cards with stats (0 uploads, tools count, infinity chaining) confirmed
+
+Stage Summary:
+- 0 lint errors, 18 warnings (non-blocking).
+- Dev server compiles cleanly.
+- Homepage is now: bold hero with quick-access pills → unified tool grid with filter pills → compact trust section with stats.
+- No regressions.

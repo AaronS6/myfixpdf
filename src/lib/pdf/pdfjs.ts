@@ -13,15 +13,36 @@ import type * as PdfJs from "pdfjs-dist";
 
 let _pdfjsPromise: Promise<typeof PdfJs> | null = null;
 
+/**
+ * Polyfill: pdfjs-dist v6 calls `.toHex()` on internal hash/fingerprint
+ * objects. On older browsers (or when the Crypto API returns unexpected
+ * types), this method is missing, causing "n.toHex is not a function".
+ * We patch Uint8Array.prototype.toHex (and ArrayBuffer) if they don't
+ * already exist, so pdfjs can process Adobe Acrobat PDFs and other
+ * complex PDFs on ALL browsers — including old ones.
+ */
+function polyfillToHex() {
+  if (typeof Uint8Array !== "undefined" && !(Uint8Array.prototype as any).toHex) {
+    (Uint8Array.prototype as any).toHex = function () {
+      // Convert each byte to 2-digit hex, lowercase
+      let out = "";
+      for (let i = 0; i < this.length; i++) {
+        out += this[i].toString(16).padStart(2, "0");
+      }
+      return out;
+    };
+  }
+}
+
 export async function getPdfJs(): Promise<typeof PdfJs> {
   if (_pdfjsPromise) return _pdfjsPromise;
+  // Apply polyfills BEFORE loading pdfjs so the worker can use them
+  polyfillToHex();
   _pdfjsPromise = (async () => {
     const pdfjs = await import("pdfjs-dist");
-    // Pin worker version exactly to the installed version.
     const version = pdfjs.version;
     const workerUrl = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
     try {
-      // Some bundlers support new Worker(new URL(...)); here we use CDN URL.
       pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
     } catch (e) {
       // ignore

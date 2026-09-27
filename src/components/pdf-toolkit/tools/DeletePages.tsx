@@ -6,7 +6,7 @@ import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { PageThumbnailGrid } from "../shared/PageThumbnailGrid";
 import { deletePdfPage } from "@/lib/pdf/pdf-ops";
-import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { X, Undo2, Save, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";

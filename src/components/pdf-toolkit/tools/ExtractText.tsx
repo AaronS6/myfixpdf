@@ -5,7 +5,7 @@ import { ToolPageShell } from "../ToolPageShell";
 import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { extractPdfText } from "@/lib/pdf/pdfjs";
-import { downloadBlob, withExt } from "@/lib/pdf/file-helpers";
+import { downloadBlob, withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { FileText, Download, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";

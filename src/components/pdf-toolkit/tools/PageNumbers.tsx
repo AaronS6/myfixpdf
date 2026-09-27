@@ -5,7 +5,7 @@ import { ToolPageShell } from "../ToolPageShell";
 import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { addPageNumbers } from "@/lib/pdf/pdf-ops";
-import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Hash } from "lucide-react";

@@ -5,7 +5,7 @@ import { ToolPageShell } from "../ToolPageShell";
 import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { addTextWatermark, addImageWatermark, type WatermarkOptions } from "@/lib/pdf/pdf-ops";
-import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { Droplets, Type, Image as ImageIcon, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";

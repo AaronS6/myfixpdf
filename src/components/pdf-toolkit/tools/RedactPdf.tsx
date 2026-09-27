@@ -6,7 +6,7 @@ import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { PdfPreview } from "../shared/PdfPreview";
 import { redactPdfPages, type Redaction } from "@/lib/pdf/pdf-ops";
-import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { Eye, X, Trash2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";

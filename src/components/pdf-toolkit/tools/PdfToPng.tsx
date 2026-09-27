@@ -6,7 +6,7 @@ import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { pdfToPngImages } from "@/lib/pdf/pdf-ops";
 import { PageThumbnailGrid } from "../shared/PageThumbnailGrid";
-import { withExt } from "@/lib/pdf/file-helpers";
+import { withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { FileImage } from "lucide-react";
 import { useI18n } from "../shared/I18nProvider";

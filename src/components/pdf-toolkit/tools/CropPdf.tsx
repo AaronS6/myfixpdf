@@ -8,7 +8,7 @@ import { PageThumbnailGrid } from "../shared/PageThumbnailGrid";
 import { PdfPreview } from "../shared/PdfPreview";
 import { cropPdfPage } from "@/lib/pdf/pdf-ops";
 import { loadPdfFromBlob } from "@/lib/pdf/pdfjs";
-import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { Crop, Wand2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";

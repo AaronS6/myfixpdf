@@ -6,7 +6,7 @@ import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { splitPdfSelectPages, splitPdfIntoGroups } from "@/lib/pdf/pdf-ops";
 import { PageThumbnailGrid } from "../shared/PageThumbnailGrid";
-import { makePreviewUrl, withExt, formatBytes } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt, formatBytes , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { Scissors, Layers3, Group } from "lucide-react";
 import { cn } from "@/lib/utils";

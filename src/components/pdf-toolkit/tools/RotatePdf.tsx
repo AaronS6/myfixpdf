@@ -6,7 +6,7 @@ import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { PageThumbnailGrid } from "../shared/PageThumbnailGrid";
 import { rotateAllPages, rotatePdfPage } from "@/lib/pdf/pdf-ops";
-import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { RotateCw, RotateCcw, Undo2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";

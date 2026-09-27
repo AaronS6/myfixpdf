@@ -4,7 +4,7 @@ import { ToolPageShell } from "../ToolPageShell";
 import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { pdfToDocx } from "@/lib/pdf/convert-ops";
-import { withExt, makePreviewUrl } from "@/lib/pdf/file-helpers";
+import { withExt, makePreviewUrl , isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { FileText } from "lucide-react";
 

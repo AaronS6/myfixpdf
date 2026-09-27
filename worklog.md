@@ -887,3 +887,47 @@ Stage Summary:
 - Blob URL leaks: 2 minor leaks identified, acceptable for a browser tool.
 - 0 lint errors, 18 warnings (all unused eslint-disable directives — non-blocking).
 - Dev server compiles cleanly, page returns 200.
+
+---
+Task ID: LAYOUT-AND-DROPZONE
+Agent: Orchestrator (Z.ai)
+Task: Make image/PDF previews take up ~60% of screen with side toolbars in EditPng and EditPdf; improve dropzone with more animations and fluid transitions.
+
+Work Log:
+
+=== 1. FileDropzone — improved animations ===
+- Added animated gradient overlay (visible on hover/drag, fades in over 500ms).
+- Added floating particles on drag (3 small colored dots that float at different speeds).
+- Added pulsing ring around the icon on drag (`animate-ping` with brand color).
+- Icon bounces (`animate-bounce`) when dragging; lifts on hover (`-translate-y-0.5`).
+- CTA button has `group-hover:scale-105 + group-hover:shadow-lg` and the Plus icon rotates 90° on hover.
+- All transitions use `cubic-bezier(0.16, 1, 0.3, 1)` for smooth, fluid motion.
+- Drag state scales the whole dropzone by 1.01 and adds a colored glow shadow.
+- Text changes color to brand color when dragging.
+- VLM confirmed: "polished and visually appealing... premium SaaS product... floating card effect."
+
+=== 2. EditPng — vertical sidebar toolbar + big preview ===
+Changed from horizontal toolbar + grid layout to a flex layout:
+- Left: 56px vertical sidebar with icon-only buttons (select, draw, text, rect, circle, highlighter, crop) + color picker dots + rotate CW/CCW + undo/redo/clear.
+- Right: `flex-1` preview canvas that fills all remaining space (was `maxHeight: 600px`, now `maxHeight: 100%` of the container which is `calc(100vh - 200px)`).
+- Pen width slider is now a floating panel in the bottom-right corner of the preview.
+- Text draft overlay positioned center of the preview.
+- All buttons have `title` + `aria-label` for accessibility.
+- VLM confirmed: "Yes" — vertical sidebar + large preview visible.
+
+=== 3. EditPdf — vertical sidebar toolbar + big preview ===
+Changed from sticky horizontal toolbar + h-70vh preview to:
+- Left: 64px vertical sidebar with all tool buttons (undo/redo, select/text/draw, rotate CW/CCW/All, duplicate, insert, delete, save) using the existing ToolButton component (which has hover tooltips).
+- Draw toolbar (color picker, pen width, clear) is now inline in the sidebar when Draw mode is active — no separate horizontal toolbar.
+- Right: `flex-1` PDF preview at `h-full` (fills the container which is `calc(100vh - 200px)`).
+- PdfPreview `initialScale` changed from 1 to 0 (Fit) so the PDF auto-fits the large preview area on mount.
+- Save button pushed to the bottom of the sidebar with `mt-auto`.
+- Removed unused `PenTool` import.
+- VLM confirmed: "Yes" — vertical sidebar + large preview visible.
+
+Stage Summary:
+- 0 lint errors, 18 warnings (unused eslint-disable — non-blocking).
+- Dev server compiles cleanly, page returns 200.
+- EditPng and EditPdf both use a vertical sidebar (56-64px wide) + large preview that fills `calc(100vh - 200px)`.
+- Dropzone has fluid animations: gradient overlay, floating particles, pulsing ring, bouncing icon, rotating Plus icon, smooth transitions.
+- No previously-fixed bugs regressed (drawingRef capture, degrees shadowing, per-page rotation, hash navigation, pdfjs cleanup all intact).

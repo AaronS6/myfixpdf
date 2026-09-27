@@ -664,359 +664,152 @@ export function EditPng() {
       ctaDisabled={!imageLoaded}
     >
       {target && imageLoaded && imageDims ? (
-        <div className="mt-5 space-y-4">
-          {/* Toolbar */}
+        <div className="mt-5 flex gap-3" style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}>
+          {/* Vertical sidebar toolbar */}
           <div
-            className="flex flex-wrap items-center gap-2 rounded-xl border p-3 text-sm shadow-sm"
+            className="flex w-14 flex-col items-center gap-1 overflow-y-auto rounded-xl border p-2 thin-scroll shrink-0"
             style={{ borderColor: "var(--border)", background: "var(--card)" }}
           >
-            <div className="flex flex-wrap gap-1">
-              {TOOLS.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    if (textDraft) commitTextDraft();
-                    setTool2(t.id);
-                  }}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all",
-                    tool2 === t.id ? "text-white shadow-sm" : "",
-                  )}
-                  style={{
-                    borderColor: tool2 === t.id ? "transparent" : "var(--border)",
-                    background: tool2 === t.id ? "var(--brand)" : "transparent",
-                    color: tool2 === t.id ? "#fff" : "var(--foreground)",
-                  }}
-                >
-                  {t.icon}
-                  {t.label}
-                </button>
-              ))}
-            </div>
+            {TOOLS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  if (textDraft) commitTextDraft();
+                  setTool2(t.id);
+                }}
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-lg transition-all duration-200 hover:scale-105",
+                  tool2 === t.id ? "text-white shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]",
+                )}
+                style={{
+                  background: tool2 === t.id ? "var(--brand)" : "transparent",
+                }}
+                title={t.label}
+                aria-label={t.label}
+              >
+                {t.icon}
+              </button>
+            ))}
 
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              {/* Color picker */}
-              <div className="flex items-center gap-1">
-                {PEN_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setPenColor(c)}
-                    className={cn(
-                      "size-6 rounded-full border-2 transition-all hover:scale-110",
-                      penColor === c ? "scale-110" : "",
-                    )}
-                    style={{
-                      background: c,
-                      borderColor: penColor === c ? "var(--brand)" : "var(--border)",
-                    }}
-                    title={`Color ${c}`}
-                    aria-label={`Pick color ${c}`}
-                  />
-                ))}
-              </div>
+            <div className="my-1 h-px w-full" style={{ background: "var(--border)" }} />
 
-              {/* Stroke width */}
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-xs"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  Width
-                </span>
-                <input
-                  type="range"
-                  min={1}
-                  max={20}
-                  step={1}
-                  value={penWidth}
-                  onChange={(e) => setPenWidth(parseInt(e.target.value, 10))}
-                  className="w-20"
-                  style={{ accentColor: "var(--brand)" }}
-                />
-                <span
-                  className="rounded-md px-2 py-0.5 text-xs font-bold"
-                  style={{
-                    background: "var(--muted)",
-                    color: "var(--foreground)",
-                  }}
-                >
-                  {penWidth}px
-                </span>
-              </div>
+            {/* Color picker — vertical */}
+            {PEN_COLORS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setPenColor(c)}
+                className={cn(
+                  "size-7 rounded-full border-2 transition-all hover:scale-110",
+                  penColor === c ? "scale-110" : "",
+                )}
+                style={{
+                  background: c,
+                  borderColor: penColor === c ? "var(--brand)" : "var(--border)",
+                }}
+                title={`Color ${c}`}
+                aria-label={`Pick color ${c}`}
+              />
+            ))}
 
-              {/* Rotate / Undo / Redo / Clear */}
-              <div className="flex gap-1">
-                <button
-                  onClick={() => rotate("ccw")}
-                  className="flex size-7 items-center justify-center rounded-md border transition-all hover:scale-105"
-                  style={{
-                    borderColor: "var(--border)",
-                    color: "var(--foreground)",
-                    background: "transparent",
-                  }}
-                  title="Rotate 90° CCW"
-                  aria-label="Rotate 90° CCW"
-                >
-                  <RotateCcw className="size-3.5" />
-                </button>
-                <button
-                  onClick={() => rotate("cw")}
-                  className="flex size-7 items-center justify-center rounded-md border transition-all hover:scale-105"
-                  style={{
-                    borderColor: "var(--border)",
-                    color: "var(--foreground)",
-                    background: "transparent",
-                  }}
-                  title="Rotate 90° CW"
-                  aria-label="Rotate 90° CW"
-                >
-                  <RotateCw className="size-3.5" />
-                </button>
-                <button
-                  onClick={undo}
-                  disabled={undoStack.length === 0}
-                  className={cn(
-                    "flex size-7 items-center justify-center rounded-md border transition-all hover:scale-105",
-                    undoStack.length === 0 && "cursor-not-allowed opacity-50",
-                  )}
-                  style={{
-                    borderColor: "var(--border)",
-                    color: "var(--foreground)",
-                    background: "transparent",
-                  }}
-                  title="Undo"
-                  aria-label="Undo"
-                >
-                  <Undo2 className="size-3.5" />
-                </button>
-                <button
-                  onClick={redo}
-                  disabled={redoStack.length === 0}
-                  className={cn(
-                    "flex size-7 items-center justify-center rounded-md border transition-all hover:scale-105",
-                    redoStack.length === 0 && "cursor-not-allowed opacity-50",
-                  )}
-                  style={{
-                    borderColor: "var(--border)",
-                    color: "var(--foreground)",
-                    background: "transparent",
-                  }}
-                  title="Redo"
-                  aria-label="Redo"
-                >
-                  <Redo2 className="size-3.5" />
-                </button>
-                <button
-                  onClick={clearAll}
-                  className="flex size-7 items-center justify-center rounded-md border transition-all hover:scale-105"
-                  style={{
-                    borderColor: "var(--border)",
-                    color: "var(--danger)",
-                    background: "transparent",
-                  }}
-                  title="Clear annotations"
-                  aria-label="Clear annotations"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              </div>
-            </div>
+            <div className="my-1 h-px w-full" style={{ background: "var(--border)" }} />
+
+            {/* Rotate / Undo / Redo / Clear */}
+            <button onClick={() => rotate("ccw")} className="flex size-10 items-center justify-center rounded-lg transition-all hover:scale-105 text-[var(--foreground)] hover:bg-[var(--muted)]" title="Rotate 90° CCW" aria-label="Rotate 90° CCW">
+              <RotateCcw className="size-4" />
+            </button>
+            <button onClick={() => rotate("cw")} className="flex size-10 items-center justify-center rounded-lg transition-all hover:scale-105 text-[var(--foreground)] hover:bg-[var(--muted)]" title="Rotate 90° CW" aria-label="Rotate 90° CW">
+              <RotateCw className="size-4" />
+            </button>
+            <button onClick={undo} disabled={undoStack.length === 0} className={cn("flex size-10 items-center justify-center rounded-lg transition-all hover:scale-105 text-[var(--foreground)] hover:bg-[var(--muted)]", undoStack.length === 0 && "opacity-30 cursor-not-allowed")} title="Undo" aria-label="Undo">
+              <Undo2 className="size-4" />
+            </button>
+            <button onClick={redo} disabled={redoStack.length === 0} className={cn("flex size-10 items-center justify-center rounded-lg transition-all hover:scale-105 text-[var(--foreground)] hover:bg-[var(--muted)]", redoStack.length === 0 && "opacity-30 cursor-not-allowed")} title="Redo" aria-label="Redo">
+              <Redo2 className="size-4" />
+            </button>
+            <button onClick={clearAll} className="flex size-10 items-center justify-center rounded-lg transition-all hover:scale-105 text-[var(--danger)] hover:bg-[var(--danger)]/10" title="Clear annotations" aria-label="Clear annotations">
+              <Trash2 className="size-4" />
+            </button>
           </div>
 
-          {/* Preview canvas + active text input */}
-          <div className="grid gap-4 lg:grid-cols-4">
+          {/* Large preview canvas — takes the rest of the space */}
+          <div
+            className="relative flex-1 overflow-hidden rounded-xl border shadow-sm"
+            style={{ borderColor: "var(--border)", background: "var(--card)" }}
+          >
             <div
-              className="overflow-hidden rounded-xl border shadow-sm lg:col-span-3"
-              style={{ borderColor: "var(--border)", background: "var(--card)" }}
+              ref={overlayRef}
+              className="flex h-full items-center justify-center p-4"
+              style={{ background: "var(--muted)" }}
             >
-              <div className="relative">
-                <div
-                  ref={overlayRef}
-                  className="flex items-center justify-center p-4"
-                  style={{ background: "var(--muted)" }}
-                >
-                  <canvas
-                    ref={canvasRef}
-                    onPointerDown={onPointerDown}
-                    onPointerMove={onPointerMove}
-                    onPointerUp={onPointerUp}
-                    onPointerCancel={onPointerUp}
-                    className="block rounded-lg shadow-md"
-                    style={{
-                      cursor:
-                        tool2 === "select"
-                          ? "default"
-                          : tool2 === "text"
-                            ? "text"
-                            : "crosshair",
-                      touchAction: "none",
-                      maxWidth: "100%",
-                      maxHeight: "600px",
-                    }}
-                  />
-                </div>
-                {/* Text draft overlay */}
-                {textDraft && (
-                  <div
-                    className="absolute"
-                    style={{
-                      left: "50%",
-                      top: "50%",
-                      transform: "translate(-50%, -50%)",
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <div
-                      className="flex flex-col gap-1 rounded-lg border p-2"
-                      style={{
-                        borderColor: "var(--brand)",
-                        background: "var(--card)",
-                        pointerEvents: "auto",
-                        minWidth: 260,
-                      }}
-                    >
-                      <label
-                        className="text-xs font-semibold"
-                        style={{ color: "var(--foreground)" }}
-                      >
-                        Text content
-                      </label>
-                      <textarea
-                        autoFocus
-                        value={textDraft.value}
-                        onChange={(e) =>
-                          setTextDraft((td) =>
-                            td ? { ...td, value: e.target.value } : td,
-                          )
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                            e.preventDefault();
-                            commitTextDraft();
-                          } else if (e.key === "Escape") {
-                            setTextDraft(null);
-                          }
-                        }}
-                        placeholder="Type text. Cmd+Enter to add."
-                        className="rounded-md border px-2 py-1.5 text-sm outline-none"
-                        style={{
-                          borderColor: "var(--border)",
-                          color: "var(--foreground)",
-                          background: "var(--card)",
-                        }}
-                        rows={3}
-                      />
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => setTextDraft(null)}
-                          className="rounded-md border px-2 py-1 text-xs"
-                          style={{
-                            borderColor: "var(--border)",
-                            color: "var(--muted-foreground)",
-                            background: "transparent",
-                          }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={commitTextDraft}
-                          className="rounded-md px-2 py-1 text-xs font-semibold text-white"
-                          style={{ background: "var(--brand)" }}
-                        >
-                          Add text
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right: info + apply crop */}
-            <div className="space-y-3">
-              <div
-                className="rounded-xl border p-3 text-sm shadow-sm"
-                style={{ borderColor: "var(--border)", background: "var(--card)" }}
-              >
-                <p
-                  className="text-xs font-semibold uppercase tracking-wider"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  Image
-                </p>
-                <p
-                  className="mt-1 text-sm font-bold"
-                  style={{ color: "var(--foreground)" }}
-                >
-                  {imageDims.w} × {imageDims.h}px
-                </p>
-                <p
-                  className="text-xs"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  Format: {imageFormat.toUpperCase()}
-                  {rotation !== 0 ? ` · rotated ${rotation}°` : ""}
-                </p>
-                <p
-                  className="mt-2 text-xs"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  {strokes.length} stroke{strokes.length === 1 ? "" : "s"} ·{" "}
-                  {shapes.length} shape{shapes.length === 1 ? "" : "s"} ·{" "}
-                  {texts.length} text{texts.length === 1 ? "" : "s"}
-                </p>
-              </div>
-
-              {tool2 === "crop" && (
-                <button
-                  onClick={applyCrop}
-                  disabled={busy || !draft}
-                  className={cn(
-                    "inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:scale-[1.02]",
-                    (busy || !draft) && "cursor-not-allowed opacity-50",
-                  )}
-                  style={{ background: "var(--brand)" }}
-                >
-                  <CropIcon className="size-3.5" /> Apply crop
-                </button>
-              )}
-
-              <button
-                onClick={downloadNow}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all"
+              <canvas
+                ref={canvasRef}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={onPointerUp}
+                className="block rounded-lg shadow-lg"
                 style={{
-                  borderColor: "var(--border)",
-                  color: "var(--foreground)",
-                  background: "transparent",
+                  cursor: tool2 === "select" ? "default" : tool2 === "text" ? "text" : "crosshair",
+                  touchAction: "none",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                }}
+              />
+            </div>
+            {/* Text draft overlay */}
+            {textDraft && (
+              <div
+                className="absolute"
+                style={{
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  pointerEvents: "none",
                 }}
               >
-                Download now
-              </button>
+                <div
+                  className="flex flex-col gap-1 rounded-lg border p-2"
+                  style={{
+                    borderColor: "var(--brand)",
+                    background: "var(--card)",
+                    pointerEvents: "auto",
+                    minWidth: 260,
+                  }}
+                >
+                  <label className="text-xs font-semibold" style={{ color: "var(--foreground)" }}>
+                    Text content
+                  </label>
+                  <textarea
+                    autoFocus
+                    value={textDraft.value}
+                    onChange={(e) => setTextDraft((td) => td ? { ...td, value: e.target.value } : td)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); commitTextDraft(); }
+                      else if (e.key === "Escape") { setTextDraft(null); }
+                    }}
+                    placeholder="Type text. Cmd+Enter to add."
+                    className="rounded-md border px-2 py-1.5 text-sm outline-none"
+                    style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--card)" }}
+                    rows={3}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setTextDraft(null)} className="rounded-md border px-2 py-1 text-xs" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)", background: "transparent" }}>
+                      Cancel
+                    </button>
+                    <button onClick={commitTextDraft} className="rounded-md px-2 py-1 text-xs font-semibold text-white" style={{ background: "var(--brand)" }}>
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Pen width slider — floating in bottom-right */}
+            <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-lg border bg-[var(--card)] px-3 py-1.5 shadow-sm" style={{ borderColor: "var(--border)" }}>
+              <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>Width</span>
+              <input type="range" min={1} max={20} step={1} value={penWidth} onChange={(e) => setPenWidth(parseInt(e.target.value, 10))} className="w-16" style={{ accentColor: "var(--brand)" }} />
+              <span className="rounded-md px-1.5 py-0.5 text-[10px] font-bold" style={{ background: "var(--muted)", color: "var(--foreground)" }}>{penWidth}px</span>
             </div>
           </div>
-
-          <div
-            className="flex items-start gap-2 rounded-lg border p-3 text-xs"
-            style={{
-              borderColor: "var(--border)",
-              background: "var(--muted)",
-              color: "var(--muted-foreground)",
-            }}
-          >
-            <Save className="size-4 shrink-0" style={{ color: "var(--cat-compress)" }} />
-            <p>Draw, add text, and shapes — your edits save automatically when you click <b>Save Image</b>.</p>
-          </div>
-        </div>
-      ) : target ? (
-        <div
-          className="mt-5 rounded-xl border border-dashed p-12 text-center text-sm"
-          style={{
-            borderColor: "var(--border)",
-            background: "var(--muted)",
-            color: "var(--muted-foreground)",
-          }}
-        >
-          Loading image…
         </div>
       ) : (
         <div

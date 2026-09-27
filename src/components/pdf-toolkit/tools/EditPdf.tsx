@@ -32,7 +32,6 @@ import {
   Save,
   ChevronLeft,
   ChevronRight,
-  PenTool,
   MousePointer2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -282,16 +281,18 @@ export function EditPdf() {
 
   return (
     <ToolPageShell tool={tool} ctaLabel="Save changes" ctaColor="var(--cat-edit)" onCtaClick={save}>
-      <div className="mt-5 space-y-4">
-        {/* Toolbar */}
-        <div className="sticky top-16 z-20 flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 shadow-sm">
+      <div className="mt-5 flex gap-3" style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}>
+        {/* Vertical sidebar toolbar */}
+        <div
+          className="flex w-16 flex-col items-center gap-1 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 shadow-sm thin-scroll shrink-0"
+        >
           <ToolButton onClick={undo} disabled={historyIdx <= 0} label="Undo last change" desc="Step back one change. Other pages stay the same.">
             <Undo2 className="size-4" />
           </ToolButton>
           <ToolButton onClick={redo} disabled={historyIdx >= history2.length - 1} label="Redo" desc="Re-apply a change you just undid.">
             <Redo2 className="size-4" />
           </ToolButton>
-          <div className="mx-1 h-6 w-px bg-[var(--border)]" />
+          <div className="my-1 h-px w-full bg-[var(--border)]" />
           <ToolButton onClick={() => setTool2("select")} active={tool2 === "select"} label="Select" desc="Move around without drawing anything.">
             <MousePointer2 className="size-4" />
           </ToolButton>
@@ -301,14 +302,13 @@ export function EditPdf() {
           <ToolButton onClick={() => setTool2("draw")} active={tool2 === "draw"} label="Draw freehand" desc="Draw freehand on the page — strokes are baked in on Save.">
             <PenLine className="size-4" />
           </ToolButton>
-          <div className="mx-1 h-6 w-px bg-[var(--border)]" />
+          <div className="my-1 h-px w-full bg-[var(--border)]" />
           <ToolButton onClick={() => rotate(90)} label={`Rotate page ${pageNum} clockwise`} desc={`Rotate this page clockwise (other pages stay the same)`}>
             <RotateCw className="size-4" />
           </ToolButton>
           <ToolButton onClick={() => rotate(270)} label={`Rotate page ${pageNum} counter-clockwise`} desc={`Rotate this page counter-clockwise (other pages stay the same)`}>
             <RotateCcw className="size-4" />
           </ToolButton>
-          {/* Rotate All — bulk action with ALL badge */}
           <ToolButton onClick={() => rotateAll(90)} label="Rotate ALL pages 90° clockwise" desc="Rotate every page in this PDF by 90° clockwise — a bulk action.">
             <span className="relative">
               <RotateCw className="size-4" />
@@ -324,25 +324,18 @@ export function EditPdf() {
           <ToolButton onClick={del} label={`Delete page ${pageNum}`} desc={`Remove this page from the PDF.`} danger>
             <Trash2 className="size-4" />
           </ToolButton>
-          <div className="ml-auto flex items-center gap-2">
-            <ToolButton onClick={save} label="Save and review the result" desc="Bake in all changes and go to the result screen." cta>
-              <Save className="size-4" /> Save
-            </ToolButton>
-          </div>
-        </div>
 
-        {/* Draw toolbar */}
-        {tool2 === "draw" && (
-          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 text-sm">
-            <PenTool className="size-4 text-[var(--cat-edit)]" />
-            <span className="text-xs font-medium text-[var(--muted-foreground)]">Draw on page {pageNum} — strokes are baked in on Save.</span>
-            <div className="ml-auto flex items-center gap-2">
+          {/* Draw toolbar — inline in sidebar when draw is active */}
+          {tool2 === "draw" && (
+            <>
+              <div className="my-1 h-px w-full bg-[var(--border)]" />
               {["var(--foreground)", "var(--brand)", "var(--danger)", "var(--success)", "var(--cat-convert)"].map((c) => (
                 <button
                   key={c}
                   onClick={() => setPenColor(c)}
-                  className={cn("size-6 rounded-full border-2", penColor === c ? "border-[var(--brand)] scale-110" : "border-[var(--border)]")}
+                  className={cn("size-7 rounded-full border-2 transition-all hover:scale-110", penColor === c ? "border-[var(--brand)] scale-110" : "border-[var(--border)]")}
                   style={{ background: c }}
+                  aria-label={`Pen color ${c}`}
                 />
               ))}
               <input
@@ -352,25 +345,32 @@ export function EditPdf() {
                 step="0.5"
                 value={penWidth}
                 onChange={(e) => setPenWidth(parseFloat(e.target.value))}
-                className="w-24 accent-[var(--cat-edit)]"
+                className="w-12 accent-[var(--cat-edit)]"
+                title="Pen width"
               />
-              <span className="text-xs">{penWidth}px</span>
               <button
                 onClick={() => setStrokes((s) => s.filter((st) => st.pageIndex !== pageNum - 1))}
-                className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+                className="rounded-md border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+                title="Clear strokes on this page"
               >
                 Clear
               </button>
-            </div>
-          </div>
-        )}
+            </>
+          )}
 
-        {/* PDF preview + overlay */}
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
-          <div className="relative h-[70vh]">
+          <div className="mt-auto pt-2">
+            <ToolButton onClick={save} label="Save and review the result" desc="Bake in all changes and go to the result screen." cta>
+              <Save className="size-4" />
+            </ToolButton>
+          </div>
+        </div>
+
+        {/* Large PDF preview — takes the rest of the space */}
+        <div className="flex-1 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+          <div className="relative h-full">
             <PdfPreview
               blob={liveBlob}
-              initialScale={1}
+              initialScale={0}
               onCanvasClick={onCanvasClick}
               renderOverlay={(pageIndex, pageW, pageH, scale) => (
                 <EditOverlay

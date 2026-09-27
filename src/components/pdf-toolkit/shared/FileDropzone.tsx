@@ -42,7 +42,7 @@ export function FileDropzone({
       for (const f of arr) {
         const r = validateFile(f, accept, maxSizeMB);
         if (!r.ok) {
-          toast.error(r.error ?? `Could not accept “${f.name}”.`);
+          toast.error(r.error ?? `Could not accept "${f.name}".`);
           continue;
         }
         ok.push(f);
@@ -84,15 +84,38 @@ export function FileDropzone({
       }}
       aria-label={title ?? "Upload files"}
       className={cn(
-        "relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[20px] border-2 border-dashed bg-[var(--card)] p-6 text-center transition-all",
-        compact ? "py-6" : "py-10",
-        dragging ? "dropzone-active" : "border-[var(--border)] hover:border-[var(--brand)]",
+        "group relative flex w-full cursor-pointer flex-col items-center justify-center gap-4 overflow-hidden rounded-[20px] border-2 border-dashed bg-[var(--card)] p-6 text-center transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        compact ? "py-6" : "py-12",
+        dragging
+          ? "dropzone-active scale-[1.01]"
+          : "border-[var(--border)] hover:border-[var(--brand)] hover:shadow-lg",
         className,
       )}
       style={{
-        boxShadow: dragging ? "0 12px 36px rgba(200, 84, 42, 0.14)" : "0 4px 16px rgba(28, 24, 18, 0.04)",
+        boxShadow: dragging
+          ? `0 16px 48px ${accentColor}26, 0 0 0 4px ${accentColor}15`
+          : "0 2px 12px rgba(15,23,42,0.04)",
       }}
     >
+      {/* Animated gradient border overlay — visible on hover/drag */}
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 rounded-[20px] opacity-0 transition-opacity duration-500",
+          dragging ? "opacity-100" : "group-hover:opacity-60",
+        )}
+        style={{
+          background: `linear-gradient(135deg, ${accentColor}10, transparent 40%, transparent 60%, ${accentColor}10)`,
+        }}
+      />
+      {/* Floating particles on drag */}
+      {dragging && (
+        <>
+          <div className="pointer-events-none absolute left-1/4 top-1/4 size-2 rounded-full bg-[var(--brand)]/30 animate-float" />
+          <div className="pointer-events-none absolute right-1/4 top-1/3 size-3 rounded-full bg-[var(--brand-accent)]/20 animate-float-slow" />
+          <div className="pointer-events-none absolute bottom-1/4 left-1/3 size-1.5 rounded-full bg-[var(--brand)]/40 animate-float" style={{ animationDelay: "-2s" }} />
+        </>
+      )}
+
       <input
         ref={inputRef}
         type="file"
@@ -104,25 +127,46 @@ export function FileDropzone({
           if (inputRef.current) inputRef.current.value = "";
         }}
       />
+      {/* Icon with bounce/pulse animation */}
       <div
         className={cn(
-          "flex items-center justify-center rounded-full",
+          "relative flex items-center justify-center rounded-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
           compact ? "size-12" : "size-16",
+          dragging ? "scale-110" : "group-hover:scale-105",
         )}
         style={{
-          background: `linear-gradient(135deg, ${accentColor}22, ${accentColor}11)`,
+          background: `linear-gradient(135deg, ${accentColor}22, ${accentColor}08)`,
           color: accentColor,
         }}
       >
         {dragging ? (
-          <FileWarning className={compact ? "size-6" : "size-8"} />
+          <FileWarning className={cn(compact ? "size-6" : "size-8", "animate-bounce")} />
         ) : (
-          <UploadCloud className={compact ? "size-6" : "size-8"} />
+          <UploadCloud
+            className={cn(
+              compact ? "size-6" : "size-8",
+              "transition-transform duration-300 group-hover:-translate-y-0.5",
+            )}
+          />
+        )}
+        {/* Pulsing ring around the icon on drag */}
+        {dragging && (
+          <div
+            className="absolute inset-0 rounded-full animate-ping"
+            style={{ background: `${accentColor}20` }}
+          />
         )}
       </div>
-      <div className="space-y-1">
+
+      <div className="space-y-1.5">
         {title && (
-          <p className={cn("font-semibold text-[var(--foreground)]", compact ? "text-sm" : "text-base")}>
+          <p
+            className={cn(
+              "font-semibold text-[var(--foreground)] transition-colors duration-200",
+              compact ? "text-sm" : "text-base",
+              dragging && "text-[var(--brand)]",
+            )}
+          >
             {dragging ? "Drop to upload" : title}
           </p>
         )}
@@ -143,11 +187,13 @@ export function FileDropzone({
           </p>
         )}
       </div>
+
+      {/* CTA button with smooth scale + shadow on hover */}
       <div
-        className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
+        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:shadow-lg"
         style={{ background: accentColor }}
       >
-        <Plus className="size-4" />
+        <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" />
         {ctaText}
       </div>
     </div>

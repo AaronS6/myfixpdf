@@ -1,0 +1,86 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { useDocumentSession } from "@/store/document-session";
+import { Header } from "@/components/pdf-toolkit/shared/Header";
+import { Footer } from "@/components/pdf-toolkit/shared/Footer";
+import { ProgressOverlay } from "@/components/pdf-toolkit/shared/ProgressOverlay";
+import { HomeView } from "@/components/pdf-toolkit/HomeView";
+import { ResultScreen } from "@/components/pdf-toolkit/shared/ResultScreen";
+import { CompressPdf } from "@/components/pdf-toolkit/tools/CompressPdf";
+import { CompressPng } from "@/components/pdf-toolkit/tools/CompressPng";
+import { PdfToWord } from "@/components/pdf-toolkit/tools/PdfToWord";
+import { WordToPdf } from "@/components/pdf-toolkit/tools/WordToPdf";
+import { PdfToJpg } from "@/components/pdf-toolkit/tools/PdfToJpg";
+import { JpgToPdf } from "@/components/pdf-toolkit/tools/JpgToPdf";
+import { SplitPdf } from "@/components/pdf-toolkit/tools/SplitPdf";
+import { MergePdf } from "@/components/pdf-toolkit/tools/MergePdf";
+import { EditPdf } from "@/components/pdf-toolkit/tools/EditPdf";
+
+export default function Page() {
+  const view = useDocumentSession((s) => s.view);
+  const setView = useDocumentSession((s) => s.setView);
+  // Track whether we've honored the incoming URL hash on first mount — guards
+  // against the sync effect clobbering the user's #compress-pdf deep-link.
+  const initializedRef = useRef(false);
+
+  // On mount (and on hashchange): read URL hash → view
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const readHash = () => {
+      const h = window.location.hash.replace(/^#/, "");
+      const valid: string[] = [
+        "home",
+        "compress-pdf",
+        "compress-png",
+        "pdf-to-word",
+        "word-to-pdf",
+        "pdf-to-jpg",
+        "jpg-to-pdf",
+        "split-pdf",
+        "merge-pdf",
+        "edit-pdf",
+        "result",
+      ];
+      if (h && valid.includes(h)) {
+        const current = useDocumentSession.getState().view;
+        if (current !== h) setView(h as never);
+      }
+    };
+    readHash();
+    initializedRef.current = true;
+    window.addEventListener("hashchange", readHash);
+    return () => window.removeEventListener("hashchange", readHash);
+  }, [setView]);
+
+  // Sync view → URL hash (only after we've honored the incoming hash)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!initializedRef.current) return; // wait for mount-effect to read incoming hash first
+    const hash = `#${view}`;
+    if (window.location.hash !== hash) {
+      window.history.replaceState(null, "", hash);
+    }
+  }, [view]);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header />
+      <main className="flex-1">
+        {view === "home" && <HomeView />}
+        {view === "compress-pdf" && <CompressPdf />}
+        {view === "compress-png" && <CompressPng />}
+        {view === "pdf-to-word" && <PdfToWord />}
+        {view === "word-to-pdf" && <WordToPdf />}
+        {view === "pdf-to-jpg" && <PdfToJpg />}
+        {view === "jpg-to-pdf" && <JpgToPdf />}
+        {view === "split-pdf" && <SplitPdf />}
+        {view === "merge-pdf" && <MergePdf />}
+        {view === "edit-pdf" && <EditPdf />}
+        {view === "result" && <ResultScreen />}
+      </main>
+      <Footer />
+      <ProgressOverlay />
+    </div>
+  );
+}

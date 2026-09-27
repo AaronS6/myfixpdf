@@ -258,108 +258,96 @@ function TrustSection() {
   const { t, lang } = useI18n();
   const [ref, inView] = useInView<HTMLDivElement>();
 
-  const cards = [
-    { icon: ShieldCheck, color: "var(--success)", title: t("hero.why.title.private"), text: t("hero.why.text.private"), stat: 0, statLabel: lang === "zh" ? "上传" : "uploads", anim: "count" as const, delay: 0 },
-    { icon: Zap, color: "var(--brand)", title: t("hero.why.title.real"), text: t("hero.why.text.real"), stat: TOOLS.length, statLabel: lang === "zh" ? "个工具" : "tools", anim: "count" as const, delay: 200 },
-    { icon: Layers, color: "var(--cat-organize)", title: t("hero.why.title.chain"), text: t("hero.why.text.chain"), stat: 0, statLabel: lang === "zh" ? "串联" : "chaining", anim: "infinity" as const, delay: 400 },
+  const stats = [
+    { icon: ShieldCheck, color: "var(--success)", stat: 0, label: lang === "zh" ? "上传" : "uploads", title: t("hero.why.title.private"), text: t("hero.why.text.private"), delay: 0 },
+    { icon: Zap, color: "var(--brand)", stat: TOOLS.length, label: lang === "zh" ? "个工具" : "tools", title: t("hero.why.title.real"), text: t("hero.why.text.real"), delay: 150 },
+    { icon: Layers, color: "var(--cat-organize)", stat: -1, label: lang === "zh" ? "串联" : "chaining", title: t("hero.why.title.chain"), text: t("hero.why.text.chain"), delay: 300 },
   ];
 
   return (
-    <section className="mx-auto mb-8 max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-      <div ref={ref} className="grid gap-6 sm:grid-cols-3">
-        {cards.map((card, i) => (
-          <TrustCard key={i} {...card} inView={inView} />
+    <section className="mx-auto max-w-5xl px-4 pb-12 sm:px-6">
+      <div ref={ref} className="grid grid-cols-1 sm:grid-cols-3 gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
+        {stats.map((s, i) => (
+          <TrustStat key={i} {...s} inView={inView} isLast={i === stats.length - 1} />
         ))}
       </div>
     </section>
   );
 }
 
-function TrustCard({
-  icon: Icon, color, title, text, stat, statLabel, anim, delay, inView,
+function TrustStat({
+  icon: Icon, color, stat, label, title, text, delay, inView,
 }: {
   icon: React.ComponentType<{ className?: string }>;
-  color: string; title: string; text: string; stat: number; statLabel: string;
-  anim: "count" | "infinity"; delay: number; inView: boolean;
+  color: string; stat: number; label: string; title: string; text: string;
+  delay: number; inView: boolean;
+  isLast?: boolean;
 }) {
-  const count = useCountUp(stat, inView, 1400);
-  const showInfinity = anim === "infinity";
+  const count = useCountUp(stat < 0 ? 0 : stat, inView && stat >= 0, 1200);
 
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 card-shadow transition-all duration-500 hover:-translate-y-1.5 hover:card-shadow-lg",
-        inView
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-12",
+        "group relative bg-[var(--card)] p-8 transition-all duration-500",
+        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
       )}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      {/* Animated gradient orb — scales on hover */}
+      {/* Hover gradient wash */}
       <div
-        className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-700 group-hover:scale-[2] group-hover:opacity-20"
-        style={{ background: color }}
-      />
-      {/* Pulsing ring behind the icon */}
-      <div
-        className={cn(
-          "absolute left-8 top-8 size-10 rounded-xl opacity-0 transition-opacity duration-500",
-          inView && "opacity-20 group-hover:animate-ping",
-        )}
-        style={{ background: color }}
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        style={{ background: `radial-gradient(circle at 50% 0%, ${color}10, transparent 70%)` }}
       />
 
-      <div className="relative z-10 flex items-center gap-4">
-        <span
-          className={cn(
-            "flex size-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-lg transition-transform duration-500",
-            inView ? "scale-100 rotate-0" : "scale-50 -rotate-12",
-          )}
-          style={{ background: color, transitionDelay: `${delay + 100}ms` }}
-        >
-          <Icon className="size-6" />
-        </span>
-        <div>
-          {showInfinity ? (
-            <p
+      <div className="relative z-10 flex flex-col items-center text-center">
+        {/* Icon — minimal, no box, just colored */}
+        <Icon
+          className="size-7 transition-transform duration-500 group-hover:scale-110"
+          style={{ color }}
+        />
+
+        {/* Stat — big, clean */}
+        <div className="mt-4 flex items-baseline gap-1.5">
+          {stat < 0 ? (
+            <span
               className={cn(
-                "text-3xl font-bold text-[var(--foreground)] leading-none transition-transform duration-700",
-                inView ? "scale-100 opacity-100" : "scale-0 opacity-0",
+                "text-4xl font-bold tabular-nums text-[var(--foreground)] transition-all duration-700",
+                inView ? "opacity-100 scale-100" : "opacity-0 scale-50",
               )}
-              style={{ transitionDelay: `${delay + 200}ms` }}
+              style={{ transitionDelay: `${delay + 100}ms` }}
             >
               ∞
-            </p>
+            </span>
           ) : (
-            <p className="text-3xl font-bold text-[var(--foreground)] leading-none tabular-nums">
+            <span className="text-4xl font-bold tabular-nums text-[var(--foreground)]">
               {count}
-            </p>
+            </span>
           )}
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">{statLabel}</p>
+          <span className="text-sm font-medium text-[var(--muted-foreground)]">{label}</span>
         </div>
-      </div>
 
-      {/* Title + description — slides in from the left */}
-      <div
-        className={cn(
-          "relative z-10 mt-5 transition-all duration-500",
-          inView ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0",
-        )}
-        style={{ transitionDelay: `${delay + 300}ms` }}
-      >
-        <p className="text-base font-semibold text-[var(--foreground)]">{title}</p>
-        <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted-foreground)]">{text}</p>
-      </div>
+        {/* Title — small caps style */}
+        <p
+          className={cn(
+            "mt-3 text-sm font-semibold text-[var(--foreground)] transition-opacity duration-500",
+            inView ? "opacity-100" : "opacity-0",
+          )}
+          style={{ transitionDelay: `${delay + 200}ms` }}
+        >
+          {title}
+        </p>
 
-      {/* Animated bottom border line — draws in from left */}
-      <div
-        className="absolute bottom-0 left-0 h-0.5 rounded-full transition-all duration-1000 ease-out"
-        style={{
-          background: color,
-          width: inView ? "100%" : "0%",
-          transitionDelay: `${delay + 400}ms`,
-        }}
-      />
+        {/* Description — one line, muted */}
+        <p
+          className={cn(
+            "mt-1 text-xs leading-relaxed text-[var(--muted-foreground)] transition-opacity duration-500",
+            inView ? "opacity-100" : "opacity-0",
+          )}
+          style={{ transitionDelay: `${delay + 300}ms` }}
+        >
+          {text}
+        </p>
+      </div>
     </div>
   );
 }

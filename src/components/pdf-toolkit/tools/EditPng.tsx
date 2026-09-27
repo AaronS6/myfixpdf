@@ -20,6 +20,10 @@ import {
   Redo2,
   Save,
   Trash2,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -115,6 +119,7 @@ export function EditPng() {
   const [tool2, setTool2] = useState<ToolKind>("select");
   const [penColor, setPenColor] = useState(PEN_COLORS[0]);
   const [penWidth, setPenWidth] = useState(4);
+  const [fullscreen, setFullscreen] = useState(false);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [texts, setTexts] = useState<TextItem[]>([]);
@@ -160,8 +165,11 @@ export function EditPng() {
   }, [target]);
 
   // Displayed canvas size — fit within a max viewport while preserving
-  // aspect ratio. Account for rotation (swap dims at 90/270).
+  // aspect ratio. Account for rotation (swap dims at 90/270). User-controllable
+  // zoom multiplies the fit scale.
   const [displaySize, setDisplaySize] = useState<{ w: number; h: number } | null>(null);
+  const [zoom, setZoom] = useState(1); // 1 = fit, 2 = 2x, 0.5 = half
+  const [fitScale, setFitScale] = useState(1); // the base fit scale before zoom
 
   useEffect(() => {
     if (!imageDims) return;
@@ -171,11 +179,12 @@ export function EditPng() {
     const maxW = 900;
     const maxH = 600;
     const scale = Math.min(maxW / baseW, maxH / baseH, 1);
+    setFitScale(scale);
     setDisplaySize({
-      w: Math.round(baseW * scale),
-      h: Math.round(baseH * scale),
+      w: Math.round(baseW * scale * zoom),
+      h: Math.round(baseH * scale * zoom),
     });
-  }, [imageDims, rotation]);
+  }, [imageDims, rotation, zoom]);
 
   // The conversion factor from canvas pixel coords → original image pixels
   // (for crop & save).
@@ -809,6 +818,70 @@ export function EditPng() {
               <input type="range" min={1} max={20} step={1} value={penWidth} onChange={(e) => setPenWidth(parseInt(e.target.value, 10))} className="w-16" style={{ accentColor: "var(--brand)" }} />
               <span className="rounded-md px-1.5 py-0.5 text-[10px] font-bold" style={{ background: "var(--muted)", color: "var(--foreground)" }}>{penWidth}px</span>
             </div>
+            {/* Zoom controls — floating in top-right */}
+            <div className="absolute top-3 right-3 flex items-center gap-1 rounded-lg border bg-[var(--card)] px-2 py-1 shadow-sm" style={{ borderColor: "var(--border)" }}>
+              <button
+                onClick={() => setZoom((z) => Math.max(0.1, z - 0.25))}
+                className="flex size-7 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors"
+                title="Zoom out"
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="size-4" />
+              </button>
+              <span className="px-1 text-xs font-bold tabular-nums text-[var(--foreground)]" style={{ minWidth: "3ch", textAlign: "center" }}>
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={() => setZoom((z) => Math.min(8, z + 0.25))}
+                className="flex size-7 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors"
+                title="Zoom in"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="size-4" />
+              </button>
+              <button
+                onClick={() => setZoom(1)}
+                className={cn(
+                  "ml-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-colors",
+                  zoom === 1 ? "bg-[var(--brand)]/10 text-[var(--brand)]" : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
+                )}
+                title="Fit to screen"
+              >
+                Fit
+              </button>
+              <button
+                onClick={() => setFullscreen(true)}
+                className="ml-1 flex size-7 items-center justify-center rounded-md text-[var(--brand)] hover:bg-[var(--brand)]/10 transition-colors"
+                title="Fullscreen"
+                aria-label="Fullscreen"
+              >
+                <Maximize2 className="size-4" />
+              </button>
+            </div>
+            {/* Fullscreen modal */}
+            {fullscreen && (
+              <div className="fixed inset-0 z-[80] flex flex-col bg-[var(--background)]/95 backdrop-blur-md animate-fade-in" onClick={() => setFullscreen(false)}>
+                <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                  <span className="text-sm font-semibold text-[var(--foreground)]">"Fullscreen preview"</span>
+                  <button onClick={() => setFullscreen(false)} className="flex size-9 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]" aria-label="Close">
+                    <X className="size-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-auto thin-scroll p-4" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex h-full items-center justify-center">
+                    <canvas
+                      ref={canvasRef}
+                      onPointerDown={onPointerDown}
+                      onPointerMove={onPointerMove}
+                      onPointerUp={onPointerUp}
+                      onPointerCancel={onPointerUp}
+                      className="block rounded-lg shadow-2xl"
+                      style={{ cursor: tool2 === "select" ? "default" : tool2 === "text" ? "text" : "crosshair", touchAction: "none", maxWidth: "100%", maxHeight: "100%" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (

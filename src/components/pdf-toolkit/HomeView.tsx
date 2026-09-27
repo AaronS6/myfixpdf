@@ -7,7 +7,7 @@ import { TOOLS, CATEGORY_LABELS, CATEGORY_COLORS, type ToolMeta } from "./tools/
 import { imageThumbnail, isPdf, getExt, formatBytes } from "@/lib/pdf/file-helpers";
 import { getPageCount } from "@/lib/pdf/pdfjs";
 import { toast } from "sonner";
-import { ArrowRight, ShieldCheck, Zap, Layers } from "lucide-react";
+import { ArrowRight, ShieldCheck, Zap, Layers, Sparkles } from "lucide-react";
 import { useDocumentSession as useSession } from "@/store/document-session";
 
 export function HomeView() {
@@ -86,16 +86,16 @@ export function HomeView() {
         <div className="absolute inset-0 -z-10 brand-gradient opacity-[0.08]" />
         <div className="absolute -right-32 -top-32 -z-10 size-96 rounded-full bg-gradient-to-br from-[#23A6D5]/20 to-[#2FE0C6]/20 blur-3xl" />
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E4E9F0] bg-white/80 px-3 py-1 text-xs font-medium text-[#5B6B79] backdrop-blur">
-            <ShieldCheck className="size-3.5 text-[#1FB65B]" />
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B]/80 px-3 py-1 text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] backdrop-blur">
+            <ShieldCheck className="size-3.5 text-[#1FB65B] dark:text-[#1FB67E]" />
             100% client-side · Your files never leave your browser
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-[#1D2733] sm:text-5xl">
+          <h1 className="text-4xl font-bold tracking-tight text-[#1D2733] dark:text-[#E6EDF6] sm:text-5xl">
             Every PDF tool you need,
             <br />
             <span className="brand-gradient-text">in one place.</span>
           </h1>
-          <p className="mt-4 text-base text-[#5B6B79] sm:text-lg">
+          <p className="mt-4 text-base text-[#5B6B79] dark:text-[#93A4B6] sm:text-lg">
             Compress, convert, merge, split, edit &amp; sign — all in your browser. Real processing, real results, no uploads.
           </p>
           <div className="mt-8">
@@ -109,9 +109,9 @@ export function HomeView() {
               ctaText="Choose Files"
             />
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-[#5B6B79]">
-            <span className="inline-flex items-center gap-1.5"><Zap className="size-3.5 text-[#1AA8E0]" /> Instant processing</span>
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-[#1FB65B]" /> Private &amp; secure</span>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+            <span className="inline-flex items-center gap-1.5"><Zap className="size-3.5 text-[#1AA8E0] dark:text-[#2FB2E4]" /> Instant processing</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-[#1FB65B] dark:text-[#1FB67E]" /> Private &amp; secure</span>
             <span className="inline-flex items-center gap-1.5"><Layers className="size-3.5 text-[#8C54FF]" /> Chain tools freely</span>
           </div>
         </div>
@@ -121,12 +121,12 @@ export function HomeView() {
       <section className="py-12">
         <div className="mb-6 flex items-end justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#1D2733] sm:text-3xl">All tools</h2>
-            <p className="mt-1 text-sm text-[#5B6B79]">
+            <h2 className="text-2xl font-bold text-[#1D2733] dark:text-[#E6EDF6] sm:text-3xl">All tools</h2>
+            <p className="mt-1 text-sm text-[#5B6B79] dark:text-[#93A4B6]">
               Pick a tool to start, or drop files above — we&apos;ll route you automatically.
             </p>
           </div>
-          {busy && <span className="text-xs text-[#5B6B79]">Loading files…</span>}
+          {busy && <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Loading files…</span>}
         </div>
 
         {(["compress", "convert", "organize", "edit"] as const).map((cat) => {
@@ -135,7 +135,7 @@ export function HomeView() {
             <div key={cat} className="mb-8">
               <div className="mb-3 flex items-center gap-2">
                 <span className="size-2 rounded-full" style={{ background: CATEGORY_COLORS[cat] }} />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-[#1D2733]">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-[#1D2733] dark:text-[#E6EDF6]">
                   {CATEGORY_LABELS[cat]}
                 </h3>
               </div>
@@ -156,15 +156,15 @@ export function HomeView() {
           { icon: Zap, color: "#1AA8E0", title: "Real results", text: "Real PDF libraries (pdf-lib, pdf.js, UPNG, docx) doing the work — no mock spinners." },
           { icon: Layers, color: "#8C54FF", title: "Chain freely", text: "Compress → merge → sign → split, all without ever pressing Download in between." },
         ].map((card, i) => (
-          <div key={i} className="rounded-2xl border border-[#E4E9F0] bg-white p-5 shadow-sm">
+          <div key={i} className="rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-5 shadow-sm">
             <span
               className="mb-3 flex size-10 items-center justify-center rounded-xl text-white"
               style={{ background: card.color }}
             >
               <card.icon className="size-5" />
             </span>
-            <p className="text-base font-semibold text-[#1D2733]">{card.title}</p>
-            <p className="mt-1 text-sm text-[#5B6B79]">{card.text}</p>
+            <p className="text-base font-semibold text-[#1D2733] dark:text-[#E6EDF6]">{card.title}</p>
+            <p className="mt-1 text-sm text-[#5B6B79] dark:text-[#93A4B6]">{card.text}</p>
           </div>
         ))}
       </section>
@@ -176,12 +176,17 @@ function ToolCard({ tool, onClick }: { tool: ToolMeta; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[#E4E9F0] bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl"
+      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl animate-fade-up"
     >
       <div
         className="absolute -right-10 -top-10 size-24 rounded-full opacity-10 transition-opacity group-hover:opacity-20"
         style={{ background: tool.color }}
       />
+      {tool.isNew && (
+        <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#FF4B6E] to-[#FF8A00] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+          <Sparkles className="size-2.5" /> New
+        </span>
+      )}
       <span
         className="flex size-12 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-105"
         style={{ background: tool.color }}
@@ -189,8 +194,8 @@ function ToolCard({ tool, onClick }: { tool: ToolMeta; onClick: () => void }) {
         <ToolGlyph id={tool.id} />
       </span>
       <div>
-        <p className="text-base font-semibold text-[#1D2733]">{tool.name}</p>
-        <p className="mt-1 text-xs leading-relaxed text-[#5B6B79]">{tool.desc}</p>
+        <p className="text-base font-semibold text-[#1D2733] dark:text-[#E6EDF6]">{tool.name}</p>
+        <p className="mt-1 text-xs leading-relaxed text-[#5B6B79] dark:text-[#93A4B6]">{tool.desc}</p>
       </div>
       <div className="mt-auto flex items-center text-xs font-semibold" style={{ color: tool.color }}>
         Open tool <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -245,6 +250,28 @@ function ToolGlyph({ id }: { id: string }) {
     "edit-pdf": (
       <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+    ),
+    "watermark-pdf": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" opacity="0.3" />
+        <path d="M9 12l2 2 4-4" />
+      </svg>
+    ),
+    "reorder-pdf": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+    "extract-text": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 7V4h16v3" /><path d="M9 20h6" /><path d="M12 4v16" />
+      </svg>
+    ),
+    "page-numbers": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 9h16" /><path d="M4 15h16" /><path d="M10 3 8 21" /><path d="M16 3l-2 18" />
       </svg>
     ),
   };

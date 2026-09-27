@@ -119,7 +119,7 @@ export function PdfPreview({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-[#FEE2E2] bg-[#FEF2F2] p-4 text-sm text-[#F04438]">
+      <div className="rounded-xl border border-[#FEE2E2] dark:border-[#5a2226] bg-[#FEF2F2] dark:bg-[#2a1212] p-4 text-sm text-[#F04438] dark:text-[#FF6B6B]">
         {error}
       </div>
     );
@@ -128,23 +128,23 @@ export function PdfPreview({
   return (
     <div className={cn("flex h-full flex-col", className)}>
       {showToolbar && (
-        <div className="flex items-center justify-between gap-2 border-b border-[#E4E9F0] bg-white px-3 py-2">
+        <div className="flex items-center justify-between gap-2 border-b border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-3 py-2">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPageNum((p) => Math.max(1, p - 1))}
               disabled={pageNum <= 1}
-              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] text-[#5B6B79] hover:bg-[#F7F9FC] disabled:opacity-40"
+              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626] disabled:opacity-40"
               aria-label="Previous page"
             >
               <ChevronLeft className="size-4" />
             </button>
-            <span className="px-2 text-xs font-medium text-[#1D2733]">
+            <span className="px-2 text-xs font-medium text-[#1D2733] dark:text-[#E6EDF6]">
               Page {pageNum} of {numPages || "—"}
             </span>
             <button
               onClick={() => setPageNum((p) => Math.min(numPages, p + 1))}
               disabled={pageNum >= numPages}
-              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] text-[#5B6B79] hover:bg-[#F7F9FC] disabled:opacity-40"
+              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626] disabled:opacity-40"
               aria-label="Next page"
             >
               <ChevronRight className="size-4" />
@@ -153,7 +153,7 @@ export function PdfPreview({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setScale((s) => SCALES[Math.max(0, SCALES.findIndex((v) => v >= s) - 1)] ?? s)}
-              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] text-[#5B6B79] hover:bg-[#F7F9FC]"
+              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
               aria-label="Zoom out"
             >
               <ZoomOut className="size-4" />
@@ -161,7 +161,7 @@ export function PdfPreview({
             <select
               value={scale}
               onChange={(e) => setScale(parseFloat(e.target.value))}
-              className="rounded-md border border-[#E4E9F0] bg-white px-2 py-1 text-xs text-[#1D2733] outline-none"
+              className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-2 py-1 text-xs text-[#1D2733] dark:text-[#E6EDF6] outline-none"
             >
               {SCALES.map((s) => (
                 <option key={s} value={s}>
@@ -172,14 +172,14 @@ export function PdfPreview({
             </select>
             <button
               onClick={() => setScale((s) => SCALES[Math.min(SCALES.length - 1, SCALES.findIndex((v) => v >= s) + 1)] ?? s)}
-              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] text-[#5B6B79] hover:bg-[#F7F9FC]"
+              className="flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
               aria-label="Zoom in"
             >
               <ZoomIn className="size-4" />
             </button>
             <button
               onClick={() => setScale(1)}
-              className="ml-1 flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] text-[#5B6B79] hover:bg-[#F7F9FC]"
+              className="ml-1 flex size-8 items-center justify-center rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
               aria-label="Reset zoom"
               title="100%"
             >
@@ -192,7 +192,7 @@ export function PdfPreview({
         ref={containerRef}
         onWheel={onWheel}
         className={cn(
-          "relative flex-1 overflow-auto thin-scroll bg-[#F7F9FC] p-4",
+          "relative flex-1 overflow-auto thin-scroll bg-[#F7F9FC] dark:bg-[#0E1626] p-4",
           loading && "flex items-center justify-center",
         )}
       >
@@ -215,7 +215,7 @@ export function PdfPreview({
           </div>
         </div>
         {loading && !error && (
-          <p className="text-sm text-[#5B6B79]">Loading PDF…</p>
+          <p className="text-sm text-[#5B6B79] dark:text-[#93A4B6]">Loading PDF…</p>
         )}
       </div>
     </div>

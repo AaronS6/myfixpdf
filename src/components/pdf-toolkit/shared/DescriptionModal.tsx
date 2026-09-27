@@ -64,11 +64,11 @@ export function DescriptionModal({ open, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B1220]/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl animate-pop-in">
-        <div className="flex items-center justify-between border-b border-[#E4E9F0] p-4">
-          <h3 className="text-lg font-semibold text-[#1D2733]">Add description / note</h3>
-          <button onClick={onClose} className="text-2xl text-[#5B6B79] hover:text-[#1D2733]">×</button>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B1220]/50 dark:bg-[#000000]/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white dark:bg-[#111A2B] shadow-2xl animate-pop-in">
+        <div className="flex items-center justify-between border-b border-[#E4E9F0] dark:border-[#1E2A44] p-4">
+          <h3 className="text-lg font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Add description / note</h3>
+          <button onClick={onClose} className="text-2xl text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]">×</button>
         </div>
         <div className="space-y-4 p-4">
           <textarea
@@ -76,7 +76,7 @@ export function DescriptionModal({ open, onClose }: Props) {
             onChange={(e) => setText(e.target.value)}
             placeholder="Type a note, description, or annotation here…"
             rows={5}
-            className="w-full resize-none rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-sm text-[#1D2733] outline-none focus:border-[#1AA8E0]"
+            className="w-full resize-none rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-3 py-2 text-sm text-[#1D2733] dark:text-[#E6EDF6] outline-none focus:border-[#1AA8E0] dark:border-[#2FB2E4]"
           />
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -84,35 +84,35 @@ export function DescriptionModal({ open, onClose }: Props) {
               className={cn(
                 "rounded-lg border p-3 text-left transition-all",
                 mode === "metadata"
-                  ? "border-[#1AA8E0] bg-[#EAF7FD]"
-                  : "border-[#E4E9F0] hover:bg-[#F7F9FC]",
+                  ? "border-[#1AA8E0] dark:border-[#2FB2E4] bg-[#EAF7FD] dark:bg-[#0d2330]"
+                  : "border-[#E4E9F0] dark:border-[#1E2A44] hover:bg-[#F7F9FC] dark:bg-[#0E1626]",
               )}
             >
-              <p className="text-sm font-semibold text-[#1D2733]">Metadata only</p>
-              <p className="text-xs text-[#5B6B79]">Stored in the PDF's Subject / Keywords. Not visible on the page.</p>
+              <p className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Metadata only</p>
+              <p className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Stored in the PDF's Subject / Keywords. Not visible on the page.</p>
             </button>
             <button
               onClick={() => setMode("visible")}
               className={cn(
                 "rounded-lg border p-3 text-left transition-all",
                 mode === "visible"
-                  ? "border-[#1AA8E0] bg-[#EAF7FD]"
-                  : "border-[#E4E9F0] hover:bg-[#F7F9FC]",
+                  ? "border-[#1AA8E0] dark:border-[#2FB2E4] bg-[#EAF7FD] dark:bg-[#0d2330]"
+                  : "border-[#E4E9F0] dark:border-[#1E2A44] hover:bg-[#F7F9FC] dark:bg-[#0E1626]",
               )}
             >
-              <p className="text-sm font-semibold text-[#1D2733]">Visible text</p>
-              <p className="text-xs text-[#5B6B79]">Renders as text on page 1.</p>
+              <p className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Visible text</p>
+              <p className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Renders as text on page 1.</p>
             </button>
           </div>
-          <div className="flex items-start gap-2 rounded-md bg-[#F7F9FC] p-2 text-xs text-[#5B6B79]">
-            <Info className="size-4 shrink-0 text-[#1AA8E0]" />
+          <div className="flex items-start gap-2 rounded-md bg-[#F7F9FC] dark:bg-[#0E1626] p-2 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+            <Info className="size-4 shrink-0 text-[#1AA8E0] dark:text-[#2FB2E4]" />
             <span>
               Visible-text mode places the description as a footer note on page 1. For full drag-and-drop text annotations, use the Edit PDF tool.
             </span>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-[#E4E9F0] p-4">
-          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-[#5B6B79] hover:bg-[#F7F9FC]">
+        <div className="flex items-center justify-end gap-2 border-t border-[#E4E9F0] dark:border-[#1E2A44] p-4">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]">
             Cancel
           </button>
           <button

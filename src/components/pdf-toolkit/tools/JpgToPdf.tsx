@@ -103,7 +103,7 @@ export function JpgToPdf() {
         <div className="mt-5 space-y-4">
           {/* Drag-and-drop reorder grid */}
           <div>
-            <p className="mb-2 text-sm font-semibold text-[#1D2733]">Drag to reorder pages</p>
+            <p className="mb-2 text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Drag to reorder pages</p>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={sourceFiles.map((f) => f.id)} strategy={rectSortingStrategy}>
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -117,11 +117,11 @@ export function JpgToPdf() {
           {/* Settings */}
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <label className="text-sm font-semibold text-[#1D2733]">Page size</label>
+              <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Page size</label>
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(e.target.value as "fit" | "a4" | "letter")}
-                className="mt-1 w-full rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-sm text-[#1D2733] outline-none focus:border-[#1AA8E0]"
+                className="mt-1 w-full rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-3 py-2 text-sm text-[#1D2733] dark:text-[#E6EDF6] outline-none focus:border-[#1AA8E0] dark:border-[#2FB2E4]"
               >
                 <option value="fit">Fit to image</option>
                 <option value="a4">A4</option>
@@ -129,11 +129,11 @@ export function JpgToPdf() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-semibold text-[#1D2733]">Orientation</label>
+              <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Orientation</label>
               <select
                 value={orientation}
                 onChange={(e) => setOrientation(e.target.value as "portrait" | "landscape")}
-                className="mt-1 w-full rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-sm text-[#1D2733] outline-none focus:border-[#1AA8E0]"
+                className="mt-1 w-full rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-3 py-2 text-sm text-[#1D2733] dark:text-[#E6EDF6] outline-none focus:border-[#1AA8E0] dark:border-[#2FB2E4]"
               >
                 <option value="portrait">Portrait</option>
                 <option value="landscape">Landscape</option>
@@ -141,8 +141,8 @@ export function JpgToPdf() {
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#1D2733]">Margin (pt)</label>
-                <span className="rounded-md bg-[#EEF3F8] px-2 py-0.5 text-xs font-bold text-[#1D2733]">{margin}</span>
+                <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Margin (pt)</label>
+                <span className="rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-xs font-bold text-[#1D2733] dark:text-[#E6EDF6]">{margin}</span>
               </div>
               <input
                 type="range"
@@ -155,13 +155,13 @@ export function JpgToPdf() {
               />
             </div>
           </div>
-          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] bg-[#F7F9FC] p-3 text-xs text-[#5B6B79]">
-            <FileImage className="size-4 shrink-0 text-[#1AA8E0]" />
+          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+            <FileImage className="size-4 shrink-0 text-[#1AA8E0] dark:text-[#2FB2E4]" />
             <p>Drag tiles to reorder. Pages are sized to your chosen page size; images are scaled to fit with the chosen margin.</p>
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] bg-[#F7F9FC] p-6 text-center text-sm text-[#5B6B79]">
+        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
           Drop JPG / PNG images above to start.
         </div>
       )}
@@ -179,16 +179,16 @@ function SortableImageTile({ id, src, name, index, size, onRemove }: { id: strin
         transition,
       }}
       className={cn(
-        "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 border-[#E4E9F0] bg-white",
-        isDragging && "border-[#1AA8E0] opacity-50 shadow-lg",
+        "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B]",
+        isDragging && "border-[#1AA8E0] dark:border-[#2FB2E4] opacity-50 shadow-lg",
       )}
     >
-      <div className="absolute left-1 top-1 z-10 flex items-center gap-0.5 rounded bg-[#1D2733]/70 px-1 py-0.5 text-[10px] font-bold text-white">
+      <div className="absolute left-1 top-1 z-10 flex items-center gap-0.5 rounded bg-[#1D2733]/70 dark:bg-[#0B1220]/80 px-1 py-0.5 text-[10px] font-bold text-white">
         {index + 1}
       </div>
       <button
         onClick={onRemove}
-        className="absolute right-1 top-1 z-10 flex size-5 items-center justify-center rounded-full bg-white/90 text-[#F04438] opacity-0 transition-opacity group-hover:opacity-100"
+        className="absolute right-1 top-1 z-10 flex size-5 items-center justify-center rounded-full bg-white dark:bg-[#111A2B]/90 text-[#F04438] dark:text-[#FF6B6B] opacity-0 transition-opacity group-hover:opacity-100"
         aria-label="Remove"
       >
         <X className="size-3" />
@@ -196,7 +196,7 @@ function SortableImageTile({ id, src, name, index, size, onRemove }: { id: strin
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={name} className="h-full w-full object-contain" />
       <button
-        className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-[#1D2733]/70 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
+        className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-[#1D2733]/70 dark:bg-[#0B1220]/80 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
         {...attributes}
         {...listeners}
       >

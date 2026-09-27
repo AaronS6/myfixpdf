@@ -52,6 +52,10 @@ export type ToolId =
   | "split-pdf"
   | "merge-pdf"
   | "edit-pdf"
+  | "watermark-pdf"
+  | "reorder-pdf"
+  | "extract-text"
+  | "page-numbers"
   | "result";
 
 type ProgressState = {

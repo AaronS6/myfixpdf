@@ -135,12 +135,12 @@ export function SplitPdf() {
       {target ? (
         <div className="mt-5 space-y-4">
           {/* Mode selector */}
-          <div className="flex gap-1 rounded-lg bg-[#F7F9FC] p-1">
+          <div className="flex gap-1 rounded-lg bg-[#F7F9FC] dark:bg-[#0E1626] p-1">
             <button
               onClick={() => setMode("single")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "single" ? "bg-white text-[#8C54FF] shadow-sm" : "text-[#5B6B79]",
+                mode === "single" ? "bg-white dark:bg-[#111A2B] text-[#8C54FF] shadow-sm" : "text-[#5B6B79] dark:text-[#93A4B6]",
               )}
             >
               <Layers3 className="size-4" /> Extract pages into one PDF
@@ -149,7 +149,7 @@ export function SplitPdf() {
               onClick={() => setMode("groups")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "groups" ? "bg-white text-[#8C54FF] shadow-sm" : "text-[#5B6B79]",
+                mode === "groups" ? "bg-white dark:bg-[#111A2B] text-[#8C54FF] shadow-sm" : "text-[#5B6B79] dark:text-[#93A4B6]",
               )}
             >
               <Group className="size-4" /> Split into separate PDFs per group
@@ -158,15 +158,15 @@ export function SplitPdf() {
 
           {mode === "single" && (
             <div>
-              <label className="text-sm font-semibold text-[#1D2733]">Quick range (e.g. “1-3, 5, 8-10”)</label>
+              <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Quick range (e.g. “1-3, 5, 8-10”)</label>
               <input
                 type="text"
                 value={rangeText}
                 onChange={(e) => updateRange(e.target.value)}
                 placeholder="1-3, 5, 8-10"
-                className="mt-1 w-full rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-sm text-[#1D2733] outline-none focus:border-[#1AA8E0]"
+                className="mt-1 w-full rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-3 py-2 text-sm text-[#1D2733] dark:text-[#E6EDF6] outline-none focus:border-[#1AA8E0] dark:border-[#2FB2E4]"
               />
-              <p className="mt-1 text-xs text-[#5B6B79]">Type page ranges to auto-tick checkboxes below.</p>
+              <p className="mt-1 text-xs text-[#5B6B79] dark:text-[#93A4B6]">Type page ranges to auto-tick checkboxes below.</p>
             </div>
           )}
 
@@ -179,7 +179,7 @@ export function SplitPdf() {
                     onClick={() => setActiveGroup(i)}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all",
-                      activeGroup === i ? "text-white" : "text-[#1D2733] ring-1 ring-[#E4E9F0]",
+                      activeGroup === i ? "text-white" : "text-[#1D2733] dark:text-[#E6EDF6] ring-1 ring-[#E4E9F0]",
                     )}
                     style={{ background: activeGroup === i ? g.color : "#fff" }}
                   >
@@ -188,12 +188,12 @@ export function SplitPdf() {
                 ))}
                 <button
                   onClick={addGroup}
-                  className="rounded-full border border-dashed border-[#8C54FF] px-3 py-1 text-xs font-semibold text-[#8C54FF] hover:bg-[#F7F9FC]"
+                  className="rounded-full border border-dashed border-[#8C54FF] px-3 py-1 text-xs font-semibold text-[#8C54FF] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
                 >
                   + New group
                 </button>
               </div>
-              <p className="text-xs text-[#5B6B79]">
+              <p className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">
                 Clicking pages adds them to the <span className="font-semibold" style={{ color: groups[activeGroup].color }}>active group</span>.
                 Each group becomes a separate output PDF.
               </p>
@@ -234,13 +234,13 @@ export function SplitPdf() {
                 : undefined
             }
           />
-          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] bg-[#F7F9FC] p-3 text-xs text-[#5B6B79]">
+          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
             <Scissors className="size-4 shrink-0 text-[#8C54FF]" />
             <p>Single mode = all selected pages form one new PDF. Group mode = each group becomes its own PDF (download individually or as ZIP).</p>
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] bg-[#F7F9FC] p-6 text-center text-sm text-[#5B6B79]">
+        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
           Drop a PDF above to pick which pages to extract or split.
         </div>
       )}

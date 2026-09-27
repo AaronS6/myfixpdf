@@ -191,3 +191,88 @@ Minor non-blocking observations (do NOT require code changes):
 Next actions (optional, not required for sign-off):
 - Consider upgrading the test PDF fixture to include actual text (not just colored rectangles) so PDF→Word conversion has something to OCR/extract beyond empty content. The current `test-doc.pdf` results in a valid 8.4 KB .docx but the .docx text content is minimal.
 - Consider adding a smoke test for `Word to PDF` (`#word-to-pdf`) — it was the only conversion flow NOT covered by this QA pass (not in the test list).
+
+
+---
+Task ID: QA-3
+Agent: QA-tester-3
+Task: Test the 4 new tools (watermark, reorder, extract-text, page-numbers) end-to-end.
+
+Work Log:
+- Read existing worklog; confirmed prior QA-1/QA-2/FIX-1 work (pdfjs `destroy()` → `cleanup()`, hash-nav cold-load ordering guard, ResultScreen type pill de-doubled, per-page rotation `degrees` shadow fix). Dev server still up at http://localhost:3000 (HTTP 200).
+- Reused fixtures: `/tmp/test-doc.pdf` (3-page PDF, 1967 B, with text "PDF Toolkit Test — Page N" + "Page N of 3" body footer + blue header bar + orange/green rectangles), `/tmp/test.png` (80×60 solid #1AA8E0 PNG, 121 B), `/tmp/test-doc.docx` (8 KB). Confirmed test-doc.pdf now actually contains text content (verified via `pdftotext -layout`) — addresses the QA-2 next-action item about the fixture being textless.
+
+**Test 1 — Watermark PDF (`#watermark-pdf`):**
+  - Fresh session → opened `#watermark-pdf` → uploaded `/tmp/test-doc.pdf` → 3 s wait → screenshot `qa3-1-wm-upload.png` + `qa3-1-wm-config.png` (scrolled). DOM + VLM verification confirmed all required elements:
+    • Two tabs: "Text watermark" / "Image watermark" ✓
+    • Text input with `placeholder="CONFIDENTIAL"` and default `value="CONFIDENTIAL"` ✓
+    • 3 sliders: font-size (12–120, value 48, step 2), rotation (0–360, value 45, step 5), opacity (0.05–1, value 0.25, step 0.05) ✓
+    • 5 color presets (Dark Gray [selected], Red, Blue, Green, Orange) — each a 32×32 colored circle ✓
+    • Position grid with 6 options: Center, Tile (3×3), Top Left, Top Right, Bottom Left, Bottom Right ✓
+    • 3 target options: "All pages" / "First page only" / "Last page only" ✓
+    • Live preview mockup on the right showing rotated "CONFIDENTIAL" text ✓
+    • "Apply Watermark" CTA ✓
+  - **Test-methodology note:** the prescribed JS `i.value = 'TOP SECRET'; i.dispatchEvent(new Event('input', {bubbles:true}))` does NOT actually update React's controlled-input state (React's value tracker compares the new `.value` to the tracker's internal cache, sees no change, and skips `onChange`). After clicking Apply Watermark, the resulting PDF showed "CONFIDENTIAL" (the default), not "TOP SECRET" — i.e. the test method failed, not the tool.
+  - Worked around by using the React-compatible native setter: `Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(i, 'TOP SECRET'); i.dispatchEvent(new Event('input', {bubbles:true}))`. Confirmed via DOM that the live-preview mockup updated to render 9 `<span>TOP SECRET</span>` elements (one per tile).
+  - Clicked "Apply Watermark" → 6 s wait → screenshot `qa3-1-wm-result2.png`. Hash → `#result`. VLM-verified: result screen shows `test-doc--watermarked.pdf` (3.7 KB), Page 1 of 3 preview, watermark text **"TOP SECRET"** visible diagonally across the page in semi-transparent grey, Download button + CONTINUE WORKING sidebar.
+  - **PASS** (the tool itself works correctly end-to-end; the prescribed JS test method is a known React-state-update quirk, not a code bug).
+
+**Test 2 — Reorder Pages (`#reorder-pdf`):**
+  - Fresh session → opened `#reorder-pdf` → uploaded `/tmp/test-doc.pdf` → 5 s wait → screenshot `qa3-2-reorder-upload.png` (upload state, file row only). Scrolled down → screenshot `qa3-2-reorder-tiles.png`. DOM + VLM confirmed:
+    • 3 page thumbnail tiles in a grid ✓
+    • 3 purple badges (`rgb(140, 84, 255)`) numbered 1, 2, 3 in current-position order ✓
+    • 3 "was 1" / "was 2" / "was 3" labels showing original page numbers ✓
+    • "Reverse order" and "Save New Order" CTAs ✓
+    • No skeleton loaders visible (thumbnails finished rendering within the 5 s wait)
+  - Clicked "Reverse order" via JS (`btns.find(b => b.textContent.trim() === 'Reverse order').click()`). Screenshot `qa3-2-reorder-reversed.png`. DOM + VLM confirmed:
+    • Purple position badges still read "1, 2, 3" (current positions) ✓
+    • "was" labels now read "was 3, was 2, was 1" (reversed) ✓ — reversal worked correctly
+  - Clicked "Save New Order" → 5 s wait → screenshot `qa3-2-reorder-result.png`. Hash → `#result`. VLM-verified: result screen shows `test-doc.-reordered.pdf` (1.9 KB → 1.9 KB, -0%), Page 1 of 3 navigation. The PDF preview body shows **"PDF Toolkit Test — Page 3"** — i.e. the original page 3 is now at position 1 — definitive proof the reorder was baked into the output PDF.
+  - **PASS.**
+
+**Test 3 — Extract Text (`#extract-text`):**
+  - Fresh session → opened `#extract-text` → uploaded `/tmp/test-doc.pdf` → 3 s wait → screenshot `qa3-3-extract-upload.png` (upload state). Scrolled down → screenshot `qa3-3-extract-scrolled.png`. DOM + VLM confirmed:
+    • Empty-state message: "Click Extract Text to pull all text content out of your PDF." ✓
+    • Secondary note: "Uses pdf.js text-content extraction. Image-only / scanned PDFs may return empty results." ✓
+    • "1 file ready" status + orange "Extract Text →" CTA ✓
+  - Clicked "Extract Text" → 6 s wait → screenshot `qa3-3-extract-result.png`. DOM + VLM confirmed:
+    • 3 stat cards: **Pages = 3, Characters = 288, Words = 45** ✓
+    • 3 per-page collapsible `<details>` sections, each `<summary>` reading "N · Page N · 3 lines · 96 chars" ✓
+    • Extracted text per page includes: "PDF Toolkit Test — Page 1" / "Sample content for testing compress/split/merge/edit/sign." / "Page 1 of 3" (and similarly for pages 2 and 3) ✓
+    • "Copy all" and "Download .txt" action buttons visible at top-right of extracted-text section ✓
+  - **PASS.**
+
+**Test 4 — Page Numbers (`#page-numbers`):**
+  - Fresh session → opened `#page-numbers` → uploaded `/tmp/test-doc.pdf` → 3 s wait → screenshot `qa3-4-pgnum-upload.png` (upload state). Scrolled down → screenshot `qa3-4-pgnum-mid.png`. DOM + VLM confirmed all required elements:
+    • 4 format cards: "Just the number" (e.g. 1), "n/total" (e.g. 1/5), "n of total" (e.g. 1 of 5), "Page n of total" (e.g. Page 1 of 5) — **4th card selected by default** ✓
+    • 4 position buttons: "Bottom Center" [selected], "Bottom Right", "Top Center", "Top Right" ✓
+    • Font-size slider (8–20, value 11, step 1) ✓
+    • Start-from slider (1–10, value 1, step 1) ✓
+    • Live preview mockup showing "Page 2 of 5" with "Preview (page 2 of 5)" heading ✓
+    • "Add Page Numbers" CTA ✓
+  - Clicked "Add Page Numbers" → 5 s wait → screenshot `qa3-4-pgnum-result.png`. Hash → `#result`. Initial VLM pass said "Page 1 of 3" was only visible in the preview toolbar, not at the bottom of the page (the footer text is small at 11pt and the preview was at 100% zoom — too small for VLM to resolve). Worked around by clicking "Zoom in" 3× and scrolling the preview container to its bottom (scrollHeight=1722, clientHeight=355) → screenshot `qa3-4-pgnum-zoomed.png`. VLM now confirmed: small **"Page 1 of 3"** text visible centered in the footer area of the PDF page ✓.
+  - **Definitive verification via downloaded PDF:** clicked the teal Download button → `/home/z/Downloads/test-doc.-numbered.pdf` (2.7 KB). Ran `pdftotext -layout` → output confirms footer text "Page 1 of 3", "Page 2 of 3", "Page 3 of 3" appended to each of the 3 pages (right-aligned in the pdftotext -layout rendering, indicating the text is positioned at the bottom of each page) ✓.
+  - **PASS.**
+
+All screenshots saved under `/tmp/qa3-*.png` for evidence. Did NOT modify any code — reporting only.
+
+Stage Summary:
+Results table:
+
+| # | Test | Result | Notes |
+|---|---|---|---|
+| 1 | Watermark PDF | PASS | Two tabs (Text/Image), CONFIDENTIAL default, 3 sliders (font 12–120/rot 0–360/opacity 0.05–1), 5 color presets, 6-position grid (Center/Tile/Top-L/Top-R/Bottom-L/Bottom-R), 3 target options (All/First/Last), live preview mockup. After changing text to "TOP SECRET" (using the React-compatible native value setter — the prescribed `i.value = '...'` JS does NOT trigger React state updates, see note below), the resulting watermarked PDF (3.7 KB, Page 1 of 3) shows "TOP SECRET" diagonally across the page in semi-transparent grey. Download + CONTINUE WORKING sidebar present. |
+| 2 | Reorder Pages | PASS | 3 page tiles + purple "1/2/3" badges + "was 1/2/3" labels + Reverse order + Save New Order CTAs. After Reverse order, badges still read "1/2/3" but "was" labels read "was 3/was 2/was 1". Result `test-doc.-reordered.pdf` (1.9 KB, Page 1 of 3) — preview body shows "PDF Toolkit Test — Page 3" at position 1, confirming the reorder was actually baked into the output PDF. |
+| 3 | Extract Text | PASS | Empty-state "Click Extract Text to pull all text content out of your PDF." + secondary note + Extract Text → CTA. Result: 3 stat cards (Pages=3, Characters=288, Words=45) + 3 collapsible per-page `<details>` summaries ("1·Page 1·3 lines · 96 chars" etc.) + extracted text includes "PDF Toolkit Test — Page N" and "Page N of 3" for each page + Copy all / Download .txt buttons. |
+| 4 | Page Numbers | PASS | 4 format cards (Just the number / n/total / n of total / Page n of total — last one selected by default), 4 position buttons (Bottom Center [default] / Bottom Right / Top Center / Top Right), font-size slider (8–20, val 11), start-from slider (1–10, val 1), live preview showing "Page 2 of 5". After Add Page Numbers → result `test-doc-numbered.pdf` (2.7 KB, Page 1 of 3). Footer "Page N of 3" text on every page confirmed both via VLM (after 3× zoom-in) and via `pdftotext -layout` of the downloaded file. |
+
+All 4 tests **PASS**. No FAIL/PARTIAL. The previously-fixed bugs from QA-1/FIX-1 and QA-2 remain fixed (no regression in PDF upload, hash navigation, ResultScreen rendering).
+
+Test-methodology notes (do NOT require code changes):
+1. **React-controlled `<input>` value setter:** the prescribed test JS `(function(){ const i = document.querySelector('input[type=text]'); i.value = 'TOP SECRET'; i.dispatchEvent(new Event('input', {bubbles:true})); return 'set' })()"` does NOT actually update React state. React's internal value tracker caches `.value` on focus/`onChange`, and when you set `i.value` directly and dispatch `input`, React sees the cached value equals the new value and skips the `onChange` handler. Workaround that DOES work: `const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; setter.call(i, 'TOP SECRET'); i.dispatchEvent(new Event('input', {bubbles:true}))`. The Watermark tool itself is correct — the test method needed adjusting. (Same React quirk noted in QA-2 for the Sign-Modal Type tab inputs.)
+2. **VLM can miss small text in PDF previews:** at default 100% zoom, the 11pt page-number footer text in the Page Numbers result preview was too small for the glm-5v-turbo VLM to resolve — it initially reported "no footer text visible". Clicking "Zoom in" 3× and scrolling the preview container to its bottom made the footer text resolvable. As a backup, downloading the PDF and running `pdftotext -layout` provided definitive evidence that the footer text was correctly added to every page. Recommendation for future QA passes: when verifying text-baked-into-PDF results, always pair VLM screenshot inspection with a `pdftotext` extraction of the downloaded file.
+3. **Tool pages are tall — VLM viewport screenshots miss below-the-fold controls:** All 4 tool pages have configuration controls below the file-upload area; VLM checks of the initial screenshot consistently reported required elements (sliders, format cards, position grids) as MISSING until I scrolled down 600–800 px. This is a tooling/viewer limitation, not a code bug — the DOM inspection confirmed all controls were present and reactive.
+
+Next actions (optional, not required for sign-off):
+- Consider adding a `data-testid` attribute to the user-facing text input on the Watermark tool's Text tab (and any other tool with multiple text inputs) so QA can target it deterministically without falling into the React-setter quirk.
+- Consider adding `aria-label` attributes to the 6 position-grid buttons on the Watermark tool (currently no aria-label, just icons) for accessibility and easier test targeting.

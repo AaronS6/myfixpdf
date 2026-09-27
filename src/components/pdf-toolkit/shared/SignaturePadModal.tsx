@@ -122,19 +122,19 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B1220]/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl animate-pop-in">
-        <div className="border-b border-[#E4E9F0] p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B1220]/50 dark:bg-[#000000]/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white dark:bg-[#111A2B] shadow-2xl animate-pop-in">
+        <div className="border-b border-[#E4E9F0] dark:border-[#1E2A44] p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-[#1D2733]">Add your signature</h3>
-            <button onClick={onClose} className="text-2xl text-[#5B6B79] hover:text-[#1D2733]">×</button>
+            <h3 className="text-lg font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Add your signature</h3>
+            <button onClick={onClose} className="text-2xl text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]">×</button>
           </div>
-          <div className="mt-3 flex gap-1 rounded-lg bg-[#F7F9FC] p-1">
+          <div className="mt-3 flex gap-1 rounded-lg bg-[#F7F9FC] dark:bg-[#0E1626] p-1">
             <button
               onClick={() => setMode("drawn")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "drawn" ? "bg-white text-[#1AA8E0] shadow-sm" : "text-[#5B6B79] hover:text-[#1D2733]",
+                mode === "drawn" ? "bg-white dark:bg-[#111A2B] text-[#1AA8E0] dark:text-[#2FB2E4] shadow-sm" : "text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]",
               )}
             >
               <PenLine className="size-4" /> Draw
@@ -143,7 +143,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
               onClick={() => setMode("typed")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "typed" ? "bg-white text-[#1AA8E0] shadow-sm" : "text-[#5B6B79] hover:text-[#1D2733]",
+                mode === "typed" ? "bg-white dark:bg-[#111A2B] text-[#1AA8E0] dark:text-[#2FB2E4] shadow-sm" : "text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]",
               )}
             >
               <Check className="size-4" /> Type
@@ -153,19 +153,19 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
         <div className="p-4">
           {mode === "drawn" ? (
             <div className="space-y-3">
-              <div className="rounded-xl border border-[#E4E9F0] bg-[#FAFBFD] p-2">
-                <canvas ref={canvasRef} className="h-44 w-full rounded-md bg-white" />
+              <div className="rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#FAFBFD] dark:bg-[#0E1626] p-2">
+                <canvas ref={canvasRef} className="h-44 w-full rounded-md bg-white dark:bg-[#111A2B]" />
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#5B6B79]">Pen color:</span>
+                  <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Pen color:</span>
                   {PEN_COLORS.map((c) => (
                     <button
                       key={c.value}
                       onClick={() => setColor(c.value)}
                       className={cn(
                         "size-6 rounded-full border-2 transition-all",
-                        color === c.value ? "border-[#1AA8E0] scale-110" : "border-[#E4E9F0]",
+                        color === c.value ? "border-[#1AA8E0] dark:border-[#2FB2E4] scale-110" : "border-[#E4E9F0] dark:border-[#1E2A44]",
                       )}
                       style={{ background: c.value }}
                       title={c.name}
@@ -173,7 +173,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#5B6B79]">Stroke:</span>
+                  <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Stroke:</span>
                   <input
                     type="range"
                     min="1"
@@ -186,7 +186,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 </div>
                 <button
                   onClick={clear}
-                  className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[#E4E9F0] px-3 py-1.5 text-sm text-[#5B6B79] hover:bg-[#F7F9FC]"
+                  className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-3 py-1.5 text-sm text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
                 >
                   <Eraser className="size-4" /> Clear
                 </button>
@@ -199,7 +199,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 value={typedName}
                 onChange={(e) => setTypedName(e.target.value)}
                 placeholder="Type your full name"
-                className="w-full rounded-lg border border-[#E4E9F0] bg-white px-3 py-2 text-base text-[#1D2733] outline-none focus:border-[#1AA8E0]"
+                className="w-full rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-3 py-2 text-base text-[#1D2733] dark:text-[#E6EDF6] outline-none focus:border-[#1AA8E0] dark:border-[#2FB2E4]"
               />
               <div className="flex flex-wrap gap-2">
                 {TYPE_FONTS.map((f) => (
@@ -208,7 +208,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                     onClick={() => setTypedFont(f.value)}
                     className={cn(
                       "rounded-lg border px-3 py-2 text-base transition-all",
-                      typedFont === f.value ? "border-[#1AA8E0] bg-[#EAF7FD]" : "border-[#E4E9F0] hover:bg-[#F7F9FC]",
+                      typedFont === f.value ? "border-[#1AA8E0] dark:border-[#2FB2E4] bg-[#EAF7FD] dark:bg-[#0d2330]" : "border-[#E4E9F0] dark:border-[#1E2A44] hover:bg-[#F7F9FC] dark:bg-[#0E1626]",
                     )}
                     style={{ fontFamily: f.value, color }}
                   >
@@ -217,14 +217,14 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#5B6B79]">Ink color:</span>
+                <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Ink color:</span>
                 {PEN_COLORS.map((c) => (
                   <button
                     key={c.value}
                     onClick={() => setColor(c.value)}
                     className={cn(
                       "size-6 rounded-full border-2 transition-all",
-                      color === c.value ? "border-[#1AA8E0] scale-110" : "border-[#E4E9F0]",
+                      color === c.value ? "border-[#1AA8E0] dark:border-[#2FB2E4] scale-110" : "border-[#E4E9F0] dark:border-[#1E2A44]",
                     )}
                     style={{ background: c.value }}
                     title={c.name}
@@ -234,10 +234,10 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-[#E4E9F0] p-4">
+        <div className="flex items-center justify-end gap-2 border-t border-[#E4E9F0] dark:border-[#1E2A44] p-4">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-[#5B6B79] hover:bg-[#F7F9FC]"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
           >
             Cancel
           </button>

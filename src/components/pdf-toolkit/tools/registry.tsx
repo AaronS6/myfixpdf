@@ -11,6 +11,8 @@ export type ToolMeta = {
   category: "compress" | "convert" | "organize" | "edit";
   accept: string;
   multiple: boolean;
+  /** "new" badge for recently added tools */
+  isNew?: boolean;
 };
 
 export const TOOLS: ToolMeta[] = [
@@ -95,6 +97,17 @@ export const TOOLS: ToolMeta[] = [
     multiple: true,
   },
   {
+    id: "reorder-pdf",
+    name: "Reorder Pages",
+    short: "Organize",
+    desc: "Drag-and-drop to rearrange pages of any PDF.",
+    color: "var(--cat-organize)",
+    category: "organize",
+    accept: ".pdf",
+    multiple: false,
+    isNew: true,
+  },
+  {
     id: "edit-pdf",
     name: "Edit PDF",
     short: "Edit & Sign",
@@ -103,6 +116,39 @@ export const TOOLS: ToolMeta[] = [
     category: "edit",
     accept: ".pdf",
     multiple: false,
+  },
+  {
+    id: "watermark-pdf",
+    name: "Watermark PDF",
+    short: "Edit & Sign",
+    desc: "Stamp text or image watermarks on every page.",
+    color: "var(--cat-edit)",
+    category: "edit",
+    accept: ".pdf",
+    multiple: false,
+    isNew: true,
+  },
+  {
+    id: "page-numbers",
+    name: "Page Numbers",
+    short: "Edit & Sign",
+    desc: "Add page numbers in 4 formats and 4 positions.",
+    color: "var(--cat-edit)",
+    category: "edit",
+    accept: ".pdf",
+    multiple: false,
+    isNew: true,
+  },
+  {
+    id: "extract-text",
+    name: "Extract Text",
+    short: "Convert",
+    desc: "Pull all text out of a PDF into a .txt file.",
+    color: "var(--cat-convert)",
+    category: "convert",
+    accept: ".pdf",
+    multiple: false,
+    isNew: true,
   },
 ];
 

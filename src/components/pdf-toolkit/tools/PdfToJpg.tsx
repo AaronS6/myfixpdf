@@ -64,8 +64,8 @@ export function PdfToJpg() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#1D2733]">JPG quality</label>
-                <span className="rounded-md bg-[#EEF3F8] px-2 py-0.5 text-xs font-bold text-[#1D2733]">
+                <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">JPG quality</label>
+                <span className="rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-xs font-bold text-[#1D2733] dark:text-[#E6EDF6]">
                   {Math.round(quality * 100)}
                 </span>
               </div>
@@ -81,8 +81,8 @@ export function PdfToJpg() {
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#1D2733]">Render scale</label>
-                <span className="rounded-md bg-[#EEF3F8] px-2 py-0.5 text-xs font-bold text-[#1D2733]">{scale.toFixed(1)}×</span>
+                <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Render scale</label>
+                <span className="rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-xs font-bold text-[#1D2733] dark:text-[#E6EDF6]">{scale.toFixed(1)}×</span>
               </div>
               <input
                 type="range"
@@ -93,12 +93,12 @@ export function PdfToJpg() {
                 onChange={(e) => setScale(parseFloat(e.target.value))}
                 className="w-full accent-[var(--cat-convert)]"
               />
-              <p className="mt-1 text-xs text-[#5B6B79]">Higher = sharper but larger files.</p>
+              <p className="mt-1 text-xs text-[#5B6B79] dark:text-[#93A4B6]">Higher = sharper but larger files.</p>
             </div>
           </div>
           <div>
-            <p className="mb-2 text-sm font-semibold text-[#1D2733]">Select pages (optional)</p>
-            <p className="mb-2 text-xs text-[#5B6B79]">
+            <p className="mb-2 text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Select pages (optional)</p>
+            <p className="mb-2 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
               Leave empty to export every page. Check the boxes to export only specific pages.
             </p>
             <PageThumbnailGrid
@@ -128,13 +128,13 @@ export function PdfToJpg() {
               }}
             />
           </div>
-          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] bg-[#F7F9FC] p-3 text-xs text-[#5B6B79]">
-            <FileImage className="size-4 shrink-0 text-[#1AA8E0]" />
+          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+            <FileImage className="size-4 shrink-0 text-[#1AA8E0] dark:text-[#2FB2E4]" />
             <p>Every selected page becomes a JPG. The result screen shows a gallery — download them one-by-one or all as a ZIP.</p>
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] bg-[#F7F9FC] p-6 text-center text-sm text-[#5B6B79]">
+        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
           Drop a PDF above to pick which pages to export.
         </div>
       )}

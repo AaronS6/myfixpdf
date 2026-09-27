@@ -85,9 +85,9 @@ export function FileDropzone({
       }}
       aria-label={title ?? "Upload files"}
       className={cn(
-        "relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[20px] border-2 border-dashed bg-white p-6 text-center transition-all",
+        "relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[20px] border-2 border-dashed bg-white dark:bg-[#111A2B] p-6 text-center transition-all",
         compact ? "py-6" : "py-10",
-        dragging ? "dropzone-active" : "border-[#cbd6e3] hover:border-[#1AA8E0]",
+        dragging ? "dropzone-active" : "border-[#cbd6e3] dark:border-[#1E2A44] hover:border-[#1AA8E0] dark:border-[#2FB2E4]",
         className,
       )}
       style={{
@@ -124,15 +124,15 @@ export function FileDropzone({
       </div>
       <div className="space-y-1">
         {title && (
-          <p className={cn("font-semibold text-[#1D2733]", compact ? "text-sm" : "text-base")}>
+          <p className={cn("font-semibold text-[#1D2733] dark:text-[#E6EDF6]", compact ? "text-sm" : "text-base")}>
             {dragging ? "Drop to upload" : title}
           </p>
         )}
         {subtitle && !compact && (
-          <p className="text-sm text-[#5B6B79]">{subtitle}</p>
+          <p className="text-sm text-[#5B6B79] dark:text-[#93A4B6]">{subtitle}</p>
         )}
         {!subtitle && !compact && (
-          <p className="text-sm text-[#5B6B79]">
+          <p className="text-sm text-[#5B6B79] dark:text-[#93A4B6]">
             Drag &amp; drop your file{multiple ? "s" : ""} here, or{" "}
             <span style={{ color: accentColor }} className="font-semibold">
               browse
@@ -140,7 +140,7 @@ export function FileDropzone({
           </p>
         )}
         {compact && (
-          <p className="text-xs text-[#5B6B79]">
+          <p className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">
             Drop or <span style={{ color: accentColor }} className="font-semibold">browse</span> · {multiple ? "multiple" : "single"}
           </p>
         )}

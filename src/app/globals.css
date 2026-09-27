@@ -158,6 +158,11 @@
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    transition: background-color 240ms ease, color 240ms ease;
+  }
+  /* Smooth color transitions on theme switch for all surfaces */
+  button, input, select, textarea, .card-shadow, [class*="bg-white"], [class*="bg-[#F7F9FC]"], [class*="bg-[#EEF3F8]"], [class*="border-[#E4E9F0]"] {
+    transition: background-color 240ms ease, border-color 240ms ease, color 240ms ease, box-shadow 200ms ease, transform 200ms ease;
   }
 }
 
@@ -179,6 +184,23 @@
 }
 .card-shadow {
   box-shadow: 0 8px 24px rgba(20, 40, 80, 0.08);
+}
+.dark .card-shadow {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.dark .brand-shadow {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Surface helpers that adapt to theme automatically */
+.surface-card {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+}
+.surface-muted {
+  background: var(--muted);
+  color: var(--muted-foreground);
 }
 
 /* Animated dashed border for dropzone when dragging */
@@ -204,6 +226,9 @@
 .thin-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(120, 140, 170, 0.55);
 }
+.dark .thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(120, 140, 170, 0.4);
+}
 
 /* Subtle entrance animations */
 @keyframes fadeUp {
@@ -219,6 +244,30 @@
 }
 .animate-pop-in {
   animation: popIn 200ms ease both;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slideInRight 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(35, 166, 213, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(35, 166, 213, 0); }
+}
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
 }
 
 /* Spinning loader ring for processing overlays */
@@ -237,3 +286,60 @@
   background-image: linear-gradient(180deg, #23A6D5 0%, #2FE0C6 100%);
   box-shadow: 0 2px 12px rgba(35, 166, 213, 0.35);
 }
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in oklch, var(--muted) 60%, transparent) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 6px;
+}
+
+/* Glassmorphism for floating panels (in dark mode especially) */
+.glass {
+  background: color-mix(in oklch, var(--card) 80%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid color-mix(in oklch, var(--border) 80%, transparent);
+}
+
+/* Subtle gradient ring around cards on hover */
+.hover-ring {
+  position: relative;
+}
+.hover-ring::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(35,166,213,0.0), rgba(47,224,198,0.0));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition: background 250ms ease;
+  pointer-events: none;
+}
+.hover-ring:hover::after {
+  background: linear-gradient(135deg, rgba(35,166,213,0.6), rgba(47,224,198,0.6));
+}
+
+/* Hide spin buttons on number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Focus ring polish */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+

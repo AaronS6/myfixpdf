@@ -103,3 +103,52 @@ export async function isPdfEncrypted(blob: Blob): Promise<boolean> {
     return /encrypted/i.test(msg);
   }
 }
+
+/**
+ * Extract text content from every page of a PDF. Returns an array of pages,
+ * each with the recovered text (lines preserved heuristically).
+ */
+export async function extractPdfText(
+  blob: Blob,
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Array<{ pageNumber: number; text: string; lineCount: number }>> {
+  const doc = await loadPdfFromBlob(blob);
+  const total = doc.numPages;
+  const out: Array<{ pageNumber: number; text: string; lineCount: number }> = [];
+  for (let p = 1; p <= total; p++) {
+    const page = await doc.getPage(p);
+    let textContent;
+    try {
+      textContent = await page.getTextContent();
+    } catch {
+      textContent = { items: [] };
+    }
+    const items = textContent.items as Array<{ str?: string; transform?: number[] }>;
+    const sorted = [...items]
+      .filter((it) => it.transform && typeof it.str === "string")
+      .map((it) => ({ str: it.str as string, x: it.transform![4], y: it.transform![5] }))
+      .sort((a, b) => (Math.abs(a.y - b.y) > 4 ? b.y - a.y : a.x - b.x));
+    const lines: string[] = [];
+    let lastY: number | null = null;
+    let buf: string[] = [];
+    for (const it of sorted) {
+      if (lastY !== null && Math.abs(it.y - lastY) > 4) {
+        lines.push(buf.join(" ").trim());
+        buf = [];
+      }
+      buf.push(it.str ?? "");
+      lastY = it.y;
+    }
+    if (buf.length) lines.push(buf.join(" ").trim());
+    const text = lines.join("\n");
+    out.push({ pageNumber: p, text, lineCount: lines.length });
+    if (onProgress) onProgress(Math.round((p / total) * 100), `Extracting page ${p}…`);
+    page.cleanup();
+  }
+  try {
+    await (doc as any).cleanup?.();
+  } catch {
+    // ignore
+  }
+  return out;
+}

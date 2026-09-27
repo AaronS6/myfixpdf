@@ -8,8 +8,8 @@ export function ProgressOverlay() {
   if (!progress.active) return null;
   const pct = typeof progress.percent === "number" ? Math.max(0, Math.min(100, progress.percent)) : null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#0B1220]/40 backdrop-blur-sm animate-pop-in">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#0B1220]/40 dark:bg-[#000000]/60 backdrop-blur-sm animate-pop-in">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#111A2B] p-8 text-center shadow-2xl">
         <div className="mx-auto mb-5 flex size-16 items-center justify-center">
           {pct !== null ? (
             <div className="relative size-16">
@@ -33,19 +33,19 @@ export function ProgressOverlay() {
                   </linearGradient>
                 </defs>
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-[#1D2733]">
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">
                 {pct}%
               </span>
             </div>
           ) : (
-            <Loader2 className="size-16 animate-spin text-[#1AA8E0]" strokeWidth={2} />
+            <Loader2 className="size-16 animate-spin text-[#1AA8E0] dark:text-[#2FB2E4]" strokeWidth={2} />
           )}
         </div>
-        <p className="text-base font-semibold text-[#1D2733]">
+        <p className="text-base font-semibold text-[#1D2733] dark:text-[#E6EDF6]">
           {progress.message || "Working…"}
         </p>
         {pct === null && (
-          <p className="mt-1 text-sm text-[#5B6B79]">This may take a moment for large files.</p>
+          <p className="mt-1 text-sm text-[#5B6B79] dark:text-[#93A4B6]">This may take a moment for large files.</p>
         )}
       </div>
     </div>

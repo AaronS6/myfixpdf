@@ -16,6 +16,11 @@ import { JpgToPdf } from "@/components/pdf-toolkit/tools/JpgToPdf";
 import { SplitPdf } from "@/components/pdf-toolkit/tools/SplitPdf";
 import { MergePdf } from "@/components/pdf-toolkit/tools/MergePdf";
 import { EditPdf } from "@/components/pdf-toolkit/tools/EditPdf";
+import { WatermarkPdf } from "@/components/pdf-toolkit/tools/WatermarkPdf";
+import { ReorderPdf } from "@/components/pdf-toolkit/tools/ReorderPdf";
+import { ExtractText } from "@/components/pdf-toolkit/tools/ExtractText";
+import { PageNumbers } from "@/components/pdf-toolkit/tools/PageNumbers";
+import { useKeyboardShortcuts } from "@/components/pdf-toolkit/shared/useKeyboardShortcuts";
 
 export default function Page() {
   const view = useDocumentSession((s) => s.view);
@@ -40,6 +45,10 @@ export default function Page() {
         "split-pdf",
         "merge-pdf",
         "edit-pdf",
+        "watermark-pdf",
+        "reorder-pdf",
+        "extract-text",
+        "page-numbers",
         "result",
       ];
       if (h && valid.includes(h)) {
@@ -63,6 +72,9 @@ export default function Page() {
     }
   }, [view]);
 
+  // Enable keyboard shortcuts (number keys jump to tools, ? shows help)
+  useKeyboardShortcuts();
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -77,6 +89,10 @@ export default function Page() {
         {view === "split-pdf" && <SplitPdf />}
         {view === "merge-pdf" && <MergePdf />}
         {view === "edit-pdf" && <EditPdf />}
+        {view === "watermark-pdf" && <WatermarkPdf />}
+        {view === "reorder-pdf" && <ReorderPdf />}
+        {view === "extract-text" && <ExtractText />}
+        {view === "page-numbers" && <PageNumbers />}
         {view === "result" && <ResultScreen />}
       </main>
       <Footer />

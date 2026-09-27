@@ -89,7 +89,7 @@ export function ToolPageShell({
           pushHistory();
           setView("home");
         }}
-        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[#5B6B79] hover:text-[#1D2733]"
+        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]"
       >
         <ChevronLeft className="size-4" /> Back to tools
       </button>
@@ -98,8 +98,8 @@ export function ToolPageShell({
           <ToolGlyph id={tool.id} />
         </span>
         <div>
-          <h1 className="text-2xl font-bold text-[#1D2733] sm:text-3xl">{tool.name}</h1>
-          <p className="mt-1 text-sm text-[#5B6B79]">{tool.desc}</p>
+          <h1 className="text-2xl font-bold text-[#1D2733] dark:text-[#E6EDF6] sm:text-3xl">{tool.name}</h1>
+          <p className="mt-1 text-sm text-[#5B6B79] dark:text-[#93A4B6]">{tool.desc}</p>
         </div>
       </div>
 
@@ -118,12 +118,12 @@ export function ToolPageShell({
       {showFileList && sourceFiles.length > 0 && (
         <div className="mt-5 space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-[#1D2733]">
+            <p className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">
               {sourceFiles.length} file{sourceFiles.length > 1 ? "s" : ""} · {formatBytes(sourceFiles.reduce((a, b) => a + b.size, 0))}
             </p>
             <button
               onClick={() => clearSourceFiles()}
-              className="text-xs font-medium text-[#5B6B79] hover:text-[#F04438]"
+              className="text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#F04438] dark:text-[#FF6B6B]"
             >
               Clear all
             </button>
@@ -140,8 +140,8 @@ export function ToolPageShell({
 
       {/* CTA bar */}
       {ctaLabel && sourceFiles.length > 0 && (
-        <div className="mt-6 flex items-center justify-end gap-3 rounded-2xl border border-[#E4E9F0] bg-white p-4 shadow-sm">
-          <span className="mr-auto text-sm text-[#5B6B79]">
+        <div className="mt-6 flex items-center justify-end gap-3 rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-4 shadow-sm">
+          <span className="mr-auto text-sm text-[#5B6B79] dark:text-[#93A4B6]">
             {sourceFiles.length} file{sourceFiles.length > 1 ? "s" : ""} ready
           </span>
           <button

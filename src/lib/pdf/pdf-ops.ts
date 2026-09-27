@@ -392,3 +392,164 @@ export async function pdfToJpgImages(
   }
   return out;
 }
+
+// ====== Add a text watermark to every page ======
+export type WatermarkOptions = {
+  text: string;
+  fontSize: number; // pt
+  opacity: number; // 0..1
+  rotation: number; // degrees
+  color: [number, number, number]; // 0..1 each
+  /** "all" | "first" | "last" | number (specific 0-based page) */
+  target: "all" | "first" | "last" | number;
+  /** "center" | "tile" (grid) | corner positions */
+  position: "center" | "tile" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+};
+
+export async function addTextWatermark(
+  blob: Blob,
+  opts: WatermarkOptions,
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(await blob.arrayBuffer());
+  const font = await doc.embedFont(StandardFonts.HelveticaBold);
+  const pages = doc.getPages();
+  const targetIndices = computeTargetIndices(opts.target, pages.length);
+  for (let i = 0; i < pages.length; i++) {
+    if (!targetIndices.has(i)) continue;
+    const page = pages[i];
+    const { width, height } = page.getSize();
+    const positions = computeWatermarkPositions(opts.position, width, height, opts.fontSize, opts.text.length);
+    for (const pos of positions) {
+      page.drawText(opts.text, {
+        x: pos.x,
+        y: pos.y,
+        size: opts.fontSize,
+        font,
+        color: rgb(opts.color[0], opts.color[1], opts.color[2]),
+        opacity: opts.opacity,
+        rotate: degrees(opts.rotation),
+      });
+    }
+    if (onProgress) onProgress(Math.round(((i + 1) / pages.length) * 100), `Watermarking page ${i + 1}…`);
+  }
+  return doc.save({ useObjectStreams: true });
+}
+
+function computeTargetIndices(target: WatermarkOptions["target"], total: number): Set<number> {
+  if (target === "all") return new Set(Array.from({ length: total }, (_, i) => i));
+  if (target === "first") return new Set([0]);
+  if (target === "last") return new Set([total - 1]);
+  if (typeof target === "number") return new Set([Math.max(0, Math.min(total - 1, target))]);
+  return new Set();
+}
+
+function computeWatermarkPositions(
+  position: WatermarkOptions["position"],
+  pageW: number,
+  pageH: number,
+  fontSize: number,
+  textLen: number,
+): Array<{ x: number; y: number }> {
+  const textW = textLen * fontSize * 0.55; // approximate
+  const textH = fontSize;
+  if (position === "center") {
+    return [{ x: (pageW - textW) / 2, y: (pageH - textH) / 2 }];
+  }
+  if (position === "top-left") return [{ x: 40, y: pageH - textH - 40 }];
+  if (position === "top-right") return [{ x: pageW - textW - 40, y: pageH - textH - 40 }];
+  if (position === "bottom-left") return [{ x: 40, y: 40 }];
+  if (position === "bottom-right") return [{ x: pageW - textW - 40, y: 40 }];
+  // tile — 3×3 grid
+  const out: Array<{ x: number; y: number }> = [];
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 3; col++) {
+      const x = (pageW / 3) * col + (pageW / 6) - textW / 2;
+      const y = (pageH / 3) * row + (pageH / 6) - textH / 2;
+      out.push({ x, y });
+    }
+  }
+  return out;
+}
+
+// ====== Add image watermark (logo/stamp) ======
+export async function addImageWatermark(
+  blob: Blob,
+  imageBytes: Uint8Array,
+  imageFormat: "png" | "jpg",
+  opts: { opacity: number; scale: number; position: WatermarkOptions["position"]; target: WatermarkOptions["target"] },
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(await blob.arrayBuffer());
+  const img = imageFormat === "png" ? await doc.embedPng(imageBytes) : await doc.embedJpg(imageBytes);
+  const pages = doc.getPages();
+  const targetIndices = computeTargetIndices(opts.target, pages.length);
+  const imgW = img.width * opts.scale;
+  const imgH = img.height * opts.scale;
+  for (let i = 0; i < pages.length; i++) {
+    if (!targetIndices.has(i)) continue;
+    const page = pages[i];
+    const { width, height } = page.getSize();
+    let x = (width - imgW) / 2;
+    let y = (height - imgH) / 2;
+    if (opts.position === "top-left") { x = 40; y = height - imgH - 40; }
+    else if (opts.position === "top-right") { x = width - imgW - 40; y = height - imgH - 40; }
+    else if (opts.position === "bottom-left") { x = 40; y = 40; }
+    else if (opts.position === "bottom-right") { x = width - imgW - 40; y = 40; }
+    page.drawImage(img, { x, y, width: imgW, height: imgH, opacity: opts.opacity });
+    if (onProgress) onProgress(Math.round(((i + 1) / pages.length) * 100), `Stamping page ${i + 1}…`);
+  }
+  return doc.save({ useObjectStreams: true });
+}
+
+// ====== Crop a single PDF page (trim margins to a specified rectangle) ======
+export async function cropPdfPage(
+  blob: Blob,
+  pageIndex: number,
+  crop: { left: number; right: number; top: number; bottom: number }, // each in PDF points
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(await blob.arrayBuffer());
+  const page = doc.getPages()[pageIndex];
+  if (!page) throw new Error(`Page ${pageIndex + 1} does not exist.`);
+  const { width, height } = page.getSize();
+  const newW = Math.max(40, width - crop.left - crop.right);
+  const newH = Math.max(40, height - crop.top - crop.bottom);
+  page.setCropBox(crop.left, crop.bottom, newW, newH);
+  page.setMediaBox(crop.left, crop.bottom, newW, newH);
+  if (onProgress) onProgress(100, "Done");
+  return doc.save({ useObjectStreams: true });
+}
+
+// ====== Add page numbers to every page (footer center) ======
+export async function addPageNumbers(
+  blob: Blob,
+  opts: { format: "1/3" | "Page 1 of 3" | "1" | "1 of 3"; fontSize: number; position: "bottom-center" | "bottom-right" | "top-center" | "top-right"; color: [number, number, number]; startFrom: number },
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(await blob.arrayBuffer());
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const pages = doc.getPages();
+  const total = pages.length;
+  for (let i = 0; i < total; i++) {
+    const page = pages[i];
+    const num = i + opts.startFrom;
+    const text = opts.format
+      .replace("1", String(num))
+      .replace("3", String(total + opts.startFrom - 1));
+    const textW = font.widthOfTextAtSize(text, opts.fontSize);
+    const { width, height } = page.getSize();
+    let x = (width - textW) / 2;
+    let y = 20;
+    if (opts.position === "bottom-right") { x = width - textW - 30; y = 20; }
+    else if (opts.position === "top-center") { x = (width - textW) / 2; y = height - opts.fontSize - 20; }
+    else if (opts.position === "top-right") { x = width - textW - 30; y = height - opts.fontSize - 20; }
+    page.drawText(text, {
+      x, y, size: opts.fontSize, font,
+      color: rgb(opts.color[0], opts.color[1], opts.color[2]),
+    });
+    if (onProgress) onProgress(Math.round(((i + 1) / total) * 100), `Numbering page ${i + 1}…`);
+  }
+  return doc.save({ useObjectStreams: true });
+}
+

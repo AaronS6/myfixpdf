@@ -14,7 +14,9 @@ export function PdfToWord() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
 
   const run = async () => {
-    const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+    const target =
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
     if (!target) {
       toast.error("Please add a PDF first.");
       return;

@@ -132,6 +132,7 @@ export type StringKey =
   | "result.zipDownloaded"
   | "result.compare.before"
   | "result.compare.after"
+  | "result.loading"
   | "result.oversize.body"
   | "result.signatureReady"
   | "result.signatureApplied"
@@ -307,6 +308,7 @@ const en: Dict = {
   "result.zipDownloaded": "ZIP downloaded",
   "result.compare.before": "Before",
   "result.compare.after": "After",
+  "result.loading": "Loading…",
   "result.oversize.body": "This file is quite large ({size}). Consider compressing it further before sharing.",
   "result.signatureReady": "Signature ready — drag it on the page, then click Apply",
   "result.signatureApplied": "Signature applied to the PDF",
@@ -479,6 +481,7 @@ const zh: Dict = {
   "result.zipDownloaded": "ZIP 已下载",
   "result.compare.before": "之前",
   "result.compare.after": "之后",
+  "result.loading": "加载中…",
   "result.oversize.body": "文件较大（{size}）。建议在分享前进一步压缩。",
   "result.signatureReady": "签名已就绪 — 拖到页面上合适位置后点击「应用」",
   "result.signatureApplied": "签名已应用到 PDF",

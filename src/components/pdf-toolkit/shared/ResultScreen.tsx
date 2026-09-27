@@ -503,6 +503,34 @@ async function loadBitmap(src: Blob): Promise<ImageBitmap | HTMLImageElement> {
   }
 }
 
+/** Check if a blob URL points to a PDF by fetching its type. */
+async function isPdfBlobUrl(url: string): Promise<boolean> {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    return blob.type === "application/pdf";
+  } catch {
+    return false;
+  }
+}
+
+/** Render the first page of a PDF (from a blob URL) to a data URL. */
+async function renderPdfFirstPageToDataUrl(blobUrl: string): Promise<string> {
+  const { loadPdfFromBlob, renderPdfPageToCanvas } = await import("@/lib/pdf/pdfjs");
+  const resp = await fetch(blobUrl);
+  const blob = await resp.blob();
+  const doc = await loadPdfFromBlob(blob);
+  const canvas = document.createElement("canvas");
+  // Render at a reasonable scale for the compare slider
+  const page = await doc.getPage(1);
+  const viewport = page.getViewport({ scale: 1.5 });
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await renderPdfPageToCanvas(doc, 1, canvas, 1.5);
+  try { await (doc as any).cleanup?.(); } catch { /* ignore */ }
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
 function CompareSlider({
   beforeUrl,
   afterUrl,
@@ -516,7 +544,10 @@ function CompareSlider({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
+  const [beforeImg, setBeforeImg] = useState<string | null>(null);
+  const [afterImg, setAfterImg] = useState<string | null>(null);
   const { t } = useI18n();
+
   useEffect(() => {
     if (!containerRef.current) return;
     const update = () => setContainerWidth(containerRef.current?.clientWidth ?? null);
@@ -525,6 +556,33 @@ function CompareSlider({
     ro.observe(containerRef.current);
     return () => ro.disconnect();
   }, []);
+
+  // Convert blob URLs to renderable image URLs. If the blob is a PDF,
+  // render the first page to a canvas and use the data URL. If it's already
+  // an image, use the URL directly.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const beforeIsPdf = await isPdfBlobUrl(beforeUrl);
+        const afterIsPdf = await isPdfBlobUrl(afterUrl);
+        const beforeImage = beforeIsPdf ? await renderPdfFirstPageToDataUrl(beforeUrl) : beforeUrl;
+        const afterImage = afterIsPdf ? await renderPdfFirstPageToDataUrl(afterUrl) : afterUrl;
+        if (!cancelled) {
+          setBeforeImg(beforeImage);
+          setAfterImg(afterImage);
+        }
+      } catch {
+        // Fallback: use the URLs directly (will show broken img for PDFs, but at least doesn't crash)
+        if (!cancelled) {
+          setBeforeImg(beforeUrl);
+          setAfterImg(afterUrl);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [beforeUrl, afterUrl]);
+
   return (
     <div
       ref={containerRef}
@@ -537,13 +595,19 @@ function CompareSlider({
         onPosition(Math.max(0, Math.min(100, p)));
       }}
     >
-      <div className="absolute inset-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={afterUrl} alt="After" className="h-full w-full object-contain" />
+      <div className="absolute inset-0 flex items-center justify-center">
+        {afterImg ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={afterImg} alt="After" className="h-full w-full object-contain" />
+        ) : (
+          <span className="text-sm text-[var(--muted-foreground)]">{t("result.loading")}</span>
+        )}
       </div>
       <div className="absolute inset-0 overflow-hidden" style={{ width: `${position}%` }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={beforeUrl} alt="Before" className="h-full w-full object-contain" style={{ width: containerWidth ?? "100%" }} />
+        {beforeImg ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={beforeImg} alt="Before" className="h-full w-full object-contain" style={{ width: containerWidth ?? "100%" }} />
+        ) : null}
       </div>
       <div
         className="compare-handle absolute inset-y-0 w-1 cursor-ew-resize"

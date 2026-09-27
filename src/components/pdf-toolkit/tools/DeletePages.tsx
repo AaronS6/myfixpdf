@@ -16,7 +16,9 @@ const tool = getTool("delete-pages")!;
 export function DeletePages() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
     useDocumentSession();
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target = 
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   // Live working blob — mutated by each delete op.
   const [liveBlob, setLiveBlob] = useState<Blob | null>(null);

@@ -19,7 +19,9 @@ export function PdfToJpg() {
   const [quality, setQuality] = useState(0.85);
   const [scale, setScale] = useState(1.5);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target =
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   const run = async () => {
     if (!target) {

@@ -26,7 +26,9 @@ type Rect = {
 export function RedactPdf() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
     useDocumentSession();
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target = 
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   const [rects, setRects] = useState<Rect[]>([]);
   // Draft rectangle currently being drawn on the active page.

@@ -5,7 +5,7 @@ import { ToolPageShell } from "../ToolPageShell";
 import { getTool } from "./registry";
 import { useDocumentSession, type ToolkitFile } from "@/store/document-session";
 import { compressImage, previewCompress } from "@/lib/pdf/image-ops";
-import { makePreviewUrl, withExt, formatBytes, percentSaved, imageThumbnail } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt, formatBytes, percentSaved, imageThumbnail, isPng, isJpg } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
@@ -30,7 +30,11 @@ export function CompressPng() {
     };
   }, [quality]);
 
-  const first = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  // Pick the first included IMAGE file — skip PDFs/DOCX that may persist
+  // from a previous tool (sourceFiles follows the user across tools).
+  const first =
+    sourceFiles.find((f) => f.included && (isPng(f.file) || isJpg(f.file))) ??
+    sourceFiles.find((f) => isPng(f.file) || isJpg(f.file));
 
   // Compute projected size preview (debounced). The setState calls inside the
   // async callback run in a microtask, not synchronously in the effect body.

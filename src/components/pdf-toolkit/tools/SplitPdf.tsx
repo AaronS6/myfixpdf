@@ -25,7 +25,9 @@ export function SplitPdf() {
   const [activeGroup, setActiveGroup] = useState(0);
   const [rangeText, setRangeText] = useState("");
 
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target =
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   const updateRange = (text: string) => {
     setRangeText(text);

@@ -19,7 +19,9 @@ export function ExtractText() {
   const [pages, setPages] = useState<PageText[]>([]);
   const [extracted, setExtracted] = useState(false);
   const [copied, setCopied] = useState(false);
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target = 
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   const run = async () => {
     if (!target) {

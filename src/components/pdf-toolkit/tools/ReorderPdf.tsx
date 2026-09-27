@@ -36,7 +36,9 @@ export function ReorderPdf() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target = 
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),

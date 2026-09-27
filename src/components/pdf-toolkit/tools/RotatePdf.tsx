@@ -18,7 +18,9 @@ export function RotatePdf() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
     useDocumentSession();
   const { t, tt, lang } = useI18n();
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target = 
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   // Live working blob — starts as the original, mutated by each rotate op.
   const [liveBlob, setLiveBlob] = useState<Blob | null>(null);

@@ -787,3 +787,37 @@ Stage Summary:
   • Numeric zoom input (value 100) + Fit button present ✓
   • Fit button works: canvas CSS 288×408 (fit to container), backing 577×816 (2x DPI) ✓
 - All previously-fixed bugs remain fixed (drawing crash, signature placement, expand button, mobile menu scroll, dropdown opacity).
+
+---
+Task ID: FIX-5
+Agent: Orchestrator (Z.ai)
+Task: Fix two critical bugs: (1) preview images not showing until pressing expand, (2) before/after compare slider not working.
+
+Work Log:
+- Bug #1 — Preview images not showing:
+  Root cause: when sourceFiles persists across tools (per the "files follow you" feature), tools like CompressPng picked the FIRST included file — which could be a PDF from a previous tool, not the image the user just uploaded. The compressImage() call on a PDF fails silently (PDF can't load in <img>), and the previewUrl stays stale (pointing to the old PDF result blob).
+  Fix: updated ALL 13 tool components to filter sourceFiles by the correct file type:
+  - PDF-only tools (CompressPdf, PdfToWord, PdfToJpg, PdfToPng, SplitPdf, RotatePdf, DeletePages, CropPdf, ReorderPdf, RedactPdf, EditPdf, WatermarkPdf, PageNumbers, ExtractText): `sourceFiles.find((f) => f.included && isPdf(f.file)) ?? sourceFiles.find((f) => isPdf(f.file))`
+  - Image-only tools (CompressPng, EditPng): filter by `isPng(f.file) || isJpg(f.file)`
+  - WordToPdf: filter by `isPdf(f.file) || isDocx(f.file)`
+  Added `isPdf`/`isDocx` imports where missing.
+  Verified: CompressPng now shows the correct image preview (naturalWidth=80, not 0).
+
+- Bug #2 — Before/after compare slider not working:
+  Root cause: CompareSlider used `<img src={blobUrl}>` to display both before and after. But for PDF results, the blob URLs point to PDF blobs, and browsers CANNOT render PDFs in `<img>` tags — the images show as broken.
+  Fix: rewrote CompareSlider to detect if a blob URL is a PDF (via `fetch(url) → blob.type === "application/pdf"`), and if so, render the first page to a canvas via pdfjs and use the resulting JPEG data URL. Added two helpers:
+  - `isPdfBlobUrl(url)` — fetches the blob and checks the type.
+  - `renderPdfFirstPageToDataUrl(blobUrl)` — loads the PDF via pdfjs, renders page 1 to canvas at 1.5x scale, returns a JPEG data URL.
+  The CompareSlider now shows a "Loading…" message while the PDF pages are being rendered, then displays both images with the draggable divider.
+  Verified: compressing a large PNG (1.4MB → 99% reduction) → clicked "Compare before/after" → both before and after images visible with draggable divider handle.
+
+Stage Summary:
+- Both critical bugs fixed.
+- 0 lint errors, 18 warnings (unused eslint-disable — non-blocking).
+- Dev server compiles cleanly, page returns 200.
+- Verified via agent-browser + VLM:
+  • CompressPng shows correct image preview (not broken) ✓
+  • CompressPng → Result screen shows image preview visible ✓
+  • CompressPdf → Result screen → Compare before/after button visible when savings exist ✓
+  • Compare slider shows both before + after images with draggable divider ✓
+- Root cause for both bugs was the persistent sourceFiles: the first file in the list could be from a previous tool, causing wrong file type selection and stale preview URLs.

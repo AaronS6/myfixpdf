@@ -64,7 +64,9 @@ export function WatermarkPdf() {
   const [imageFormat, setImageFormat] = useState<"png" | "jpg">("png");
   const [imageScale, setImageScale] = useState(0.3);
 
-  const target0 = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target0 = 
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   const run = async () => {
     if (!target0) {

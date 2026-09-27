@@ -47,7 +47,9 @@ export function PageNumbers() {
   const [position, setPosition] = useState<(typeof POSITIONS)[number]["id"]>("bottom-center");
   const [fontSize, setFontSize] = useState(11);
   const [startFrom, setStartFrom] = useState(1);
-  const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+  const target = 
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
 
   const run = async () => {
     if (!target) {

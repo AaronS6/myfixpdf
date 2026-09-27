@@ -5,7 +5,7 @@ import { ToolPageShell } from "../ToolPageShell";
 import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
 import { compressPdf, COMPRESSION_LEVELS, type CompressionLevel } from "@/lib/pdf/pdf-ops";
-import { makePreviewUrl, withExt, formatBytes, percentSaved } from "@/lib/pdf/file-helpers";
+import { makePreviewUrl, withExt, formatBytes, percentSaved, isPdf } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Sparkles, FileText, Archive } from "lucide-react";
@@ -30,7 +30,11 @@ export function CompressPdf() {
   const [level, setLevel] = useState<CompressionLevel>("recommended");
 
   const run = async () => {
-    const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
+    // Pick the first included PDF — skip images/DOCX that may persist
+    // from a previous tool (sourceFiles follows the user across tools).
+    const target =
+      sourceFiles.find((f) => f.included && isPdf(f.file)) ??
+      sourceFiles.find((f) => isPdf(f.file));
     if (!target) {
       toast.error(lang === "zh" ? "请先添加一个 PDF。" : "Please add a PDF first.");
       return;

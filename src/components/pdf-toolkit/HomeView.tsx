@@ -263,6 +263,41 @@ export function HomeView() {
             />
           ))}
         </div>
+
+        {/* Beam — external app card */}
+        <div className="mt-6">
+          <a
+            href="https://mybeam.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative flex items-center gap-5 overflow-hidden rounded-2xl border border-[var(--brand)]/20 bg-gradient-to-r from-[var(--brand)]/5 to-[var(--brand-accent)]/5 p-6 card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:card-shadow-lg"
+          >
+            {/* Floating gradient orb */}
+            <div className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-20" style={{ background: "var(--brand)" }} />
+            {/* Icon */}
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+              <svg viewBox="0 0 24 24" fill="none" className="size-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" />
+              </svg>
+            </span>
+            {/* Text */}
+            <div className="relative z-10 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-base font-bold text-[var(--foreground)]">Beam</p>
+                <span className="rounded-full bg-[var(--brand)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--brand)]">New App</span>
+              </div>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                {lang === "zh"
+                  ? "通过扫描二维码或在网络中搜索，即时传输文件和图片 — 无需注册。"
+                  : "Transfer files and photos instantly by scanning a QR code or searching on your network — no sign-up needed."}
+              </p>
+            </div>
+            {/* Arrow */}
+            <div className="relative z-10 flex items-center text-sm font-bold text-[var(--brand)] opacity-0 transition-opacity group-hover:opacity-100">
+              {lang === "zh" ? "打开" : "Open"} <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
+            </div>
+          </a>
+        </div>
       </section>
 
       {/* Divider */}

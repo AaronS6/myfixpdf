@@ -168,6 +168,19 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1.5">
+          {/* Beam — external link to mybeam.vercel.app */}
+          <a
+            href="https://mybeam.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[var(--brand)]/30 bg-[var(--brand)]/5 px-3 py-2 text-sm font-semibold text-[var(--brand)] transition-all duration-200 hover:bg-[var(--brand)]/10 hover:shadow-sm hover:scale-105"
+            title="Beam — transfer files by QR code or network search"
+          >
+            <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" />
+            </svg>
+            Beam
+          </a>
           <button
             onClick={() => setView("home")}
             className={cn(

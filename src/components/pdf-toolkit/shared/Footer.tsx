@@ -38,12 +38,9 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-md overflow-hidden">
-                <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 3 h7 l5 5 v13 a0 0 0 0 1 0 0 h-12 a0 0 0 0 1 0 0 z" fill="rgba(255,255,255,0.18)" stroke="currentColor" />
-                  <path d="M13 3 v5 h5" />
-                  <path d="m9 14.5 2 2 4-4.5" strokeWidth="2.4" />
-                </svg>
+              <span className="flex size-9 items-center justify-center rounded-xl bg-white shadow-md overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.png" alt="myfixpdf logo" className="size-9 object-cover" />
               </span>
               <div className="flex flex-col leading-none">
                 <span className="text-base font-bold text-[var(--foreground)]">

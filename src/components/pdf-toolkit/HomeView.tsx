@@ -178,6 +178,24 @@ export function HomeView() {
               </div>
             )}
 
+            {/* Quick action: Merge button — prominent, always visible */}
+            <div className="mt-6 flex items-center justify-center gap-3 animate-fade-up" style={{ animationDelay: "200ms" }}>
+              <button
+                onClick={() => setView("merge-pdf")}
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] px-6 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:scale-105 hover:shadow-lg"
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 6 4 4 4-4" /><path d="M12 10v8" /><path d="M5 22h14" /></svg>
+                {lang === "zh" ? "合并文件" : "Merge Files"}
+                <span className="ml-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold">
+                  {sourceFiles.length > 0 ? sourceFiles.length : ""}
+                </span>
+                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+              </button>
+              <span className="text-xs text-[var(--muted-foreground)]">
+                {lang === "zh" ? "PDF + 图片 → 一个 PDF" : "PDF + images → one PDF"}
+              </span>
+            </div>
+
             {/* Popular tools quick-access pills */}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-2 animate-fade-up" style={{ animationDelay: "240ms" }}>
               <span className="text-xs font-medium text-[var(--muted-foreground)] mr-1">{lang === "zh" ? "常用:" : "Popular:"}</span>

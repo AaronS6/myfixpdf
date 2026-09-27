@@ -86,8 +86,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Satoshi font from Fontshare (Indian Type Foundry) — premium geometric sans */}
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f[]=Satoshi-300,400,500,700,900&display=swap"
+        />
+      </head>
       <body
-        className={`${inter.variable} ${geistMono.variable} ${dancingScript.variable} ${pacifico.variable} ${greatVibes.variable} ${caveat.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${geistMono.variable} ${dancingScript.variable} ${pacifico.variable} ${greatVibes.variable} ${caveat.variable} antialiased font-sans bg-background text-foreground`}
       >
         <ThemeProvider>
           <I18nProvider>

@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { FileDropzone } from "./shared/FileDropzone";
 import { useDocumentSession, newFileId, type ToolkitFile } from "@/store/document-session";
 import { TOOLS, CATEGORY_LABELS, CATEGORY_COLORS, type ToolMeta } from "./tools/registry";
-import { imageThumbnail, isPdf, getExt } from "@/lib/pdf/file-helpers";
+import { imageThumbnail, isPdf, getExt, formatBytes } from "@/lib/pdf/file-helpers";
 import { getPageCount } from "@/lib/pdf/pdfjs";
 import { toast } from "sonner";
 import { ArrowRight, ShieldCheck, Zap, Layers, FileStack } from "lucide-react";
@@ -16,8 +16,10 @@ type FilterCat = "all" | "compress" | "convert" | "organize" | "edit";
 
 export function HomeView() {
   const setView = useSession((s) => s.setView);
-  const setSourceFiles = useSession((s) => s.setSourceFiles);
+  const addSourceFiles = useSession((s) => s.addSourceFiles);
+  const removeSourceFile = useSession((s) => s.removeSourceFile);
   const clearSourceFiles = useSession((s) => s.clearSourceFiles);
+  const sourceFiles = useSession((s) => s.sourceFiles);
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState<FilterCat>("all");
   const { t, tTool, tt, lang } = useI18n();
@@ -46,17 +48,12 @@ export function HomeView() {
         toolkitFiles.push(tf);
       }
       if (toolkitFiles.length === 0) { setBusy(false); return; }
-      clearSourceFiles();
-      setSourceFiles(toolkitFiles);
-      const allPdfs = toolkitFiles.every((f) => f.type === "application/pdf");
-      const allImages = toolkitFiles.every((f) => f.type.startsWith("image/"));
-      const mixed = !allPdfs && !allImages;
-      if (mixed || (toolkitFiles.length > 1 && (allPdfs || allImages))) setView("merge-pdf");
-      else if (allImages) setView(toolkitFiles.length > 1 ? "convert-to-pdf" : "edit-png");
-      else if (allPdfs) {
-        if (toolkitFiles.length === 1) toast.success(t("toast.pdfAddedPickTool"), { duration: 3500 });
-        else setView("merge-pdf");
-      }
+      // Add files — don't auto-route. Show bubbles and let user pick a tool.
+      addSourceFiles(toolkitFiles);
+      toast.success(
+        lang === "zh" ? `已添加 ${toolkitFiles.length} 个文件` : `Added ${toolkitFiles.length} file${toolkitFiles.length > 1 ? "s" : ""}`,
+        { description: lang === "zh" ? "选择下方工具开始使用" : "Pick a tool below to get started", duration: 4000 },
+      );
     } finally { setBusy(false); }
   };
 
@@ -121,6 +118,65 @@ export function HomeView() {
                 ctaText={busy ? t("tool.loading") : t("hero.dropzone.cta")}
               />
             </div>
+
+            {/* File bubbles — show staged files inside the hero, grow as user adds more */}
+            {sourceFiles.length > 0 && (
+              <div className="mx-auto mt-6 max-w-xl animate-fade-up">
+                <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {sourceFiles.map((f) => {
+                      const isPdfFile = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+                      return (
+                        <div
+                          key={f.id}
+                          className="group relative flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--muted)] px-3 py-2 animate-pop-in"
+                        >
+                          {/* File type icon bubble */}
+                          <span
+                            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
+                            style={{ background: isPdfFile ? "var(--brand)" : "var(--cat-convert)" }}
+                          >
+                            {isPdfFile ? (
+                              <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" /></svg>
+                            )}
+                          </span>
+                          {/* File name + size */}
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-[var(--foreground)] max-w-[120px]">{f.name}</p>
+                            <p className="text-[10px] text-[var(--muted-foreground)]">
+                              {f.pageCount ? `${f.pageCount}p · ` : ""}{formatBytes(f.size)}
+                            </p>
+                          </div>
+                          {/* Remove button */}
+                          <button
+                            onClick={() => removeSourceFile(f.id)}
+                            className="flex size-5 items-center justify-center rounded-full text-[var(--muted-foreground)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+                            aria-label="Remove file"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" className="size-3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Clear all + hint */}
+                  <div className="mt-3 flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => clearSourceFiles()}
+                      className="text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--danger)]"
+                    >
+                      {lang === "zh" ? "清除全部" : "Clear all"}
+                    </button>
+                    <span className="text-[var(--border)]">·</span>
+                    <span className="text-xs font-medium text-[var(--brand)]">
+                      {lang === "zh" ? "↓ 选择下方工具开始" : "↓ Pick a tool below to start"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Popular tools quick-access pills */}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-2 animate-fade-up" style={{ animationDelay: "240ms" }}>

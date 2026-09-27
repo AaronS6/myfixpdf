@@ -48,7 +48,7 @@ export type ToolId =
   | "pdf-to-word"
   | "word-to-pdf"
   | "pdf-to-jpg"
-  | "jpg-to-pdf"
+  | "convert-to-pdf"
   | "split-pdf"
   | "merge-pdf"
   | "edit-pdf"

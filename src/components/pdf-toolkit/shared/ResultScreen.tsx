@@ -22,6 +22,7 @@ import {
 import { useDocumentSession, type ToolId } from "@/store/document-session";
 import { formatBytes, percentSaved, downloadBlob, makePreviewUrl } from "@/lib/pdf/file-helpers";
 import { PdfPreview } from "./PdfPreview";
+import { ImagePreview } from "./ImagePreview";
 import { SignaturePadModal } from "./SignaturePadModal";
 import { DescriptionModal } from "./DescriptionModal";
 import { toast } from "sonner";
@@ -39,12 +40,22 @@ export function ResultScreen() {
   const [sigModal, setSigModal] = useState(false);
   const [descModal, setDescModal] = useState(false);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
+  // sigPos is in CSS pixels relative to the page canvas (top-left origin).
+  // The scale + page dims are captured at render time into the ref below.
   const [sigPos, setSigPos] = useState<{ x: number; y: number; w: number; h: number; page: number }>({
     x: 80,
     y: 80,
     w: 200,
     h: 80,
     page: 0,
+  });
+  // Live ref to the page dims/scale the overlay was last rendered with.
+  // Used at bake time to convert CSS pixels → PDF points (and flip Y).
+  const sigOverlayInfoRef = useRef<{ pageW: number; pageH: number; scale: number; pageIndex: number }>({
+    pageW: 595.28,
+    pageH: 841.89,
+    scale: 1,
+    pageIndex: 0,
   });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -108,16 +119,24 @@ export function ResultScreen() {
       const bin = atob(base64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      // Convert overlay CSS pixels → PDF points (Y measured from bottom-left in PDF space).
+      const { pageW, pageH, scale, pageIndex } = sigOverlayInfoRef.current;
+      const safeScale = scale > 0 ? scale : 1;
+      const pdfX = sigPos.x / safeScale;
+      // Y-up conversion: pdfY is the bottom-left Y of the signature rectangle.
+      const pdfY = pageH - (sigPos.y + sigPos.h) / safeScale;
+      const pdfW = sigPos.w / safeScale;
+      const pdfH = sigPos.h / safeScale;
       const out = await embedImageOnPage(
         resultFile.blob,
-        sigPos.page,
+        pageIndex,
         bytes,
         "png",
         {
-          x: sigPos.x,
-          y: sigPos.y,
-          width: sigPos.w,
-          height: sigPos.h,
+          x: pdfX,
+          y: pdfY,
+          width: Math.max(1, pdfW),
+          height: Math.max(1, pdfH),
         },
         (pct, msg) => useDocumentSession.getState().updateProgress(msg, pct),
       );
@@ -187,7 +206,7 @@ export function ResultScreen() {
           )}
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.03]"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.03]"
           >
             <Download className="size-4" /> Download
           </button>
@@ -219,22 +238,29 @@ export function ResultScreen() {
             <CompareSlider beforeUrl={resultFile.beforePreviewUrl} afterUrl={previewUrl} position={comparePos} onPosition={setComparePos} />
           ) : isPdf && previewUrl ? (
             <div className="relative h-[70vh]">
-              <PdfPreview blob={resultFile!.blob} />
-              {/* Signature drag overlay */}
-              {signaturePreview && (
-                <SignatureOverlay
-                  dataUrl={signaturePreview}
-                  pos={sigPos}
-                  onChange={setSigPos}
-                  onApply={applySignature}
-                  onRemove={() => setSignaturePreview(null)}
-                />
-              )}
+              <PdfPreview
+                blob={resultFile!.blob}
+                renderOverlay={(pageIndex, pageW, pageH, scale) => {
+                  // Capture page/scale info for bake-time conversion. Writing to a ref during
+                  // render is safe (does not trigger re-render).
+                  sigOverlayInfoRef.current = { pageW, pageH, scale, pageIndex };
+                  if (!signaturePreview) return null;
+                  return (
+                    <SignatureOverlay
+                      dataUrl={signaturePreview}
+                      pos={sigPos}
+                      onChange={setSigPos}
+                      onApply={applySignature}
+                      onRemove={() => setSignaturePreview(null)}
+                      pageIndex={pageIndex}
+                    />
+                  );
+                }}
+              />
             </div>
           ) : isImage && previewUrl ? (
-            <div className="flex h-[70vh] items-center justify-center bg-[var(--muted)] p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={previewUrl} alt="Preview" className="max-h-full max-w-full rounded-md shadow-md" />
+            <div className="relative h-[70vh]">
+              <ImagePreview src={previewUrl} />
             </div>
           ) : (
             <div className="flex h-64 items-center justify-center text-[var(--muted-foreground)]">No preview available</div>
@@ -260,7 +286,7 @@ export function ResultScreen() {
                 <>
                   <ActionButton icon={Sparkles} label="Compress More" color="var(--cat-compress)" onClick={() => chainTo("compress-png")} />
                   <ActionButton icon={Combine} label="Add to PDF merge" color="var(--cat-organize)" onClick={() => chainTo("merge-pdf")} />
-                  <ActionButton icon={FilePlus2} label="Add to JPG→PDF" color="var(--cat-convert)" onClick={() => chainTo("jpg-to-pdf")} />
+                  <ActionButton icon={FilePlus2} label="Add to Convert→PDF" color="var(--cat-convert)" onClick={() => chainTo("convert-to-pdf")} />
                 </>
               )}
               <ActionButton icon={RotateCcw} label="Start Over" color="#5B6B79" onClick={reset} />
@@ -296,7 +322,7 @@ export function ResultScreen() {
         <div className="mt-4 flex justify-center">
           <button
             onClick={handleDownloadAllZip}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
           >
             <Archive className="size-4" /> Download all as ZIP
           </button>
@@ -428,15 +454,25 @@ function SignatureOverlay({
   onChange,
   onApply,
   onRemove,
+  pageIndex,
 }: {
   dataUrl: string;
   pos: { x: number; y: number; w: number; h: number; page: number };
   onChange: (p: { x: number; y: number; w: number; h: number; page: number }) => void;
   onApply: () => void;
   onRemove: () => void;
+  pageIndex: number;
 }) {
   const dragRef = useRef<{ kind: "move" | "resize"; startX: number; startY: number; start: typeof pos } | null>(null);
-  const [page, setPage] = useState(1);
+
+  // The overlay is always rendered on the page currently shown by PdfPreview.
+  // Sync pos.page so applySignature bakes onto the right page.
+  useEffect(() => {
+    if (pos.page !== pageIndex) {
+      onChange({ ...pos, page: pageIndex });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageIndex]);
 
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -460,7 +496,7 @@ function SignatureOverlay({
               ...dragRef.current.start,
               x: dragRef.current.start.x + dx,
               y: dragRef.current.start.y + dy,
-              page: pos.page,
+              page: pageIndex,
             });
           };
           const up = () => {
@@ -484,10 +520,10 @@ function SignatureOverlay({
               if (!dragRef.current) return;
               const dx = ev.clientX - dragRef.current.startX;
               const dy = ev.clientY - dragRef.current.startY;
-              const ar = dragRef.current.start.w / dragRef.current.start.h;
+              const ar = dragRef.current.start.w / Math.max(1, dragRef.current.start.h);
               const w = Math.max(40, dragRef.current.start.w + dx);
               const h = w / ar;
-              onChange({ ...dragRef.current.start, w, h, page: pos.page });
+              onChange({ ...dragRef.current.start, w, h, page: pageIndex });
             };
             const up = () => {
               dragRef.current = null;
@@ -503,19 +539,8 @@ function SignatureOverlay({
           <button onClick={onRemove} className="px-1 hover:text-[var(--danger)]">Remove</button>
         </div>
       </div>
-      <div className="pointer-events-auto absolute bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-[var(--card)]/95 px-2 py-1 shadow-md">
-        <span className="text-[10px] text-[var(--muted-foreground)]">On page</span>
-        <select
-          value={pos.page}
-          onChange={(e) => onChange({ ...pos, page: parseInt(e.target.value, 10) })}
-          className="ml-1 rounded border border-[var(--border)] px-1 py-0.5 text-[10px]"
-        >
-          {Array.from({ length: 20 }).map((_, i) => (
-            <option key={i} value={i}>
-              {i + 1}
-            </option>
-          ))}
-        </select>
+      <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-[var(--card)]/95 px-2 py-1 shadow-md">
+        <span className="text-[10px] text-[var(--muted-foreground)]">On page {pageIndex + 1}</span>
       </div>
     </div>
   );

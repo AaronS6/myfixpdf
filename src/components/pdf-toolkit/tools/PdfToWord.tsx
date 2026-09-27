@@ -44,10 +44,7 @@ export function PdfToWord() {
     <ToolPageShell tool={tool} ctaLabel="Convert to Word" ctaColor="var(--cat-convert)" onCtaClick={run}>
       <div className="mt-5 flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
         <FileText className="size-4 shrink-0 text-[var(--brand)]" />
-        <p>
-          Real client-side conversion: text content is extracted from each PDF page via pdf.js, then reconstructed as paragraphs
-          and headings in a real .docx (using the docx library). Image-only / scanned PDFs are rasterized and embedded as pictures.
-        </p>
+        <p>Get an editable Word document from any PDF — perfect for making quick changes.</p>
       </div>
     </ToolPageShell>
   );

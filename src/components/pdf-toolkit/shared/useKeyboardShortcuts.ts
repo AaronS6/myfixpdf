@@ -12,7 +12,7 @@ const SINGLE_KEYS: Record<string, { view: ToolId; label: string }> = {
   "3": { view: "pdf-to-word", label: "PDF to Word" },
   "4": { view: "word-to-pdf", label: "Word to PDF" },
   "5": { view: "pdf-to-jpg", label: "PDF to JPG" },
-  "6": { view: "jpg-to-pdf", label: "JPG to PDF" },
+  "6": { view: "convert-to-pdf", label: "Convert to PDF" },
   "7": { view: "split-pdf", label: "Split PDF" },
   "8": { view: "merge-pdf", label: "Merge PDF" },
   "9": { view: "edit-pdf", label: "Edit PDF" },

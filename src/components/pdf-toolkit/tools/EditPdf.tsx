@@ -13,6 +13,7 @@ import {
   insertBlankPage,
   addTextToPage,
   embedImageOnPage,
+  rotateAllPages,
 } from "@/lib/pdf/pdf-ops";
 import { loadPdfFromBlob } from "@/lib/pdf/pdfjs";
 import { makePreviewUrl, withExt } from "@/lib/pdf/file-helpers";
@@ -35,6 +36,7 @@ import {
   MousePointer2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 const tool = getTool("edit-pdf")!;
 
@@ -135,6 +137,19 @@ export function EditPdf() {
     } catch (e) {
       stopProgress();
       toast.error(e instanceof Error ? e.message : "Rotate failed");
+    }
+  };
+
+  const rotateAll = async (degrees: 90 | 180 | 270) => {
+    try {
+      startProgress(`Rotating every page ${degrees}°…`, "determinate", 0);
+      const out = await rotateAllPages(liveBlob, degrees, (pct, msg) => updateProgress(msg, pct));
+      updateBlob(out);
+      stopProgress();
+      toast.success(`Rotated every page by ${degrees}°`);
+    } catch (e) {
+      stopProgress();
+      toast.error(e instanceof Error ? e.message : "Rotate all failed");
     }
   };
 
@@ -270,87 +285,49 @@ export function EditPdf() {
       <div className="mt-5 space-y-4">
         {/* Toolbar */}
         <div className="sticky top-16 z-20 flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 shadow-sm">
-          <button
-            onClick={undo}
-            disabled={historyIdx <= 0}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-30"
-            title="Undo"
-          >
+          <ToolButton onClick={undo} disabled={historyIdx <= 0} label="Undo last change" desc="Step back one change. Other pages stay the same.">
             <Undo2 className="size-4" />
-          </button>
-          <button
-            onClick={redo}
-            disabled={historyIdx >= history2.length - 1}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-30"
-            title="Redo"
-          >
+          </ToolButton>
+          <ToolButton onClick={redo} disabled={historyIdx >= history2.length - 1} label="Redo" desc="Re-apply a change you just undid.">
             <Redo2 className="size-4" />
-          </button>
-          <div className="mx-1 h-6 w-px bg-[#E4E9F0]" />
-          <button
-            onClick={() => setTool2("select")}
-            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "select" ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]")}
-            title="Select"
-          >
+          </ToolButton>
+          <div className="mx-1 h-6 w-px bg-[var(--border)]" />
+          <ToolButton onClick={() => setTool2("select")} active={tool2 === "select"} label="Select" desc="Move around without drawing anything.">
             <MousePointer2 className="size-4" />
-          </button>
-          <button
-            onClick={() => setTool2("text")}
-            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "text" ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]")}
-            title="Add text"
-          >
+          </ToolButton>
+          <ToolButton onClick={() => setTool2("text")} active={tool2 === "text"} label="Add text" desc="Add text anywhere on the page.">
             <Type className="size-4" />
-          </button>
-          <button
-            onClick={() => setTool2("draw")}
-            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "draw" ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]")}
-            title="Draw"
-          >
+          </ToolButton>
+          <ToolButton onClick={() => setTool2("draw")} active={tool2 === "draw"} label="Draw freehand" desc="Draw freehand on the page — strokes are baked in on Save.">
             <PenLine className="size-4" />
-          </button>
-          <div className="mx-1 h-6 w-px bg-[#E4E9F0]" />
-          <button
-            onClick={() => rotate(90)}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-            title={`Rotate page ${pageNum} clockwise (only this page)`}
-          >
+          </ToolButton>
+          <div className="mx-1 h-6 w-px bg-[var(--border)]" />
+          <ToolButton onClick={() => rotate(90)} label={`Rotate page ${pageNum} clockwise`} desc={`Rotate this page clockwise (other pages stay the same)`}>
             <RotateCw className="size-4" />
-          </button>
-          <button
-            onClick={() => rotate(270)}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-            title={`Rotate page ${pageNum} counter-clockwise (only this page)`}
-          >
+          </ToolButton>
+          <ToolButton onClick={() => rotate(270)} label={`Rotate page ${pageNum} counter-clockwise`} desc={`Rotate this page counter-clockwise (other pages stay the same)`}>
             <RotateCcw className="size-4" />
-          </button>
-          <button
-            onClick={duplicate}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-            title={`Duplicate page ${pageNum}`}
-          >
+          </ToolButton>
+          {/* Rotate All — bulk action with ALL badge */}
+          <ToolButton onClick={() => rotateAll(90)} label="Rotate ALL pages 90° clockwise" desc="Rotate every page in this PDF by 90° clockwise — a bulk action.">
+            <span className="relative">
+              <RotateCw className="size-4" />
+              <span className="absolute -right-2 -top-2 rounded bg-[var(--cat-edit)] px-1 py-0 text-[8px] font-bold leading-tight text-white">ALL</span>
+            </span>
+          </ToolButton>
+          <ToolButton onClick={duplicate} label={`Duplicate page ${pageNum}`} desc={`Make a copy of this page right after it.`}>
             <Copy className="size-4" />
-          </button>
-          <button
-            onClick={insertBlank}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-            title={`Insert blank page after ${pageNum}`}
-          >
+          </ToolButton>
+          <ToolButton onClick={insertBlank} label={`Insert blank page after ${pageNum}`} desc={`Add an empty page right after this one.`}>
             <Plus className="size-4" />
-          </button>
-          <button
-            onClick={del}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
-            title={`Delete page ${pageNum}`}
-          >
+          </ToolButton>
+          <ToolButton onClick={del} label={`Delete page ${pageNum}`} desc={`Remove this page from the PDF.`} danger>
             <Trash2 className="size-4" />
-          </button>
+          </ToolButton>
           <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={save}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#FF4B6E] to-[#FF8A00] px-3 py-2 text-sm font-bold text-white shadow-sm"
-            >
+            <ToolButton onClick={save} label="Save and review the result" desc="Bake in all changes and go to the result screen." cta>
               <Save className="size-4" /> Save
-            </button>
+            </ToolButton>
           </div>
         </div>
 
@@ -468,12 +445,13 @@ function EditOverlay(props: {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     for (const s of strokes) {
+      // Defensive: never crash on a malformed stroke entry.
+      if (!s || typeof s.pageIndex !== "number" || !Array.isArray(s.points) || s.points.length === 0) continue;
       if (s.pageIndex !== pageIndex) continue;
       ctx.strokeStyle = s.color;
       ctx.lineWidth = s.width * scale;
       ctx.beginPath();
       const pts = s.points;
-      if (pts.length === 0) continue;
       ctx.moveTo(pts[0].x * scale, pts[0].y * scale);
       for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x * scale, pts[i].y * scale);
       ctx.stroke();
@@ -509,8 +487,11 @@ function EditOverlay(props: {
   };
   const onPointerUp = () => {
     if (tool2 !== "draw" || !drawingRef.current) return;
-    if (drawingRef.current.points.length > 1) {
-      setStrokes((s) => [...s, drawingRef.current!]);
+    // Capture the stroke by VALUE before clearing the ref, because the
+    // setStrokes updater runs asynchronously and would otherwise read null.
+    const stroke = drawingRef.current;
+    if (stroke.points.length > 1) {
+      setStrokes((s) => [...s, stroke]);
     }
     drawingRef.current = null;
   };
@@ -617,3 +598,63 @@ async function strokeToPng(stroke: DrawStroke): Promise<Uint8Array> {
   const arr = new Uint8Array(await blob.arrayBuffer());
   return arr;
 }
+
+/**
+ * ToolButton — toolbar button with a hover tooltip. Wraps the shadcn Tooltip
+ * component and uses our CSS vars for consistent theming. The tooltip is
+ * portaled and avoids viewport overflow via Radix's collision-aware positioning.
+ */
+function ToolButton({
+  onClick,
+  disabled,
+  label,
+  desc,
+  active,
+  danger,
+  cta,
+  children,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+  label: string;
+  desc: string;
+  active?: boolean;
+  danger?: boolean;
+  cta?: boolean;
+  children: React.ReactNode;
+}) {
+  const button = (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed",
+        cta
+          ? "border-transparent bg-[var(--brand)] px-3 text-white font-bold shadow-sm hover:opacity-90"
+          : active
+            ? "border-[var(--cat-edit)] bg-[var(--cat-edit)]/10 text-[var(--cat-edit)]"
+            : danger
+              ? "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+              : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
+      )}
+      aria-label={label}
+      title={label}
+    >
+      {children}
+    </button>
+  );
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent
+        side="bottom"
+        sideOffset={6}
+        className="max-w-[220px] text-center leading-snug border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-md"
+      >
+        <p className="font-semibold">{label}</p>
+        <p className="text-[10px] text-[var(--muted-foreground)]">{desc}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+

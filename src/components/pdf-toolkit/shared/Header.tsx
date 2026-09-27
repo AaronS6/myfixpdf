@@ -13,6 +13,8 @@ type Cat = {
   labelKey: "nav.compress" | "nav.convert" | "nav.organize" | "nav.edit";
   color: string;
   tools: Array<{ id: ToolId; label: string; desc: string }>;
+  /** Alignment hint for the dropdown so it never overflows the viewport. */
+  align: "left" | "center" | "right";
 };
 
 export function Header() {
@@ -27,6 +29,7 @@ export function Header() {
       id: "compress",
       labelKey: "nav.compress",
       color: "var(--cat-compress)",
+      align: "left",
       tools: [
         { id: "compress-pdf", label: tTool("compress-pdf").name, desc: tTool("compress-pdf").desc },
         { id: "compress-png", label: tTool("compress-png").name, desc: tTool("compress-png").desc },
@@ -37,11 +40,12 @@ export function Header() {
       id: "convert",
       labelKey: "nav.convert",
       color: "var(--cat-convert)",
+      align: "left",
       tools: [
         { id: "pdf-to-word", label: tTool("pdf-to-word").name, desc: tTool("pdf-to-word").desc },
         { id: "word-to-pdf", label: tTool("word-to-pdf").name, desc: tTool("word-to-pdf").desc },
         { id: "pdf-to-jpg", label: tTool("pdf-to-jpg").name, desc: tTool("pdf-to-jpg").desc },
-        { id: "jpg-to-pdf", label: tTool("jpg-to-pdf").name, desc: tTool("jpg-to-pdf").desc },
+        { id: "convert-to-pdf", label: tTool("convert-to-pdf").name, desc: tTool("convert-to-pdf").desc },
         { id: "extract-text", label: tTool("extract-text").name, desc: tTool("extract-text").desc },
         { id: "translate-pdf", label: tTool("translate-pdf").name, desc: tTool("translate-pdf").desc },
       ],
@@ -50,6 +54,7 @@ export function Header() {
       id: "organize",
       labelKey: "nav.organize",
       color: "var(--cat-organize)",
+      align: "center",
       tools: [
         { id: "split-pdf", label: tTool("split-pdf").name, desc: tTool("split-pdf").desc },
         { id: "merge-pdf", label: tTool("merge-pdf").name, desc: tTool("merge-pdf").desc },
@@ -63,6 +68,7 @@ export function Header() {
       id: "edit",
       labelKey: "nav.edit",
       color: "var(--cat-edit)",
+      align: "right",
       tools: [
         { id: "edit-pdf", label: tTool("edit-pdf").name, desc: tTool("edit-pdf").desc },
         { id: "watermark-pdf", label: tTool("watermark-pdf").name, desc: tTool("watermark-pdf").desc },
@@ -72,6 +78,14 @@ export function Header() {
     },
   ];
 
+  const menuWidth = (cat: Cat) => (cat.tools.length > 4 ? 560 : 280);
+
+  const menuPosition = (cat: Cat) => {
+    if (cat.align === "left") return "left-0";
+    if (cat.align === "right") return "right-0";
+    return "left-1/2 -translate-x-1/2";
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] glass">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
@@ -79,15 +93,15 @@ export function Header() {
           <button
             onClick={() => setView("home")}
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.02]"
-            aria-label={t("brand.name")}
+            aria-label="myfixpdf — home"
           >
-            <span className="relative flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#C8542A] to-[#E8A87C] text-white shadow-md">
+            <span className="relative flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-md">
               <FileStack className="size-5" />
-              <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#E8A87C] ring-2 ring-[var(--card)]" />
+              <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#60A5FA] ring-2 ring-[var(--card)]" />
             </span>
             <div className="flex flex-col leading-none">
-              <span className="text-[15px] font-bold tracking-tight text-[var(--foreground)]">
-                PDF <span className="brand-gradient-text">Toolkit</span>
+              <span className="text-[16px] font-bold tracking-tight text-[var(--foreground)]">
+                my<span className="brand-gradient-text">fixpdf</span>
               </span>
               <span className="text-[10px] font-medium text-[var(--muted-foreground)]">
                 {t("nav.madeBy")}
@@ -113,10 +127,13 @@ export function Header() {
                 <ChevronDown className={cn("size-3.5 transition-transform", openMenu === cat.id && "rotate-180")} />
               </button>
               {openMenu === cat.id && (
-                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 z-50 animate-fade-up">
+                <div className={cn("absolute top-full pt-2 z-50 animate-fade-up", menuPosition(cat))}>
                   <div
-                    className="grid w-[520px] grid-cols-2 gap-1 rounded-2xl border border-[var(--border)] glass p-3 shadow-xl"
-                    style={{ gridTemplateColumns: cat.tools.length > 4 ? "1fr 1fr" : "1fr" }}
+                    className={cn(
+                      "grid gap-1 rounded-2xl border border-[var(--border)] glass p-2.5 shadow-xl",
+                      cat.tools.length > 4 ? "grid-cols-2" : "grid-cols-1",
+                    )}
+                    style={{ width: menuWidth(cat) }}
                   >
                     {cat.tools.map((tool) => (
                       <button
@@ -126,7 +143,7 @@ export function Header() {
                           setOpenMenu(null);
                         }}
                         className={cn(
-                          "flex items-start gap-3 rounded-xl p-3 text-left transition-all hover:bg-[var(--muted)]",
+                          "flex items-start gap-3 rounded-xl p-2.5 text-left transition-all hover:bg-[var(--muted)]",
                           view === tool.id && "bg-[var(--muted)]",
                         )}
                       >
@@ -155,7 +172,7 @@ export function Header() {
             className={cn(
               "hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all",
               view === "home"
-                ? "bg-gradient-to-br from-[#C8542A] to-[#E8A87C] text-white shadow-sm"
+                ? "bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-sm"
                 : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
             )}
           >
@@ -163,12 +180,6 @@ export function Header() {
           </button>
           <ThemeToggle />
           <LanguageToggle />
-          <button
-            onClick={() => setView("merge-pdf")}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#C8542A] to-[#E8A87C] px-3.5 py-2 text-sm font-semibold text-white shadow-md transition-transform hover:scale-[1.03]"
-          >
-            {t("nav.getStarted")}
-          </button>
           {/* Mobile */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
@@ -228,7 +239,7 @@ function ToolIcon({ id, className }: { id: ToolId; className?: string }) {
     "pdf-to-word": <ConvertIcon className={className} />,
     "word-to-pdf": <ConvertIcon className={className} />,
     "pdf-to-jpg": <ImageIcon className={className} />,
-    "jpg-to-pdf": <ConvertIcon className={className} />,
+    "convert-to-pdf": <ConvertIcon className={className} />,
     "split-pdf": <SplitIcon className={className} />,
     "merge-pdf": <MergeIcon className={className} />,
     "edit-pdf": <EditIcon className={className} />,
@@ -291,16 +302,14 @@ function EditIcon({ className }: { className?: string }) {
 function WatermarkIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className ?? "size-5"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" opacity="0.3" />
-      <path d="M9 12l2 2 4-4" />
+      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" opacity="0.3" /><path d="M9 12l2 2 4-4" />
     </svg>
   );
 }
 function ReorderIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className ?? "size-5"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+      <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
     </svg>
   );
 }
@@ -321,8 +330,7 @@ function NumberIcon({ className }: { className?: string }) {
 function RedactIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className ?? "size-5"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" />
-      <rect x="7" y="13" width="10" height="4" fill="currentColor" stroke="none" />
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><rect x="7" y="13" width="10" height="4" fill="currentColor" stroke="none" />
     </svg>
   );
 }

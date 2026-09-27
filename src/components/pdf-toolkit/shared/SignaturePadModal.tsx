@@ -285,7 +285,7 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
           </button>
           <button
             onClick={onConfirmClick}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#C8542A] to-[#E8A87C] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#60A5FA] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
           >
             <Check className="size-4" /> {lang === "zh" ? "应用签名" : "Apply signature"}
           </button>

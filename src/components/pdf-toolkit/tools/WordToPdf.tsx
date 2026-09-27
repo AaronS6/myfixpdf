@@ -44,10 +44,7 @@ export function WordToPdf() {
     <ToolPageShell tool={tool} ctaLabel="Convert to PDF" ctaColor="var(--cat-convert)" onCtaClick={run}>
       <div className="mt-5 flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
         <FileText className="size-4 shrink-0 text-[var(--brand)]" />
-        <p>
-          The .docx is parsed to HTML by mammoth.js, then rendered to PDF via html2canvas + jsPDF. Headings, bold/italic,
-          lists, and embedded images are preserved. Very complex layouts may render imperfectly.
-        </p>
+        <p>Turn your Word document into a clean, shareable PDF.</p>
       </div>
     </ToolPageShell>
   );

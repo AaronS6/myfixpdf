@@ -74,7 +74,7 @@ export type StringKey =
 type Dict = Record<StringKey, string>;
 
 const en: Dict = {
-  "brand.name": "PDF Toolkit",
+  "brand.name": "myfixpdf",
   "brand.tagline": "Every PDF tool you need, in one place.",
   "nav.compress": "Compress",
   "nav.convert": "Convert",
@@ -147,7 +147,7 @@ const en: Dict = {
 };
 
 const zh: Dict = {
-  "brand.name": "PDF 工具箱",
+  "brand.name": "myfixpdf PDF 工具箱",
   "brand.tagline": "你需要的每一个 PDF 工具，一站式搞定。",
   "nav.compress": "压缩",
   "nav.convert": "转换",
@@ -229,7 +229,7 @@ export const TOOL_NAMES: Record<Lang, Record<string, { name: string; short: stri
     "pdf-to-word": { name: "PDF to Word", short: "Convert", desc: "Turn a PDF into an editable Word document you can actually open and edit." },
     "word-to-pdf": { name: "Word to PDF", short: "Convert", desc: "Turn a Word document into a clean, shareable PDF." },
     "pdf-to-jpg": { name: "PDF to JPG", short: "Convert", desc: "Turn each page of a PDF into a JPG image — download one or all as a ZIP." },
-    "jpg-to-pdf": { name: "JPG to PDF", short: "Convert", desc: "Combine your JPG or PNG images into a single PDF." },
+    "convert-to-pdf": { name: "Convert to PDF", short: "Convert", desc: "Turn any image or document into a PDF — JPG, PNG, even another PDF." },
     "split-pdf": { name: "Split PDF", short: "Organize", desc: "Pick exactly which pages to keep — by checkbox or by typing page numbers." },
     "merge-pdf": { name: "Merge PDF", short: "Organize", desc: "Mix PDFs and images into one PDF. Choose which pages to include from each file." },
     "reorder-pdf": { name: "Reorder Pages", short: "Organize", desc: "Drag pages around to put them in any order you want." },
@@ -250,7 +250,7 @@ export const TOOL_NAMES: Record<Lang, Record<string, { name: string; short: stri
     "pdf-to-word": { name: "PDF 转 Word", short: "转换", desc: "把 PDF 转成可编辑的 Word 文档，能直接打开并修改。" },
     "word-to-pdf": { name: "Word 转 PDF", short: "转换", desc: "把 Word 文档转成清晰、易分享的 PDF。" },
     "pdf-to-jpg": { name: "PDF 转 JPG", short: "转换", desc: "把 PDF 的每一页都转成 JPG 图片 — 可单独下载或打包成 ZIP。" },
-    "jpg-to-pdf": { name: "JPG 转 PDF", short: "转换", desc: "把多张 JPG 或 PNG 图片合并成一个 PDF。" },
+    "convert-to-pdf": { name: "转为 PDF", short: "转换", desc: "把任何图片或文档转成 PDF — 支持 JPG、PNG，甚至另一个 PDF。" },
     "split-pdf": { name: "拆分 PDF", short: "整理", desc: "精确选择要保留的页面 — 用复选框或输入页码。" },
     "merge-pdf": { name: "合并 PDF", short: "整理", desc: "把 PDF 和图片混搭成一个 PDF。可从每个文件中挑选要包含的页面。" },
     "reorder-pdf": { name: "重排页面", short: "整理", desc: "拖动页面调整顺序，随心所欲。" },

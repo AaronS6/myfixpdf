@@ -236,7 +236,7 @@ export function SplitPdf() {
           />
           <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
             <Scissors className="size-4 shrink-0 text-[#8C54FF]" />
-            <p>Single mode = all selected pages form one new PDF. Group mode = each group becomes its own PDF (download individually or as ZIP).</p>
+            <p>Single mode keeps all selected pages in one new PDF. Group mode creates a separate PDF for each group.</p>
           </div>
         </div>
       ) : (

@@ -85,10 +85,7 @@ export function CompressPdf() {
         </div>
         <div className="mt-3 flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
           <FileText className="size-4 shrink-0 text-[var(--brand)]" />
-          <p>
-            Real client-side compression: each page is rasterized at the chosen DPI and re-encoded as JPEG, then re-embedded
-            in a fresh PDF. Vector-only PDFs may shrink less than image-heavy ones.
-          </p>
+          <p>Pick a quality level — smaller files reduce quality slightly, larger files keep it crisp.</p>
         </div>
         {sourceFiles.length > 1 && (
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-[var(--warning)]/30 bg-[var(--warning)]/10 p-3 text-xs text-[var(--warning)]">

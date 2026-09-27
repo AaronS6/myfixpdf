@@ -71,7 +71,7 @@ type Snapshot = {
   imgHeight: number;
 };
 
-const PEN_COLORS = ["#1A1A1A", "#C8542A", "#2F855A", "#1D4ED8", "#B5346C", "#D97706"];
+const PEN_COLORS = ["#1A1A1A", "#2563EB", "#2F855A", "#1D4ED8", "#B5346C", "#D97706"];
 
 function drawStroke(ctx: CanvasRenderingContext2D, s: Stroke) {
   if (s.points.length === 0) return;
@@ -968,11 +968,7 @@ export function EditPng() {
             }}
           >
             <Save className="size-4 shrink-0" style={{ color: "var(--cat-compress)" }} />
-            <p>
-              Pick a tool, then click/drag on the image. Annotations are rasterized onto the canvas
-              in real time using the HTML5 Canvas API. <b>Save Image</b> rasterizes everything to a{" "}
-              {imageFormat.toUpperCase()} via <code className="rounded px-1" style={{ background: "var(--card)" }}>canvas.toBlob</code>.
-            </p>
+            <p>Draw, add text, and shapes — your edits save automatically when you click <b>Save Image</b>.</p>
           </div>
         </div>
       ) : target ? (

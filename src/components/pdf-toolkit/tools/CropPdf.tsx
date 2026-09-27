@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ToolPageShell } from "../ToolPageShell";
 import { getTool } from "./registry";
 import { useDocumentSession } from "@/store/document-session";
@@ -212,84 +212,14 @@ export function CropPdf() {
                       showToolbar={false}
                       renderOverlay={(_pi, w, h, scale) => {
                         if (_pi !== selectedPage || !showCropOverlay) return null;
-                        const leftPx = crop.left * scale;
-                        const rightPx = crop.right * scale;
-                        const topPx = crop.top * scale;
-                        const bottomPx = crop.bottom * scale;
-                        const fullW = w * scale;
-                        const fullH = h * scale;
-                        // We render 4 dark masks around the kept rectangle.
-                        // The kept rectangle has top-left at (leftPx, topPx)
-                        // and bottom-right at (fullW - rightPx, fullH - bottomPx).
-                        const keptW = Math.max(0, fullW - leftPx - rightPx);
-                        const keptH = Math.max(0, fullH - topPx - bottomPx);
                         return (
-                          <div className="absolute inset-0 pointer-events-none">
-                            {/* Top */}
-                            <div
-                              className="absolute"
-                              style={{
-                                left: 0,
-                                top: 0,
-                                width: fullW,
-                                height: topPx,
-                                background: "rgba(20, 19, 15, 0.55)",
-                                border: "1px dashed var(--brand)",
-                                borderBottomWidth: 0,
-                              }}
-                            />
-                            {/* Bottom */}
-                            <div
-                              className="absolute"
-                              style={{
-                                left: 0,
-                                top: topPx + keptH,
-                                width: fullW,
-                                height: bottomPx,
-                                background: "rgba(20, 19, 15, 0.55)",
-                                border: "1px dashed var(--brand)",
-                                borderTopWidth: 0,
-                              }}
-                            />
-                            {/* Left */}
-                            <div
-                              className="absolute"
-                              style={{
-                                left: 0,
-                                top: topPx,
-                                width: leftPx,
-                                height: keptH,
-                                background: "rgba(20, 19, 15, 0.55)",
-                                border: "1px dashed var(--brand)",
-                                borderRightWidth: 0,
-                              }}
-                            />
-                            {/* Right */}
-                            <div
-                              className="absolute"
-                              style={{
-                                left: leftPx + keptW,
-                                top: topPx,
-                                width: rightPx,
-                                height: keptH,
-                                background: "rgba(20, 19, 15, 0.55)",
-                                border: "1px dashed var(--brand)",
-                                borderLeftWidth: 0,
-                              }}
-                            />
-                            {/* Outline around kept area */}
-                            <div
-                              className="absolute"
-                              style={{
-                                left: leftPx,
-                                top: topPx,
-                                width: keptW,
-                                height: keptH,
-                                outline: "2px solid var(--brand)",
-                                boxShadow: "0 0 0 1px rgba(255,255,255,0.5)",
-                              }}
-                            />
-                          </div>
+                          <CropOverlay
+                            pageW={w}
+                            pageH={h}
+                            scale={scale}
+                            crop={crop}
+                            setCrop={setCrop}
+                          />
                         );
                       }}
                     />
@@ -387,9 +317,7 @@ export function CropPdf() {
           >
             <Crop className="size-4 shrink-0" style={{ color: "var(--cat-organize)" }} />
             <p>
-              Drag the sliders to set crop margins in PDF points. The dark mask shows the area that
-              will be removed. <b>Apply crop</b> bakes the crop into the live PDF; <b>Save</b>{" "}
-              produces the final file.
+              Click and drag on the page to draw the crop area, or fine-tune with the sliders. <b>Apply crop</b> bakes it in; <b>Save</b> produces the final file.
             </p>
           </div>
         </div>
@@ -408,3 +336,254 @@ export function CropPdf() {
     </ToolPageShell>
   );
 }
+
+/**
+ * CropOverlay — interactive crop rectangle on top of the PDF preview.
+ * The user can:
+ *   - Click and drag on empty area to draw a new crop rectangle (replacing the
+ *     current margins).
+ *   - Drag the kept rectangle to move it.
+ *   - Drag any of the 4 corner handles to resize.
+ * The 4 sliders in the parent state (`crop`) update live as the user drags,
+ * and the sliders can also drive the rectangle (two-way sync).
+ *
+ * Coordinate space:
+ *   - crop.left/right/top/bottom are in PDF points.
+ *   - The overlay is sized pageW * scale × pageH * scale in CSS pixels.
+ *   - Conversion: cssPx = pdfPt * scale, pdfPt = cssPx / scale.
+ */
+function CropOverlay({
+  pageW,
+  pageH,
+  scale,
+  crop,
+  setCrop,
+}: {
+  pageW: number;
+  pageH: number;
+  scale: number;
+  crop: CropMargins;
+  setCrop: React.Dispatch<React.SetStateAction<CropMargins>>;
+}) {
+  const safeScale = scale > 0 ? scale : 1;
+  const fullW = pageW * safeScale;
+  const fullH = pageH * safeScale;
+  const leftPx = crop.left * safeScale;
+  const rightPx = crop.right * safeScale;
+  const topPx = crop.top * safeScale;
+  const bottomPx = crop.bottom * safeScale;
+  const keptW = Math.max(0, fullW - leftPx - rightPx);
+  const keptH = Math.max(0, fullH - topPx - bottomPx);
+
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
+  // dragRef tracks the active drag operation. We use window-level mousemove
+  // listeners so the drag keeps tracking even if the cursor leaves the overlay.
+  const dragRef = useRef<
+    | {
+        kind: "new" | "move" | "resize-tl" | "resize-tr" | "resize-bl" | "resize-br";
+        startX: number;
+        startY: number;
+        startCrop: CropMargins;
+      }
+    | null
+  >(null);
+
+  // Helper to convert a CSS-pixel rectangle (x1,y1,x2,y2) to crop margins.
+  const rectToCrop = (x1: number, y1: number, x2: number, y2: number): CropMargins => {
+    // Normalize so x1<=x2, y1<=y2.
+    const nx1 = Math.min(x1, x2);
+    const nx2 = Math.max(x1, x2);
+    const ny1 = Math.min(y1, y2);
+    const ny2 = Math.max(y1, y2);
+    // Clamp to page bounds.
+    const cx1 = Math.max(0, Math.min(fullW, nx1));
+    const cx2 = Math.max(0, Math.min(fullW, nx2));
+    const cy1 = Math.max(0, Math.min(fullH, ny1));
+    const cy2 = Math.max(0, Math.min(fullH, ny2));
+    return {
+      left: cx1 / safeScale,
+      right: (fullW - cx2) / safeScale,
+      top: cy1 / safeScale,
+      bottom: (fullH - cy2) / safeScale,
+    };
+  };
+
+  const startDrag = (
+    e: React.MouseEvent,
+    kind: "new" | "move" | "resize-tl" | "resize-tr" | "resize-bl" | "resize-br",
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragRef.current = {
+      kind,
+      startX: e.clientX,
+      startY: e.clientY,
+      startCrop: { ...crop },
+    };
+    const move = (ev: MouseEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const dx = ev.clientX - d.startX;
+      const dy = ev.clientY - d.startY;
+      if (d.kind === "new") {
+        // Convert start point to overlay-local coords.
+        const overlayEl = overlayRef.current;
+        if (!overlayEl) return;
+        const rect = overlayEl.getBoundingClientRect();
+        const sx = d.startX - rect.left;
+        const sy = d.startY - rect.top;
+        const ex = sx + dx;
+        const ey = sy + dy;
+        setCrop(rectToCrop(sx, sy, ex, ey));
+      } else if (d.kind === "move") {
+        // Convert dx, dy to PDF points and shift the margins.
+        const dxPt = dx / safeScale;
+        const dyPt = dy / safeScale;
+        const start = d.startCrop;
+        // Compute the current kept size in PDF points.
+        const keptWPt = pageW - start.left - start.right;
+        const keptHPt = pageH - start.top - start.bottom;
+        // New top-left = (start.left + dxPt, start.top + dyPt).
+        let newLeft = start.left + dxPt;
+        let newTop = start.top + dyPt;
+        // Clamp: don't let left go negative or push right edge past pageW.
+        newLeft = Math.max(0, Math.min(newLeft, pageW - keptWPt - start.right));
+        newTop = Math.max(0, Math.min(newTop, pageH - keptHPt - start.bottom));
+        setCrop({
+          ...start,
+          left: newLeft,
+          top: newTop,
+          right: pageW - newLeft - keptWPt,
+          bottom: pageH - newTop - keptHPt,
+        });
+      } else {
+        // Resize handles — recompute corners.
+        const overlayEl = overlayRef.current;
+        if (!overlayEl) return;
+        const rect = overlayEl.getBoundingClientRect();
+        // Original rectangle corners in CSS px:
+        const sx1 = d.startCrop.left * safeScale;
+        const sy1 = d.startCrop.top * safeScale;
+        const sx2 = fullW - d.startCrop.right * safeScale;
+        const sy2 = fullH - d.startCrop.bottom * safeScale;
+        // New cursor position in overlay-local CSS px:
+        const cx = ev.clientX - rect.left;
+        const cy = ev.clientY - rect.top;
+        // Choose which corner is the "moving" one based on kind:
+        let nx1 = sx1;
+        let ny1 = sy1;
+        let nx2 = sx2;
+        let ny2 = sy2;
+        if (d.kind === "resize-tl") { nx1 = cx; ny1 = cy; }
+        else if (d.kind === "resize-tr") { nx2 = cx; ny1 = cy; }
+        else if (d.kind === "resize-bl") { nx1 = cx; ny2 = cy; }
+        else if (d.kind === "resize-br") { nx2 = cx; ny2 = cy; }
+        setCrop(rectToCrop(nx1, ny1, nx2, ny2));
+      }
+    };
+    const up = () => {
+      dragRef.current = null;
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
+
+  return (
+    <div
+      ref={overlayRef}
+      className="absolute inset-0 pointer-events-auto"
+      style={{ cursor: "crosshair" }}
+      onMouseDown={(e) => {
+        // Only start a "new" drag if the click was on the empty area
+        // (not on the kept rectangle or its handles).
+        const target = e.target as HTMLElement;
+        if (target.dataset && (target.dataset.cropHandle || target.dataset.cropRect)) return;
+        startDrag(e, "new");
+      }}
+    >
+      {/* Top mask */}
+      <div
+        className="absolute"
+        style={{
+          left: 0,
+          top: 0,
+          width: fullW,
+          height: topPx,
+          background: "rgba(15, 23, 42, 0.55)",
+        }}
+      />
+      {/* Bottom mask */}
+      <div
+        className="absolute"
+        style={{
+          left: 0,
+          top: topPx + keptH,
+          width: fullW,
+          height: bottomPx,
+          background: "rgba(15, 23, 42, 0.55)",
+        }}
+      />
+      {/* Left mask */}
+      <div
+        className="absolute"
+        style={{
+          left: 0,
+          top: topPx,
+          width: leftPx,
+          height: keptH,
+          background: "rgba(15, 23, 42, 0.55)",
+        }}
+      />
+      {/* Right mask */}
+      <div
+        className="absolute"
+        style={{
+          left: leftPx + keptW,
+          top: topPx,
+          width: rightPx,
+          height: keptH,
+          background: "rgba(15, 23, 42, 0.55)",
+        }}
+      />
+      {/* Kept rectangle — draggable to move */}
+      <div
+        data-crop-rect="true"
+        onMouseDown={(e) => startDrag(e, "move")}
+        className="absolute"
+        style={{
+          left: leftPx,
+          top: topPx,
+          width: keptW,
+          height: keptH,
+          outline: "2px solid var(--brand)",
+          boxShadow: "0 0 0 1px rgba(255,255,255,0.5), inset 0 0 0 1px rgba(255,255,255,0.5)",
+          cursor: "move",
+        }}
+      >
+        {/* Corner handles */}
+        {[
+          { kind: "resize-tl" as const, x: 0, y: 0, cursor: "nwse-resize" },
+          { kind: "resize-tr" as const, x: keptW, y: 0, cursor: "nesw-resize" },
+          { kind: "resize-bl" as const, x: 0, y: keptH, cursor: "nesw-resize" },
+          { kind: "resize-br" as const, x: keptW, y: keptH, cursor: "nwse-resize" },
+        ].map((h) => (
+          <div
+            key={h.kind}
+            data-crop-handle="true"
+            onMouseDown={(e) => startDrag(e, h.kind)}
+            className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[var(--brand)] bg-[var(--card)] shadow-md"
+            style={{
+              left: h.x,
+              top: h.y,
+              cursor: h.cursor,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+

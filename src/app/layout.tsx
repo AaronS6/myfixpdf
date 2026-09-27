@@ -47,7 +47,7 @@ const caveat = Caveat({
 });
 
 export const metadata: Metadata = {
-  title: "PDF Toolkit — Every PDF tool you need, in one place",
+  title: "myfixpdf — Every PDF tool you need, in one place",
   description:
     "Compress, convert, merge, split, edit and sign PDFs — all in your browser. No uploads, no waiting. Just real, working PDF tools.",
   keywords: [
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
     "PDF to Word",
     "Word to PDF",
     "PDF to JPG",
-    "JPG to PDF",
+    "convert to PDF",
     "edit PDF",
     "sign PDF",
   ],
@@ -67,9 +67,9 @@ export const metadata: Metadata = {
     icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
   },
   openGraph: {
-    title: "PDF Toolkit",
+    title: "myfixpdf",
     description: "Every PDF tool you need, in one place.",
-    siteName: "PDF Toolkit",
+    siteName: "myfixpdf",
     type: "website",
   },
 };

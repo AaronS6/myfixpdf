@@ -141,8 +141,7 @@ export function CompressPng() {
                 className="w-full accent-[var(--cat-compress)]"
               />
               <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                For PNGs: lower quality → fewer colors (true lossy quantization via UPNG.js).
-                For JPGs: lower quality → higher JPEG compression.
+                Drag the slider — smaller files have a bit less detail, larger files keep everything crisp.
               </p>
             </div>
             <div>

@@ -75,7 +75,7 @@ export function HomeView() {
       if (mixed || (toolkitFiles.length > 1 && (allPdfs || allImages))) {
         setView("merge-pdf");
       } else if (allImages) {
-        setView(toolkitFiles.length > 1 ? "jpg-to-pdf" : "edit-png");
+        setView(toolkitFiles.length > 1 ? "convert-to-pdf" : "edit-png");
       } else if (allPdfs) {
         if (toolkitFiles.length === 1) {
           toast.success(
@@ -97,8 +97,8 @@ export function HomeView() {
       <section className="relative overflow-hidden mesh-bg">
         <div className="absolute inset-0 -z-10 grain" />
         {/* Floating decorative blobs */}
-        <div className="absolute -left-32 top-20 -z-10 size-72 rounded-full bg-gradient-to-br from-[#C8542A]/15 to-[#E8A87C]/10 blur-3xl animate-float-slow" />
-        <div className="absolute -right-32 -top-10 -z-10 size-96 rounded-full bg-gradient-to-br from-[#7C5BAA]/10 to-[#C8542A]/8 blur-3xl animate-float" />
+        <div className="absolute -left-32 top-20 -z-10 size-72 rounded-full bg-gradient-to-br from-[#2563EB]/15 to-[#60A5FA]/10 blur-3xl animate-float-slow" />
+        <div className="absolute -right-32 -top-10 -z-10 size-96 rounded-full bg-gradient-to-br from-[#6366F1]/10 to-[#2563EB]/8 blur-3xl animate-float" />
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--border)] glass px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up">
@@ -179,7 +179,7 @@ export function HomeView() {
         })}
       </section>
 
-      {/* Why PDF Toolkit strip */}
+      {/* Why myfixpdf strip */}
       <section className="mx-auto mb-16 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-3">
           {[
@@ -250,11 +250,6 @@ function ToolCard({
         className="absolute -right-12 -top-12 size-28 rounded-full opacity-10 transition-all duration-500 group-hover:scale-110 group-hover:opacity-20"
         style={{ background: tool.color }}
       />
-      {tool.isNew && (
-        <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-          <Sparkles className="size-2.5" /> New
-        </span>
-      )}
       <span
         className="flex size-12 items-center justify-center rounded-xl text-white shadow-md transition-transform duration-300 group-hover:scale-110"
         style={{ background: tool.color }}
@@ -299,7 +294,7 @@ function ToolGlyph({ id }: { id: string }) {
         <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" />
       </svg>
     ),
-    "jpg-to-pdf": (
+    "convert-to-pdf": (
       <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M9 13h6" />
       </svg>

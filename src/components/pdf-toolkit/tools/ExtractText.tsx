@@ -93,7 +93,7 @@ export function ExtractText() {
                   </button>
                   <button
                     onClick={downloadTxt}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-3 py-1.5 text-xs font-bold text-white shadow-sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-3 py-1.5 text-xs font-bold text-white shadow-sm"
                   >
                     <Download className="size-3.5" /> Download .txt
                   </button>

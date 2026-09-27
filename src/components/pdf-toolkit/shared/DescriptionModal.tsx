@@ -117,7 +117,7 @@ export function DescriptionModal({ open, onClose }: Props) {
           </button>
           <button
             onClick={apply}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:scale-[1.02] transition-transform"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:scale-[1.02] transition-transform"
           >
             <Check className="size-4" /> Apply description
           </button>

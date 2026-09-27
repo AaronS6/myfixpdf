@@ -201,10 +201,10 @@ export function HomeView() {
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
       </div>
 
-      {/* ===== TRUST SECTION — animated count-up, scroll-triggered entrance ===== */}
+      {/* ===== TRUST SECTION — clean, no numbers ===== */}
       <TrustSection />
 
-      {/* Subtle animated gradient line at the very bottom */}
+      {/* Subtle gradient line at the very bottom */}
       <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent animate-gradient-shift" />
         <p className="mt-4 text-center text-xs text-[var(--muted-foreground)]">
@@ -217,26 +217,6 @@ export function HomeView() {
   );
 }
 
-/** Count-up hook: animates from 0 to `target` when `active` becomes true. */
-function useCountUp(target: number, active: boolean, duration = 1400): number {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    let raf: number;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - t, 3);
-      setVal(Math.round(eased * target));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, active, duration]);
-  return val;
-}
-
 /** Intersection Observer hook — returns true once the element enters the viewport. */
 function useInView<T extends HTMLElement>(): [React.RefObject<T | null>, boolean] {
   const ref = useRef<T>(null);
@@ -246,7 +226,7 @@ function useInView<T extends HTMLElement>(): [React.RefObject<T | null>, boolean
     if (!el) return;
     const ro = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setInView(true); ro.disconnect(); } },
-      { threshold: 0.2 },
+      { threshold: 0.15 },
     );
     ro.observe(el);
     return () => ro.disconnect();
@@ -258,97 +238,44 @@ function TrustSection() {
   const { t, lang } = useI18n();
   const [ref, inView] = useInView<HTMLDivElement>();
 
-  const stats = [
-    { icon: ShieldCheck, color: "var(--success)", stat: 0, label: lang === "zh" ? "上传" : "uploads", title: t("hero.why.title.private"), text: t("hero.why.text.private"), delay: 0 },
-    { icon: Zap, color: "var(--brand)", stat: TOOLS.length, label: lang === "zh" ? "个工具" : "tools", title: t("hero.why.title.real"), text: t("hero.why.text.real"), delay: 150 },
-    { icon: Layers, color: "var(--cat-organize)", stat: -1, label: lang === "zh" ? "串联" : "chaining", title: t("hero.why.title.chain"), text: t("hero.why.text.chain"), delay: 300 },
+  const items = [
+    { icon: ShieldCheck, color: "var(--success)", title: t("hero.why.title.private"), text: t("hero.why.text.private"), delay: 0 },
+    { icon: Zap, color: "var(--brand)", title: t("hero.why.title.real"), text: t("hero.why.text.real"), delay: 150 },
+    { icon: Layers, color: "var(--cat-organize)", title: t("hero.why.title.chain"), text: t("hero.why.text.chain"), delay: 300 },
   ];
 
   return (
     <section className="mx-auto max-w-5xl px-4 pb-12 sm:px-6">
       <div ref={ref} className="grid grid-cols-1 sm:grid-cols-3 gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
-        {stats.map((s, i) => (
-          <TrustStat key={i} {...s} inView={inView} isLast={i === stats.length - 1} />
-        ))}
+        {items.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={i}
+              className={cn(
+                "group relative bg-[var(--card)] px-8 py-10 transition-all duration-500",
+                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
+              )}
+              style={{ transitionDelay: `${item.delay}ms` }}
+            >
+              {/* Hover gradient wash */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                style={{ background: `radial-gradient(circle at 50% 0%, ${item.color}10, transparent 70%)` }}
+              />
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <Icon
+                  className="size-8 transition-transform duration-500 group-hover:scale-110"
+                  style={{ color: item.color }}
+                />
+                <p className="mt-4 text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-[var(--muted-foreground)] max-w-[220px]">{item.text}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
-  );
-}
-
-function TrustStat({
-  icon: Icon, color, stat, label, title, text, delay, inView,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  color: string; stat: number; label: string; title: string; text: string;
-  delay: number; inView: boolean;
-  isLast?: boolean;
-}) {
-  const count = useCountUp(stat < 0 ? 0 : stat, inView && stat >= 0, 1200);
-
-  return (
-    <div
-      className={cn(
-        "group relative bg-[var(--card)] p-8 transition-all duration-500",
-        inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
-      )}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {/* Hover gradient wash */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-        style={{ background: `radial-gradient(circle at 50% 0%, ${color}10, transparent 70%)` }}
-      />
-
-      <div className="relative z-10 flex flex-col items-center text-center">
-        {/* Icon — minimal, no box, just colored */}
-        <Icon
-          className="size-7 transition-transform duration-500 group-hover:scale-110"
-          style={{ color }}
-        />
-
-        {/* Stat — big, clean */}
-        <div className="mt-4 flex items-baseline gap-1.5">
-          {stat < 0 ? (
-            <span
-              className={cn(
-                "text-4xl font-bold tabular-nums text-[var(--foreground)] transition-all duration-700",
-                inView ? "opacity-100 scale-100" : "opacity-0 scale-50",
-              )}
-              style={{ transitionDelay: `${delay + 100}ms` }}
-            >
-              ∞
-            </span>
-          ) : (
-            <span className="text-4xl font-bold tabular-nums text-[var(--foreground)]">
-              {count}
-            </span>
-          )}
-          <span className="text-sm font-medium text-[var(--muted-foreground)]">{label}</span>
-        </div>
-
-        {/* Title — small caps style */}
-        <p
-          className={cn(
-            "mt-3 text-sm font-semibold text-[var(--foreground)] transition-opacity duration-500",
-            inView ? "opacity-100" : "opacity-0",
-          )}
-          style={{ transitionDelay: `${delay + 200}ms` }}
-        >
-          {title}
-        </p>
-
-        {/* Description — one line, muted */}
-        <p
-          className={cn(
-            "mt-1 text-xs leading-relaxed text-[var(--muted-foreground)] transition-opacity duration-500",
-            inView ? "opacity-100" : "opacity-0",
-          )}
-          style={{ transitionDelay: `${delay + 300}ms` }}
-        >
-          {text}
-        </p>
-      </div>
-    </div>
   );
 }
 

@@ -80,20 +80,20 @@ export function ExtractText() {
               </div>
 
               {/* Action bar */}
-              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-3 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-sm">
                 <FileText className="size-4 text-[#FF8A00]" />
-                <span className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Extracted text</span>
+                <span className="text-sm font-semibold text-[var(--foreground)]">Extracted text</span>
                 <div className="ml-auto flex gap-2">
                   <button
                     onClick={copyAll}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] px-3 py-1.5 text-xs font-medium text-[#1D2733] dark:text-[#E6EDF6] hover:bg-[#F7F9FC] dark:hover:bg-[#0E1626]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]"
                   >
-                    {copied ? <Check className="size-3.5 text-[#1FB65B]" /> : <Copy className="size-3.5" />}
+                    {copied ? <Check className="size-3.5 text-[var(--success)]" /> : <Copy className="size-3.5" />}
                     {copied ? "Copied!" : "Copy all"}
                   </button>
                   <button
                     onClick={downloadTxt}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#23A6D5] to-[#2FE0C6] px-3 py-1.5 text-xs font-bold text-white shadow-sm"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-3 py-1.5 text-xs font-bold text-white shadow-sm"
                   >
                     <Download className="size-3.5" /> Download .txt
                   </button>
@@ -103,17 +103,17 @@ export function ExtractText() {
               {/* Page-by-page text */}
               <div className="space-y-3">
                 {pages.map((p) => (
-                  <details key={p.pageNumber} open={pages.length <= 3} className="group rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] shadow-sm">
-                    <summary className="flex cursor-pointer items-center gap-2 p-3 text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">
+                  <details key={p.pageNumber} open={pages.length <= 3} className="group rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+                    <summary className="flex cursor-pointer items-center gap-2 p-3 text-sm font-semibold text-[var(--foreground)]">
                       <span className="flex size-6 items-center justify-center rounded-md bg-[#FF8A00]/15 text-xs font-bold text-[#FF8A00]">
                         {p.pageNumber}
                       </span>
                       Page {p.pageNumber}
-                      <span className="ml-auto text-xs font-normal text-[#5B6B79] dark:text-[#93A4B6]">
+                      <span className="ml-auto text-xs font-normal text-[var(--muted-foreground)]">
                         {p.lineCount} lines · {p.text.length.toLocaleString()} chars
                       </span>
                     </summary>
-                    <pre className="whitespace-pre-wrap border-t border-[#E4E9F0] dark:border-[#1E2A44] p-3 text-xs text-[#1D2733] dark:text-[#E6EDF6] font-mono leading-relaxed max-h-72 overflow-y-auto thin-scroll">
+                    <pre className="whitespace-pre-wrap border-t border-[var(--border)] p-3 text-xs text-[var(--foreground)] font-mono leading-relaxed max-h-72 overflow-y-auto thin-scroll">
                       {p.text || "(no extractable text on this page)"}
                     </pre>
                   </details>
@@ -121,15 +121,15 @@ export function ExtractText() {
               </div>
             </>
           ) : (
-            <div className="rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+            <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
               <FileText className="mx-auto mb-2 size-8 text-[#FF8A00]" />
-              Click <b className="text-[#1D2733] dark:text-[#E6EDF6]">Extract Text</b> to pull all text content out of your PDF.
+              Click <b className="text-[var(--foreground)]">Extract Text</b> to pull all text content out of your PDF.
               <p className="mt-2 text-xs">Uses pdf.js text-content extraction. Image-only / scanned PDFs may return empty results.</p>
             </div>
           )}
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+        <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
           Drop a PDF above to extract its text.
         </div>
       )}
@@ -139,9 +139,9 @@ export function ExtractText() {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-3 text-center shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wider text-[#5B6B79] dark:text-[#93A4B6]">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-[#1D2733] dark:text-[#E6EDF6]">{value}</p>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-center shadow-sm">
+      <p className="text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">{label}</p>
+      <p className="mt-1 text-2xl font-bold text-[var(--foreground)]">{value}</p>
     </div>
   );
 }

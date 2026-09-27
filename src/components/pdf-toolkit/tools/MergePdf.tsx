@@ -222,19 +222,19 @@ export function MergePdf() {
       {flatPages.length > 0 ? (
         <div className="mt-5 space-y-4">
           {/* Review header */}
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-sm">
             <Layers className="size-4 text-[#8C54FF]" />
-            <span className="font-semibold text-[#1D2733] dark:text-[#E6EDF6]">{included.length} pages will be merged</span>
-            <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">·</span>
-            <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">{sourceFiles.length} source file{sourceFiles.length > 1 ? "s" : ""}</span>
-            <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">·</span>
-            <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Total size: {formatBytes(totalSize)}</span>
+            <span className="font-semibold text-[var(--foreground)]">{included.length} pages will be merged</span>
+            <span className="text-xs text-[var(--muted-foreground)]">·</span>
+            <span className="text-xs text-[var(--muted-foreground)]">{sourceFiles.length} source file{sourceFiles.length > 1 ? "s" : ""}</span>
+            <span className="text-xs text-[var(--muted-foreground)]">·</span>
+            <span className="text-xs text-[var(--muted-foreground)]">Total size: {formatBytes(totalSize)}</span>
             <div className="ml-auto flex gap-2">
-              <label className="text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6]">Page size</label>
+              <label className="text-xs font-medium text-[var(--muted-foreground)]">Page size</label>
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(e.target.value as "fit" | "a4" | "letter")}
-                className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-2 py-1 text-xs text-[#1D2733] dark:text-[#E6EDF6] outline-none"
+                className="rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-xs text-[var(--foreground)] outline-none"
               >
                 <option value="fit">Fit to image</option>
                 <option value="a4">A4</option>
@@ -243,7 +243,7 @@ export function MergePdf() {
             </div>
           </div>
 
-          <p className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+          <p className="text-xs text-[var(--muted-foreground)]">
             Drag tiles to reorder. Uncheck any page you don&apos;t want included. Click a PDF thumbnail to expand its individual pages.
           </p>
 
@@ -264,7 +264,7 @@ export function MergePdf() {
           </DndContext>
 
           {/* Add more files inline */}
-          <label className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] py-3 text-sm font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:border-[#8C54FF] hover:text-[#8C54FF] cursor-pointer">
+          <label className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--muted)] py-3 text-sm font-medium text-[var(--muted-foreground)] hover:border-[#8C54FF] hover:text-[#8C54FF] cursor-pointer">
             <Plus className="size-4" /> Add more files
             <input
               type="file"
@@ -294,7 +294,7 @@ export function MergePdf() {
             />
           </label>
 
-          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+          <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
             <Combine className="size-4 shrink-0 text-[#8C54FF]" />
             <p>
               Accepts mixed PDF + JPG + PNG. Expand any PDF to cherry-pick individual pages. Every page is dragged into the
@@ -303,7 +303,7 @@ export function MergePdf() {
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+        <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
           Loading files…
         </div>
       )}
@@ -318,30 +318,30 @@ function SortableMergeTile({ page, onToggle, onExpand, isExpanded }: { page: Fla
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 bg-white dark:bg-[#111A2B]",
-        page.included ? "border-[#E4E9F0] dark:border-[#1E2A44]" : "border-[#E4E9F0] dark:border-[#1E2A44] opacity-50",
+        "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 bg-[var(--card)]",
+        page.included ? "border-[var(--border)]" : "border-[var(--border)] opacity-50",
         isDragging && "border-[#8C54FF] opacity-50 shadow-lg",
       )}
     >
-      <div className="absolute left-1 top-1 z-10 rounded bg-[#1D2733]/70 dark:bg-[#0B1220]/80 px-1 py-0.5 text-[10px] font-bold text-white">
+      <div className="absolute left-1 top-1 z-10 rounded bg-[var(--foreground)]/70 px-1 py-0.5 text-[10px] font-bold text-white">
         {page.isImage ? <ImageIcon className="size-3" /> : <FileText className="size-3" />}
       </div>
       <button
         onClick={onToggle}
         className={cn(
           "absolute right-1 top-1 z-10 flex size-5 items-center justify-center rounded-full border-2 text-white transition-all",
-          page.included ? "border-[#1FB65B] bg-[#1FB65B]" : "border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B]/80 text-transparent",
+          page.included ? "border-[#1FB65B] bg-[#1FB65B]" : "border-[var(--border)] bg-[var(--card)]/80 text-transparent",
         )}
         aria-label={page.included ? "Exclude" : "Include"}
       >
         ✓
       </button>
-      <div className="flex h-full w-full items-center justify-center bg-[#F7F9FC] dark:bg-[#0E1626] p-2" {...attributes} {...listeners}>
+      <div className="flex h-full w-full items-center justify-center bg-[var(--muted)] p-2" {...attributes} {...listeners}>
         {page.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={page.thumbnail} alt={page.sourceName} className="h-full w-full object-contain" />
         ) : (
-          <div className="flex flex-col items-center text-[#5B6B79] dark:text-[#93A4B6]">
+          <div className="flex flex-col items-center text-[var(--muted-foreground)]">
             <FileText className="size-8" />
             <span className="mt-1 text-[10px]">Page {page.pageIndex + 1}</span>
           </div>
@@ -350,13 +350,13 @@ function SortableMergeTile({ page, onToggle, onExpand, isExpanded }: { page: Fla
       {!page.isImage && (
         <button
           onClick={onExpand}
-          className="absolute bottom-1 left-1 z-10 flex items-center gap-0.5 rounded bg-[#1D2733]/70 dark:bg-[#0B1220]/80 px-1 py-0.5 text-[9px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100"
+          className="absolute bottom-1 left-1 z-10 flex items-center gap-0.5 rounded bg-[var(--foreground)]/70 px-1 py-0.5 text-[9px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100"
         >
           <ChevronDown className={cn("size-3 transition-transform", isExpanded && "rotate-180")} />
           {isExpanded ? "Collapse" : "Expand"}
         </button>
       )}
-      <p className="absolute bottom-1 right-1 max-w-[70%] truncate rounded bg-[#1D2733]/70 dark:bg-[#0B1220]/80 px-1 py-0.5 text-[9px] text-white">
+      <p className="absolute bottom-1 right-1 max-w-[70%] truncate rounded bg-[var(--foreground)]/70 px-1 py-0.5 text-[9px] text-white">
         {page.sourceName}
       </p>
     </div>

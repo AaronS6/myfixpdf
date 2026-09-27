@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { UploadCloud, FileWarning, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { validateFile, type AcceptString } from "@/lib/pdf/file-helpers";
+import { validateFile } from "@/lib/pdf/file-helpers";
 import { toast } from "sonner";
 
 type Props = {
@@ -16,7 +16,6 @@ type Props = {
   compact?: boolean;
   accentColor?: string;
   ctaText?: string;
-  /** Soft cap per file (MB). */
   maxSizeMB?: number;
 };
 
@@ -85,13 +84,13 @@ export function FileDropzone({
       }}
       aria-label={title ?? "Upload files"}
       className={cn(
-        "relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[20px] border-2 border-dashed bg-white dark:bg-[#111A2B] p-6 text-center transition-all",
+        "relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[20px] border-2 border-dashed bg-[var(--card)] p-6 text-center transition-all",
         compact ? "py-6" : "py-10",
-        dragging ? "dropzone-active" : "border-[#cbd6e3] dark:border-[#1E2A44] hover:border-[#1AA8E0] dark:border-[#2FB2E4]",
+        dragging ? "dropzone-active" : "border-[var(--border)] hover:border-[var(--brand)]",
         className,
       )}
       style={{
-        boxShadow: dragging ? "0 12px 36px rgba(35,166,213,0.18)" : "0 8px 24px rgba(20,40,80,0.06)",
+        boxShadow: dragging ? "0 12px 36px rgba(200, 84, 42, 0.14)" : "0 4px 16px rgba(28, 24, 18, 0.04)",
       }}
     >
       <input
@@ -102,7 +101,6 @@ export function FileDropzone({
         className="sr-only"
         onChange={(e) => {
           handleFiles(e.target.files);
-          // Reset input so the same file can be re-selected
           if (inputRef.current) inputRef.current.value = "";
         }}
       />
@@ -124,15 +122,15 @@ export function FileDropzone({
       </div>
       <div className="space-y-1">
         {title && (
-          <p className={cn("font-semibold text-[#1D2733] dark:text-[#E6EDF6]", compact ? "text-sm" : "text-base")}>
+          <p className={cn("font-semibold text-[var(--foreground)]", compact ? "text-sm" : "text-base")}>
             {dragging ? "Drop to upload" : title}
           </p>
         )}
         {subtitle && !compact && (
-          <p className="text-sm text-[#5B6B79] dark:text-[#93A4B6]">{subtitle}</p>
+          <p className="text-sm text-[var(--muted-foreground)]">{subtitle}</p>
         )}
         {!subtitle && !compact && (
-          <p className="text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+          <p className="text-sm text-[var(--muted-foreground)]">
             Drag &amp; drop your file{multiple ? "s" : ""} here, or{" "}
             <span style={{ color: accentColor }} className="font-semibold">
               browse
@@ -140,7 +138,7 @@ export function FileDropzone({
           </p>
         )}
         {compact && (
-          <p className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+          <p className="text-xs text-[var(--muted-foreground)]">
             Drop or <span style={{ color: accentColor }} className="font-semibold">browse</span> · {multiple ? "multiple" : "single"}
           </p>
         )}

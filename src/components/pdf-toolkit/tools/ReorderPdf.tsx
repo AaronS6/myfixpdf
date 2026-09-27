@@ -129,20 +129,20 @@ export function ReorderPdf() {
     <ToolPageShell tool={tool} ctaLabel="Save New Order" ctaColor="var(--cat-organize)" onCtaClick={run}>
       {target ? (
         <div className="mt-5 space-y-4">
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-3 text-sm shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-sm shadow-sm">
             <GripVertical className="size-4 text-[#8C54FF]" />
-            <span className="font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Drag pages to reorder</span>
-            <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">· {pages.length} pages total</span>
+            <span className="font-semibold text-[var(--foreground)]">Drag pages to reorder</span>
+            <span className="text-xs text-[var(--muted-foreground)]">· {pages.length} pages total</span>
             <div className="ml-auto flex gap-2">
               <button
                 onClick={() => setPages((p) => [...p].reverse())}
-                className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-2.5 py-1 text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:hover:bg-[#0E1626]"
+                className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]"
               >
                 Reverse order
               </button>
               <button
                 onClick={() => setPages((p) => [...p].sort((a, b) => a.index - b.index))}
-                className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-2.5 py-1 text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:hover:bg-[#0E1626]"
+                className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]"
               >
                 Reset to original
               </button>
@@ -152,7 +152,7 @@ export function ReorderPdf() {
           {loading && pages.length === 0 ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="aspect-[3/4] rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] skeleton" />
+                <div key={i} className="aspect-[3/4] rounded-lg border border-[var(--border)] skeleton" />
               ))}
             </div>
           ) : (
@@ -167,13 +167,13 @@ export function ReorderPdf() {
             </DndContext>
           )}
 
-          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+          <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
             <RotateCw className="size-4 shrink-0 text-[#8C54FF]" />
-            <p>Drag tiles to reorder pages. The new order is applied with pdf-lib&apos;s <code className="rounded bg-[#EEF3F8] dark:bg-[#182238] px-1">copyPages</code> — a true reorder, not a render.</p>
+            <p>Drag tiles to reorder pages. The new order is applied with pdf-lib&apos;s <code className="rounded bg-[var(--muted)] px-1">copyPages</code> — a true reorder, not a render.</p>
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+        <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
           Drop a PDF above to start reordering pages.
         </div>
       )}
@@ -188,14 +188,14 @@ function SortablePageTile({ page, displayIdx }: { page: Page; displayIdx: number
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B]",
+        "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 border-[var(--border)] bg-[var(--card)]",
         isDragging && "border-[#8C54FF] opacity-50 shadow-xl z-10",
       )}
     >
       <div className="absolute left-1 top-1 z-10 flex items-center gap-1 rounded bg-[#8C54FF] px-1.5 py-0.5 text-[10px] font-bold text-white">
         {displayIdx + 1}
       </div>
-      <div className="absolute right-1 top-1 z-10 rounded bg-[#1D2733]/70 dark:bg-[#0B1220]/80 px-1 py-0.5 text-[9px] text-white">
+      <div className="absolute right-1 top-1 z-10 rounded bg-[var(--foreground)]/70 px-1 py-0.5 text-[9px] text-white">
         was {page.index + 1}
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}

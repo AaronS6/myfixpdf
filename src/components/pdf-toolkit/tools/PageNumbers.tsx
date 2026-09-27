@@ -69,7 +69,7 @@ export function PageNumbers() {
       {target ? (
         <div className="mt-5 space-y-4">
           <div>
-            <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Format</label>
+            <label className="text-sm font-semibold text-[var(--foreground)]">Format</label>
             <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {FORMATS.map((f) => (
                 <button
@@ -77,18 +77,18 @@ export function PageNumbers() {
                   onClick={() => setFormat(f.id)}
                   className={cn(
                     "rounded-lg border p-3 text-left transition-all",
-                    format === f.id ? "border-[#FF4B6E] bg-[#FF4B6E]/10" : "border-[#E4E9F0] dark:border-[#1E2A44] hover:bg-[#F7F9FC] dark:hover:bg-[#0E1626]",
+                    format === f.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10" : "border-[var(--border)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
                   )}
                 >
-                  <p className={cn("text-xs font-semibold", format === f.id ? "text-[#FF4B6E]" : "text-[#1D2733] dark:text-[#E6EDF6]")}>{f.label}</p>
-                  <p className="mt-1 text-[10px] text-[#5B6B79] dark:text-[#93A4B6]">e.g. {f.example(startFrom, startFrom + 4)}</p>
+                  <p className={cn("text-xs font-semibold", format === f.id ? "text-[#FF4B6E]" : "text-[var(--foreground)]")}>{f.label}</p>
+                  <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">e.g. {f.example(startFrom, startFrom + 4)}</p>
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Position</label>
+            <label className="text-sm font-semibold text-[var(--foreground)]">Position</label>
             <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {POSITIONS.map((p) => (
                 <button
@@ -96,7 +96,7 @@ export function PageNumbers() {
                   onClick={() => setPosition(p.id)}
                   className={cn(
                     "rounded-lg border px-2 py-2 text-xs font-medium transition-all",
-                    position === p.id ? "border-[#FF4B6E] bg-[#FF4B6E]/10 text-[#FF4B6E]" : "border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:hover:bg-[#0E1626]",
+                    position === p.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
                   )}
                 >
                   {p.label}
@@ -108,24 +108,24 @@ export function PageNumbers() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Font size</label>
-                <span className="rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-xs font-bold text-[#1D2733] dark:text-[#E6EDF6]">{fontSize}pt</span>
+                <label className="text-sm font-semibold text-[var(--foreground)]">Font size</label>
+                <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{fontSize}pt</span>
               </div>
               <input type="range" min="8" max="20" step="1" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Start from</label>
-                <span className="rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-xs font-bold text-[#1D2733] dark:text-[#E6EDF6]">{startFrom}</span>
+                <label className="text-sm font-semibold text-[var(--foreground)]">Start from</label>
+                <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{startFrom}</span>
               </div>
               <input type="range" min="1" max="10" step="1" value={startFrom} onChange={(e) => setStartFrom(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
             </div>
           </div>
 
           {/* Live preview mockup */}
-          <div className="rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#5B6B79] dark:text-[#93A4B6]">Preview (page 2 of 5)</p>
-            <div className="relative mx-auto aspect-[3/4] w-48 overflow-hidden rounded border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] shadow-sm">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)] p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">Preview (page 2 of 5)</p>
+            <div className="relative mx-auto aspect-[3/4] w-48 overflow-hidden rounded border border-[var(--border)] bg-[var(--card)] shadow-sm">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="size-16 rounded-lg bg-gradient-to-br from-[#23A6D5]/20 to-[#2FE0C6]/20" />
               </div>
@@ -144,13 +144,13 @@ export function PageNumbers() {
             </div>
           </div>
 
-          <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+          <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
             <Hash className="size-4 shrink-0 text-[#FF4B6E]" />
-            <p>Page numbers are baked into the PDF using pdf-lib&apos;s <code className="rounded bg-[#EEF3F8] dark:bg-[#182238] px-1">drawText</code> with the Helvetica font.</p>
+            <p>Page numbers are baked into the PDF using pdf-lib&apos;s <code className="rounded bg-[var(--muted)] px-1">drawText</code> with the Helvetica font.</p>
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+        <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
           Drop a PDF above to add page numbers.
         </div>
       )}

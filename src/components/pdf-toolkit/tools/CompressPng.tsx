@@ -101,20 +101,20 @@ export function CompressPng() {
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
           {/* Live preview / compare */}
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Live preview</p>
-            <div className="overflow-hidden rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-white dark:bg-[#111A2B]">
+            <p className="text-sm font-semibold text-[var(--foreground)]">Live preview</p>
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--muted)] p-3">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[var(--card)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={previewUrl ?? makePreviewUrl(first.file)} alt="Preview" className="h-full w-full object-contain" />
               </div>
               <div className="mt-2 flex items-center justify-between text-xs">
-                <span className="text-[#5B6B79] dark:text-[#93A4B6]">
-                  Original: <b className="text-[#1D2733] dark:text-[#E6EDF6]">{formatBytes(first.size)}</b>
+                <span className="text-[var(--muted-foreground)]">
+                  Original: <b className="text-[var(--foreground)]">{formatBytes(first.size)}</b>
                 </span>
                 {previewSize !== null && (
-                  <span className="text-[#5B6B79] dark:text-[#93A4B6]">
+                  <span className="text-[var(--muted-foreground)]">
                     Projected: <b className="text-[var(--cat-compress)]">{formatBytes(previewSize)}</b>{" "}
-                    <span className="ml-1 rounded-full bg-[#1FB65B]/10 dark:bg-[#1FB67E]/15 px-1.5 py-0.5 text-[10px] font-bold text-[#1FB65B] dark:text-[#1FB67E]">
+                    <span className="ml-1 rounded-full bg-[var(--success)]/10 px-1.5 py-0.5 text-[10px] font-bold text-[var(--success)]">
                       −{percentSaved(first.size, previewSize)}%
                     </span>
                   </span>
@@ -126,8 +126,8 @@ export function CompressPng() {
           <div className="space-y-4">
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Quality</label>
-                <span className="rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-xs font-bold text-[#1D2733] dark:text-[#E6EDF6]">
+                <label className="text-sm font-semibold text-[var(--foreground)]">Quality</label>
+                <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">
                   {Math.round(quality * 100)}
                 </span>
               </div>
@@ -140,15 +140,15 @@ export function CompressPng() {
                 onChange={(e) => setQuality(parseFloat(e.target.value))}
                 className="w-full accent-[var(--cat-compress)]"
               />
-              <p className="mt-1 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                 For PNGs: lower quality → fewer colors (true lossy quantization via UPNG.js).
                 For JPGs: lower quality → higher JPEG compression.
               </p>
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Max longest edge</label>
-                <span className="rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-xs font-bold text-[#1D2733] dark:text-[#E6EDF6]">{maxWidth}px</span>
+                <label className="text-sm font-semibold text-[var(--foreground)]">Max longest edge</label>
+                <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{maxWidth}px</span>
               </div>
               <input
                 type="range"
@@ -159,16 +159,16 @@ export function CompressPng() {
                 onChange={(e) => setMaxWidth(parseInt(e.target.value, 10))}
                 className="w-full accent-[var(--cat-compress)]"
               />
-              <p className="mt-1 text-xs text-[#5B6B79] dark:text-[#93A4B6]">Downsamples the image if larger than this. Lower = smaller file.</p>
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">Downsamples the image if larger than this. Lower = smaller file.</p>
             </div>
-            <div className="flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+            <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
               <Sparkles className="size-4 shrink-0 text-[var(--cat-compress)]" />
               <p>The preview shows exactly what the output will be — drag the slider and watch the projected size update in real time.</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+        <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
           Drop a PNG or JPG above to see the live compression preview.
         </div>
       )}

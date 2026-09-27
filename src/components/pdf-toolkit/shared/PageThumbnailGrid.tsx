@@ -92,7 +92,7 @@ export function PageThumbnailGrid({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-[#FEE2E2] dark:border-[#5a2226] bg-[#FEF2F2] dark:bg-[#2a1212] p-4 text-sm text-[#F04438] dark:text-[#FF6B6B]">
+      <div className="rounded-xl border border-[var(--danger)]/30 bg-[var(--danger)]/5 p-4 text-sm text-[var(--danger)]">
         Could not render preview: {error}
       </div>
     );
@@ -108,7 +108,7 @@ export function PageThumbnailGrid({
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => onToggleAll(!allSelected)}
-            className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-2.5 py-1.5 text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
           >
             {allSelected ? "Deselect all" : "Select all"}
           </button>
@@ -120,7 +120,7 @@ export function PageThumbnailGrid({
               onToggleAll(false);
               for (const i of odd) onToggle?.(i);
             }}
-            className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-2.5 py-1.5 text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
           >
             Odd
           </button>
@@ -131,18 +131,18 @@ export function PageThumbnailGrid({
               onToggleAll(false);
               for (const i of even) onToggle?.(i);
             }}
-            className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-2.5 py-1.5 text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="rounded-md border border-[var(--border)] px-2.5 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
           >
             Even
           </button>
-          <span className="ml-auto text-xs text-[#5B6B79] dark:text-[#93A4B6]">
+          <span className="ml-auto text-xs text-[var(--muted-foreground)]">
             {selected.size} of {total || "—"} selected
             {noneSelected && total > 0 && " · none"}
           </span>
         </div>
       )}
       {loading && pages.length === 0 ? (
-        <div className="flex items-center justify-center py-12 text-[#5B6B79] dark:text-[#93A4B6]">
+        <div className="flex items-center justify-center py-12 text-[var(--muted-foreground)]">
           <Loader2 className="size-5 animate-spin mr-2" /> Rendering thumbnails…
         </div>
       ) : (
@@ -153,10 +153,10 @@ export function PageThumbnailGrid({
               <div
                 key={p.index}
                 className={cn(
-                  "group relative overflow-hidden rounded-lg border bg-white dark:bg-[#111A2B] p-1.5 transition-all",
+                  "group relative overflow-hidden rounded-lg border bg-[var(--card)] p-1.5 transition-all",
                   isSel
-                    ? "border-[#1AA8E0] dark:border-[#2FB2E4] ring-2 ring-[#1AA8E0]/30 dark:ring-[#2FB2E4]/40"
-                    : "border-[#E4E9F0] dark:border-[#1E2A44] hover:border-[#1AA8E0] dark:border-[#2FB2E4]",
+                    ? "border-[var(--brand)] ring-2 ring-[var(--brand)]/30"
+                    : "border-[var(--border)] hover:border-[var(--brand)]",
                 )}
               >
                 <div className="relative aspect-[3/4] overflow-hidden rounded">
@@ -171,14 +171,14 @@ export function PageThumbnailGrid({
                         }}
                         className={cn(
                           "flex size-6 items-center justify-center rounded-md border-2 text-white shadow-sm transition-all",
-                          isSel ? "border-[#1AA8E0] dark:border-[#2FB2E4] bg-[#1AA8E0]" : "border-white bg-white dark:bg-[#111A2B]/80 text-transparent group-hover:bg-white dark:bg-[#111A2B]",
+                          isSel ? "border-[var(--brand)] bg-[var(--brand)]" : "border-white bg-[var(--card)]/80 text-transparent group-hover:bg-[var(--card)]",
                         )}
                       >
                         <Checkbox checked={isSel} className="pointer-events-none size-3.5 border-0" />
                       </button>
                     </div>
                   )}
-                  <div className="absolute bottom-1 left-1 rounded bg-[#1D2733]/70 dark:bg-[#0B1220]/80 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  <div className="absolute bottom-1 left-1 rounded bg-[var(--foreground)]/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
                     {p.index + 1}
                   </div>
                 </div>
@@ -187,8 +187,8 @@ export function PageThumbnailGrid({
             );
           })}
           {loading && pages.length > 0 && (
-            <div className="flex aspect-[3/4] items-center justify-center rounded-lg border border-dashed border-[#E4E9F0] dark:border-[#1E2A44]">
-              <Loader2 className="size-5 animate-spin text-[#1AA8E0] dark:text-[#2FB2E4]" />
+            <div className="flex aspect-[3/4] items-center justify-center rounded-lg border border-dashed border-[var(--border)]">
+              <Loader2 className="size-5 animate-spin text-[var(--brand)]" />
             </div>
           )}
         </div>

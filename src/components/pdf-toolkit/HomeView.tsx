@@ -7,14 +7,16 @@ import { TOOLS, CATEGORY_LABELS, CATEGORY_COLORS, type ToolMeta } from "./tools/
 import { imageThumbnail, isPdf, getExt, formatBytes } from "@/lib/pdf/file-helpers";
 import { getPageCount } from "@/lib/pdf/pdfjs";
 import { toast } from "sonner";
-import { ArrowRight, ShieldCheck, Zap, Layers, Sparkles } from "lucide-react";
+import { ArrowRight, ShieldCheck, Zap, Layers, Sparkles, FileStack } from "lucide-react";
 import { useDocumentSession as useSession } from "@/store/document-session";
+import { useI18n } from "./shared/I18nProvider";
 
 export function HomeView() {
   const setView = useSession((s) => s.setView);
   const setSourceFiles = useSession((s) => s.setSourceFiles);
   const clearSourceFiles = useSession((s) => s.clearSourceFiles);
   const [busy, setBusy] = useState(false);
+  const { t, tTool, lang } = useI18n();
 
   const handleFiles = async (files: File[]) => {
     setBusy(true);
@@ -37,10 +39,18 @@ export function HomeView() {
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             if (/encrypted/i.test(msg)) {
-              toast.error(`“${f.name}” is password-protected. Please remove the password first.`);
+              toast.error(
+                lang === "zh"
+                  ? `“${f.name}” 已加密，请先移除密码`
+                  : `“${f.name}” is password-protected. Please remove the password first.`,
+              );
               continue;
             }
-            toast.error(`Could not read PDF “${f.name}”: ${msg}`);
+            toast.error(
+              lang === "zh"
+                ? `无法读取 PDF “${f.name}”：${msg}`
+                : `Could not read PDF “${f.name}”: ${msg}`,
+            );
             continue;
           }
         } else if (f.type.startsWith("image/")) {
@@ -65,11 +75,13 @@ export function HomeView() {
       if (mixed || (toolkitFiles.length > 1 && (allPdfs || allImages))) {
         setView("merge-pdf");
       } else if (allImages) {
-        setView(toolkitFiles.length > 1 ? "jpg-to-pdf" : "compress-png");
+        setView(toolkitFiles.length > 1 ? "jpg-to-pdf" : "edit-png");
       } else if (allPdfs) {
-        // Single PDF → ask via toast
         if (toolkitFiles.length === 1) {
-          toast.success("PDF added. Pick a tool below.", { duration: 3500 });
+          toast.success(
+            lang === "zh" ? "PDF 已添加，请在下方选择一个工具。" : "PDF added. Pick a tool below.",
+            { duration: 3500 },
+          );
         } else {
           setView("merge-pdf");
         }
@@ -80,68 +92,86 @@ export function HomeView() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl px-6 py-12 sm:px-10 sm:py-16">
-        <div className="absolute inset-0 -z-10 brand-gradient opacity-[0.08]" />
-        <div className="absolute -right-32 -top-32 -z-10 size-96 rounded-full bg-gradient-to-br from-[#23A6D5]/20 to-[#2FE0C6]/20 blur-3xl" />
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B]/80 px-3 py-1 text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6] backdrop-blur">
-            <ShieldCheck className="size-3.5 text-[#1FB65B] dark:text-[#1FB67E]" />
-            100% client-side · Your files never leave your browser
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight text-[#1D2733] dark:text-[#E6EDF6] sm:text-5xl">
-            Every PDF tool you need,
-            <br />
-            <span className="brand-gradient-text">in one place.</span>
-          </h1>
-          <p className="mt-4 text-base text-[#5B6B79] dark:text-[#93A4B6] sm:text-lg">
-            Compress, convert, merge, split, edit &amp; sign — all in your browser. Real processing, real results, no uploads.
-          </p>
-          <div className="mt-8">
-            <FileDropzone
-              accept=".pdf,.png,.jpg,.jpeg,.docx"
-              multiple
-              onFiles={handleFiles}
-              accentColor="var(--brand)"
-              title="Drop files here or click to browse"
-              subtitle="PDFs, JPGs, PNGs, DOCX — multiple files supported"
-              ctaText="Choose Files"
-            />
-          </div>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
-            <span className="inline-flex items-center gap-1.5"><Zap className="size-3.5 text-[#1AA8E0] dark:text-[#2FB2E4]" /> Instant processing</span>
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-[#1FB65B] dark:text-[#1FB67E]" /> Private &amp; secure</span>
-            <span className="inline-flex items-center gap-1.5"><Layers className="size-3.5 text-[#8C54FF]" /> Chain tools freely</span>
+    <div className="relative">
+      {/* Hero with premium mesh background */}
+      <section className="relative overflow-hidden mesh-bg">
+        <div className="absolute inset-0 -z-10 grain" />
+        {/* Floating decorative blobs */}
+        <div className="absolute -left-32 top-20 -z-10 size-72 rounded-full bg-gradient-to-br from-[#C8542A]/15 to-[#E8A87C]/10 blur-3xl animate-float-slow" />
+        <div className="absolute -right-32 -top-10 -z-10 size-96 rounded-full bg-gradient-to-br from-[#7C5BAA]/10 to-[#C8542A]/8 blur-3xl animate-float" />
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--border)] glass px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up">
+              <ShieldCheck className="size-3.5 text-[var(--success)]" />
+              {t("hero.badge")}
+            </div>
+            <h1 className="text-4xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up" style={{ animationDelay: "60ms" }}>
+              {t("hero.title1")}
+              <br />
+              <span className="brand-gradient-text">{t("hero.titleAccent")}</span>
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base text-[var(--muted-foreground)] sm:text-lg animate-fade-up" style={{ animationDelay: "120ms" }}>
+              {t("hero.subtitle")}
+            </p>
+            <div className="mt-8 animate-fade-up" style={{ animationDelay: "180ms" }}>
+              <FileDropzone
+                accept=".pdf,.png,.jpg,.jpeg,.docx"
+                multiple
+                onFiles={handleFiles}
+                accentColor="var(--brand)"
+                title={t("hero.dropzone.title")}
+                subtitle={t("hero.dropzone.subtitle")}
+                ctaText={busy ? t("tool.loading") : t("hero.dropzone.cta")}
+              />
+            </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-5 text-xs text-[var(--muted-foreground)] animate-fade-up" style={{ animationDelay: "240ms" }}>
+              <span className="inline-flex items-center gap-1.5">
+                <Zap className="size-3.5 text-[var(--brand)]" /> {t("hero.features.instant")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="size-3.5 text-[var(--success)]" /> {t("hero.features.private")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Layers className="size-3.5 text-[var(--cat-organize)]" /> {t("hero.features.chain")}
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Tool grid */}
-      <section className="py-12">
-        <div className="mb-6 flex items-end justify-between">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mb-6 flex items-end justify-between animate-fade-up">
           <div>
-            <h2 className="text-2xl font-bold text-[#1D2733] dark:text-[#E6EDF6] sm:text-3xl">All tools</h2>
-            <p className="mt-1 text-sm text-[#5B6B79] dark:text-[#93A4B6]">
-              Pick a tool to start, or drop files above — we&apos;ll route you automatically.
-            </p>
+            <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
+              {t("hero.allTools")}
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
           </div>
-          {busy && <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Loading files…</span>}
+          {busy && <span className="text-xs text-[var(--muted-foreground)]">{t("tool.loading")}</span>}
         </div>
 
         {(["compress", "convert", "organize", "edit"] as const).map((cat) => {
           const tools = TOOLS.filter((t) => t.category === cat);
           return (
-            <div key={cat} className="mb-8">
-              <div className="mb-3 flex items-center gap-2">
+            <div key={cat} className="mb-10">
+              <div className="mb-4 flex items-center gap-2">
                 <span className="size-2 rounded-full" style={{ background: CATEGORY_COLORS[cat] }} />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-[#1D2733] dark:text-[#E6EDF6]">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
                   {CATEGORY_LABELS[cat]}
                 </h3>
+                <span className="ml-2 text-xs text-[var(--muted-foreground)]">· {tools.length} tools</span>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {tools.map((t) => (
-                  <ToolCard key={t.id} tool={t} onClick={() => setView(t.id)} />
+                {tools.map((tool, i) => (
+                  <ToolCard
+                    key={tool.id}
+                    tool={tool}
+                    name={tTool(tool.id).name}
+                    desc={tTool(tool.id).desc}
+                    onClick={() => setView(tool.id)}
+                    delay={i * 40}
+                  />
                 ))}
               </div>
             </div>
@@ -150,62 +180,99 @@ export function HomeView() {
       </section>
 
       {/* Why PDF Toolkit strip */}
-      <section className="mb-12 grid gap-4 sm:grid-cols-3">
-        {[
-          { icon: ShieldCheck, color: "#1FB65B", title: "Truly private", text: "Every byte is processed by your browser. Nothing is uploaded anywhere." },
-          { icon: Zap, color: "#1AA8E0", title: "Real results", text: "Real PDF libraries (pdf-lib, pdf.js, UPNG, docx) doing the work — no mock spinners." },
-          { icon: Layers, color: "#8C54FF", title: "Chain freely", text: "Compress → merge → sign → split, all without ever pressing Download in between." },
-        ].map((card, i) => (
-          <div key={i} className="rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-5 shadow-sm">
-            <span
-              className="mb-3 flex size-10 items-center justify-center rounded-xl text-white"
-              style={{ background: card.color }}
+      <section className="mx-auto mb-16 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            {
+              icon: ShieldCheck,
+              color: "var(--success)",
+              title: t("hero.why.title.private"),
+              text: t("hero.why.text.private"),
+            },
+            {
+              icon: Zap,
+              color: "var(--brand)",
+              title: t("hero.why.title.real"),
+              text: t("hero.why.text.real"),
+            },
+            {
+              icon: Layers,
+              color: "var(--cat-organize)",
+              title: t("hero.why.title.chain"),
+              text: t("hero.why.text.chain"),
+            },
+          ].map((card, i) => (
+            <div
+              key={i}
+              className="group relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg animate-fade-up"
+              style={{ animationDelay: `${i * 80}ms` }}
             >
-              <card.icon className="size-5" />
-            </span>
-            <p className="text-base font-semibold text-[#1D2733] dark:text-[#E6EDF6]">{card.title}</p>
-            <p className="mt-1 text-sm text-[#5B6B79] dark:text-[#93A4B6]">{card.text}</p>
-          </div>
-        ))}
+              <div
+                className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-opacity group-hover:opacity-20"
+                style={{ background: card.color }}
+              />
+              <span
+                className="mb-3 flex size-10 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-110"
+                style={{ background: card.color }}
+              >
+                <card.icon className="size-5" />
+              </span>
+              <p className="text-base font-semibold text-[var(--foreground)]">{card.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--muted-foreground)]">{card.text}</p>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   );
 }
 
-function ToolCard({ tool, onClick }: { tool: ToolMeta; onClick: () => void }) {
+function ToolCard({
+  tool,
+  name,
+  desc,
+  onClick,
+  delay = 0,
+}: {
+  tool: ToolMeta;
+  name: string;
+  desc: string;
+  onClick: () => void;
+  delay?: number;
+}) {
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl animate-fade-up"
+      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover-ring animate-fade-up"
+      style={{ animationDelay: `${delay}ms` }}
     >
       <div
-        className="absolute -right-10 -top-10 size-24 rounded-full opacity-10 transition-opacity group-hover:opacity-20"
+        className="absolute -right-12 -top-12 size-28 rounded-full opacity-10 transition-all duration-500 group-hover:scale-110 group-hover:opacity-20"
         style={{ background: tool.color }}
       />
       {tool.isNew && (
-        <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#FF4B6E] to-[#FF8A00] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+        <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
           <Sparkles className="size-2.5" /> New
         </span>
       )}
       <span
-        className="flex size-12 items-center justify-center rounded-xl text-white shadow-sm transition-transform group-hover:scale-105"
+        className="flex size-12 items-center justify-center rounded-xl text-white shadow-md transition-transform duration-300 group-hover:scale-110"
         style={{ background: tool.color }}
       >
         <ToolGlyph id={tool.id} />
       </span>
       <div>
-        <p className="text-base font-semibold text-[#1D2733] dark:text-[#E6EDF6]">{tool.name}</p>
-        <p className="mt-1 text-xs leading-relaxed text-[#5B6B79] dark:text-[#93A4B6]">{tool.desc}</p>
+        <p className="text-base font-semibold text-[var(--foreground)]">{name}</p>
+        <p className="mt-1 text-xs leading-relaxed text-[var(--muted-foreground)]">{desc}</p>
       </div>
       <div className="mt-auto flex items-center text-xs font-semibold" style={{ color: tool.color }}>
-        Open tool <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+        Open tool <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
       </div>
     </button>
   );
 }
 
 function ToolGlyph({ id }: { id: string }) {
-  // Inline SVG glyphs matching the Header icons
   const map: Record<string, React.ReactNode> = {
     "compress-pdf": (
       <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -274,6 +341,38 @@ function ToolGlyph({ id }: { id: string }) {
         <path d="M4 9h16" /><path d="M4 15h16" /><path d="M10 3 8 21" /><path d="M16 3l-2 18" />
       </svg>
     ),
+    "redact-pdf": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" />
+        <rect x="7" y="13" width="10" height="4" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+    "rotate-pdf": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" />
+      </svg>
+    ),
+    "delete-pages": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      </svg>
+    ),
+    "crop-pdf": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" />
+      </svg>
+    ),
+    "edit-png": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+    ),
+    "translate-pdf": (
+      <svg viewBox="0 0 24 24" fill="none" className="size-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m5 8 6 6" /><path d="m4 14 6-6 2-3" /><path d="M2 5h12" /><path d="M7 2h1" />
+        <path d="m22 22-5-10-5 10" /><path d="M14 18h6" />
+      </svg>
+    ),
   };
-  return <>{map[id] ?? null}</>;
+  return <>{map[id] ?? <FileStack className="size-6" />}</>;
 }

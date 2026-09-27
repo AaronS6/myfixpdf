@@ -2,19 +2,21 @@
 
 import { Loader2 } from "lucide-react";
 import { useDocumentSession } from "@/store/document-session";
+import { useI18n } from "./I18nProvider";
 
 export function ProgressOverlay() {
   const progress = useDocumentSession((s) => s.progress);
+  const { lang } = useI18n();
   if (!progress.active) return null;
   const pct = typeof progress.percent === "number" ? Math.max(0, Math.min(100, progress.percent)) : null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#0B1220]/40 dark:bg-[#000000]/60 backdrop-blur-sm animate-pop-in">
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#111A2B] p-8 text-center shadow-2xl">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--foreground)]/40 backdrop-blur-md animate-pop-in">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 text-center shadow-2xl">
         <div className="mx-auto mb-5 flex size-16 items-center justify-center">
           {pct !== null ? (
             <div className="relative size-16">
               <svg className="size-16 -rotate-90" viewBox="0 0 64 64">
-                <circle cx="32" cy="32" r="28" fill="none" stroke="#E4E9F0" strokeWidth="6" />
+                <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border)" strokeWidth="6" />
                 <circle
                   cx="32"
                   cy="32"
@@ -28,24 +30,26 @@ export function ProgressOverlay() {
                 />
                 <defs>
                   <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#23A6D5" />
-                    <stop offset="100%" stopColor="#2FE0C6" />
+                    <stop offset="0%" stopColor="#C8542A" />
+                    <stop offset="100%" stopColor="#E8A87C" />
                   </linearGradient>
                 </defs>
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-[var(--foreground)]">
                 {pct}%
               </span>
             </div>
           ) : (
-            <Loader2 className="size-16 animate-spin text-[#1AA8E0] dark:text-[#2FB2E4]" strokeWidth={2} />
+            <Loader2 className="size-16 animate-spin text-[var(--brand)]" strokeWidth={2} />
           )}
         </div>
-        <p className="text-base font-semibold text-[#1D2733] dark:text-[#E6EDF6]">
-          {progress.message || "Working…"}
+        <p className="text-base font-semibold text-[var(--foreground)]">
+          {progress.message || (lang === "zh" ? "处理中…" : "Working…")}
         </p>
         {pct === null && (
-          <p className="mt-1 text-sm text-[#5B6B79] dark:text-[#93A4B6]">This may take a moment for large files.</p>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            {lang === "zh" ? "大文件可能需要一些时间，请稍候。" : "This may take a moment for large files."}
+          </p>
         )}
       </div>
     </div>

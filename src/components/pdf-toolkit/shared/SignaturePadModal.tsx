@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import SignaturePad from "signature_pad";
-import { Trash2, Eraser, PenLine, Check } from "lucide-react";
+import { Eraser, PenLine, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "./I18nProvider";
 
 type Props = {
   open: boolean;
@@ -12,9 +13,9 @@ type Props = {
 };
 
 const PEN_COLORS = [
-  { name: "Black", value: "#1D2733" },
-  { name: "Blue", value: "#1AA8E0" },
-  { name: "Red", value: "#F04438" },
+  { name: "Black", value: "#1A1A1A" },
+  { name: "Blue", value: "#1A5FB4" },
+  { name: "Red", value: "#C8242A" },
 ];
 
 const TYPE_FONTS = [
@@ -28,37 +29,56 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const padRef = useRef<SignaturePad | null>(null);
   const [mode, setMode] = useState<"drawn" | "typed">("drawn");
-  const [color, setColor] = useState("#1D2733");
+  const [color, setColor] = useState("#1A1A1A");
   const [stroke, setStroke] = useState(2.5);
   const [typedName, setTypedName] = useState("");
   const [typedFont, setTypedFont] = useState(TYPE_FONTS[0].value);
+  const { lang } = useI18n();
 
-  // Initialize / re-initialize the signature pad whenever canvas mounts
+  // Initialize the signature pad using requestAnimationFrame to ensure the
+  // modal animation has finished and the canvas has its final dimensions.
   useEffect(() => {
-    if (!open || mode !== "drawn" || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    // High-DPI canvas
-    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    const w = canvas.offsetWidth;
-    const h = canvas.offsetHeight;
-    canvas.width = w * ratio;
-    canvas.height = h * ratio;
-    canvas.getContext("2d")?.scale(ratio, ratio);
-    const pad = new SignaturePad(canvas, {
-      penColor: color,
-      minWidth: 0.8,
-      maxWidth: stroke,
-      backgroundColor: "#FFFFFF",
+    if (!open || mode !== "drawn") return;
+    let cancelled = false;
+    let pad: SignaturePad | null = null;
+    const raf = requestAnimationFrame(() => {
+      if (cancelled || !canvasRef.current) return;
+      const canvas = canvasRef.current;
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      // Read dimensions after the modal is laid out
+      const w = canvas.offsetWidth || 320;
+      const h = canvas.offsetHeight || 160;
+      canvas.width = Math.max(1, Math.round(w * ratio));
+      canvas.height = Math.max(1, Math.round(h * ratio));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.scale(ratio, ratio);
+      // White background so the saved PNG shows on white pages
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, w, h);
+      try {
+        pad = new SignaturePad(canvas, {
+          penColor: color,
+          minWidth: 0.8,
+          maxWidth: stroke,
+          backgroundColor: "#FFFFFF",
+        });
+        padRef.current = pad;
+      } catch (e) {
+        // signature_pad can throw if canvas context unavailable — fail silently
+        console.warn("SignaturePad init failed:", e);
+      }
     });
-    padRef.current = pad;
     return () => {
-      pad.off();
+      cancelled = true;
+      if (pad) {
+        try { pad.off(); } catch { /* ignore */ }
+      }
       padRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, mode]);
 
-  // Update pen color live
   useEffect(() => {
     if (padRef.current) {
       padRef.current.penColor = color;
@@ -69,24 +89,25 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
 
   if (!open) return null;
 
-  const clear = () => padRef.current?.clear();
+  const clear = () => {
+    if (padRef.current) {
+      try { padRef.current.clear(); } catch { /* ignore */ }
+    }
+  };
 
   const produceDataUrl = async (): Promise<string> => {
     if (mode === "drawn") {
       if (!padRef.current || padRef.current.isEmpty()) {
-        throw new Error("Please draw your signature first.");
+        throw new Error(lang === "zh" ? "请先绘制签名" : "Please draw your signature first.");
       }
-      // Composite onto a white background so it shows on white PDF pages
       const source = padRef.current.toDataURL("image/png");
       return await compositeWhite(source, color);
     } else {
-      if (!typedName.trim()) throw new Error("Please type your name first.");
-      // Render the typed name to a canvas with the chosen font
+      if (!typedName.trim()) throw new Error(lang === "zh" ? "请输入你的姓名" : "Please type your name first.");
       const canvas = document.createElement("canvas");
       const fontSize = 64;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas 2D context unavailable");
-      // wait for fonts to be ready
       try {
         await (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready;
       } catch {
@@ -98,7 +119,6 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
       const h = Math.ceil(fontSize * 1.5) + 20;
       canvas.width = w;
       canvas.height = h;
-      // Re-set after resize
       const ctx2 = canvas.getContext("2d");
       if (!ctx2) throw new Error("Canvas 2D context unavailable");
       ctx2.fillStyle = "#FFFFFF";
@@ -117,55 +137,71 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
       const dataUrl = await produceDataUrl();
       onConfirm({ dataUrl, format: mode, color });
     } catch (e) {
-      alert(e instanceof Error ? e.message : String(e));
+      // Use a non-blocking alert-replacement
+      const msg = e instanceof Error ? e.message : String(e);
+      import("sonner").then(({ toast }) => toast.error(msg));
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0B1220]/50 dark:bg-[#000000]/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white dark:bg-[#111A2B] shadow-2xl animate-pop-in">
-        <div className="border-b border-[#E4E9F0] dark:border-[#1E2A44] p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[var(--foreground)]/40 p-4 backdrop-blur-md animate-fade-in">
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-2xl animate-pop-in">
+        <div className="border-b border-[var(--border)] p-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Add your signature</h3>
-            <button onClick={onClose} className="text-2xl text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]">×</button>
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              {lang === "zh" ? "添加你的签名" : "Add your signature"}
+            </h3>
+            <button
+              onClick={onClose}
+              className="flex size-8 items-center justify-center rounded-md text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+              aria-label="Close"
+            >
+              ×
+            </button>
           </div>
-          <div className="mt-3 flex gap-1 rounded-lg bg-[#F7F9FC] dark:bg-[#0E1626] p-1">
+          <div className="mt-3 flex gap-1 rounded-lg bg-[var(--muted)] p-1">
             <button
               onClick={() => setMode("drawn")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "drawn" ? "bg-white dark:bg-[#111A2B] text-[#1AA8E0] dark:text-[#2FB2E4] shadow-sm" : "text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]",
+                mode === "drawn" ? "bg-[var(--card)] text-[var(--brand)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
               )}
             >
-              <PenLine className="size-4" /> Draw
+              <PenLine className="size-4" /> {lang === "zh" ? "手绘" : "Draw"}
             </button>
             <button
               onClick={() => setMode("typed")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "typed" ? "bg-white dark:bg-[#111A2B] text-[#1AA8E0] dark:text-[#2FB2E4] shadow-sm" : "text-[#5B6B79] dark:text-[#93A4B6] hover:text-[#1D2733] dark:text-[#E6EDF6]",
+                mode === "typed" ? "bg-[var(--card)] text-[var(--brand)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
               )}
             >
-              <Check className="size-4" /> Type
+              <Check className="size-4" /> {lang === "zh" ? "输入" : "Type"}
             </button>
           </div>
         </div>
         <div className="p-4">
           {mode === "drawn" ? (
             <div className="space-y-3">
-              <div className="rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#FAFBFD] dark:bg-[#0E1626] p-2">
-                <canvas ref={canvasRef} className="h-44 w-full rounded-md bg-white dark:bg-[#111A2B]" />
+              <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--muted)] p-2">
+                <canvas
+                  ref={canvasRef}
+                  className="h-44 w-full rounded-md bg-white"
+                  style={{ touchAction: "none" }}
+                />
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Pen color:</span>
+                  <span className="text-xs text-[var(--muted-foreground)]">
+                    {lang === "zh" ? "笔色：" : "Pen color:"}
+                  </span>
                   {PEN_COLORS.map((c) => (
                     <button
                       key={c.value}
                       onClick={() => setColor(c.value)}
                       className={cn(
                         "size-6 rounded-full border-2 transition-all",
-                        color === c.value ? "border-[#1AA8E0] dark:border-[#2FB2E4] scale-110" : "border-[#E4E9F0] dark:border-[#1E2A44]",
+                        color === c.value ? "scale-110 border-[var(--brand)]" : "border-[var(--border)]",
                       )}
                       style={{ background: c.value }}
                       title={c.name}
@@ -173,7 +209,9 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Stroke:</span>
+                  <span className="text-xs text-[var(--muted-foreground)]">
+                    {lang === "zh" ? "粗细：" : "Stroke:"}
+                  </span>
                   <input
                     type="range"
                     min="1"
@@ -181,14 +219,14 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                     step="0.5"
                     value={stroke}
                     onChange={(e) => setStroke(parseFloat(e.target.value))}
-                    className="w-24 accent-[#1AA8E0]"
+                    className="w-24 accent-[var(--brand)]"
                   />
                 </div>
                 <button
                   onClick={clear}
-                  className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-3 py-1.5 text-sm text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+                  className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                 >
-                  <Eraser className="size-4" /> Clear
+                  <Eraser className="size-4" /> {lang === "zh" ? "清除" : "Clear"}
                 </button>
               </div>
             </div>
@@ -198,8 +236,8 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                 type="text"
                 value={typedName}
                 onChange={(e) => setTypedName(e.target.value)}
-                placeholder="Type your full name"
-                className="w-full rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] px-3 py-2 text-base text-[#1D2733] dark:text-[#E6EDF6] outline-none focus:border-[#1AA8E0] dark:border-[#2FB2E4]"
+                placeholder={lang === "zh" ? "输入你的姓名" : "Type your full name"}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-base text-[var(--foreground)] outline-none focus:border-[var(--brand)]"
               />
               <div className="flex flex-wrap gap-2">
                 {TYPE_FONTS.map((f) => (
@@ -208,23 +246,27 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
                     onClick={() => setTypedFont(f.value)}
                     className={cn(
                       "rounded-lg border px-3 py-2 text-base transition-all",
-                      typedFont === f.value ? "border-[#1AA8E0] dark:border-[#2FB2E4] bg-[#EAF7FD] dark:bg-[#0d2330]" : "border-[#E4E9F0] dark:border-[#1E2A44] hover:bg-[#F7F9FC] dark:bg-[#0E1626]",
+                      typedFont === f.value
+                        ? "border-[var(--brand)] bg-[var(--brand)]/8"
+                        : "border-[var(--border)] hover:bg-[var(--muted)]",
                     )}
                     style={{ fontFamily: f.value, color }}
                   >
-                    {typedName || "Your Name"}
+                    {typedName || (lang === "zh" ? "你的姓名" : "Your Name")}
                   </button>
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">Ink color:</span>
+                <span className="text-xs text-[var(--muted-foreground)]">
+                  {lang === "zh" ? "墨色：" : "Ink color:"}
+                </span>
                 {PEN_COLORS.map((c) => (
                   <button
                     key={c.value}
                     onClick={() => setColor(c.value)}
                     className={cn(
                       "size-6 rounded-full border-2 transition-all",
-                      color === c.value ? "border-[#1AA8E0] dark:border-[#2FB2E4] scale-110" : "border-[#E4E9F0] dark:border-[#1E2A44]",
+                      color === c.value ? "scale-110 border-[var(--brand)]" : "border-[var(--border)]",
                     )}
                     style={{ background: c.value }}
                     title={c.name}
@@ -234,18 +276,18 @@ export function SignaturePadModal({ open, onClose, onConfirm }: Props) {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-[#E4E9F0] dark:border-[#1E2A44] p-4">
+        <div className="flex items-center justify-end gap-2 border-t border-[var(--border)] p-4">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
           >
-            Cancel
+            {lang === "zh" ? "取消" : "Cancel"}
           </button>
           <button
             onClick={onConfirmClick}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#23A6D5] to-[#2FE0C6] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-[#C8542A] to-[#E8A87C] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
           >
-            <Check className="size-4" /> Apply signature
+            <Check className="size-4" /> {lang === "zh" ? "应用签名" : "Apply signature"}
           </button>
         </div>
       </div>
@@ -265,7 +307,6 @@ async function compositeWhite(sourceDataUrl: string, inkColor: string): Promise<
   canvas.height = img.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable");
-  // White background
   ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(img, 0, 0);

@@ -62,8 +62,8 @@ export function ResultScreen() {
   if (!resultFile && !showMultiResults) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <p className="text-[#5B6B79] dark:text-[#93A4B6]">No result yet. Run a tool first.</p>
-        <button onClick={() => setView("home")} className="mt-3 rounded-lg bg-[#1AA8E0] px-4 py-2 text-white">
+        <p className="text-[var(--muted-foreground)]">No result yet. Run a tool first.</p>
+        <button onClick={() => setView("home")} className="mt-3 rounded-lg bg-[var(--brand)] px-4 py-2 text-white">
           Back to home
         </button>
       </div>
@@ -142,7 +142,7 @@ export function ResultScreen() {
               pushHistory();
               setView("home");
             }}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
             aria-label="Back"
           >
             <ChevronLeft className="size-4" />
@@ -152,18 +152,18 @@ export function ResultScreen() {
               type="text"
               value={rename}
               onChange={(e) => setRename(e.target.value)}
-              className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-lg font-bold text-[#1D2733] dark:text-[#E6EDF6] outline-none hover:border-[#E4E9F0] dark:border-[#1E2A44] focus:border-[#1AA8E0] dark:border-[#2FB2E4]"
+              className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-lg font-bold text-[var(--foreground)] outline-none hover:border-[var(--border)] focus:border-[var(--brand)]"
               style={{ width: `${Math.max(20, rename.length + 2)}ch` }}
               aria-label="Edit filename"
             />
             <div className="mt-1 flex items-center gap-2 px-2">
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#EEF3F8] dark:bg-[#182238] px-2 py-0.5 text-[10px] font-bold uppercase text-[#5B6B79] dark:text-[#93A4B6]">
+              <span className="inline-flex items-center gap-1 rounded-md bg-[var(--muted)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--muted-foreground)]">
                 {isPdf ? <FileText className="size-3" /> : isImage ? <ImageIcon className="size-3" /> : null}
                 {resultFile?.ext.toUpperCase().replace(".", "") || "FILE"}
               </span>
-              <span className="text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">{formatBytes(resultFile?.size ?? 0)}</span>
+              <span className="text-sm font-semibold text-[var(--foreground)]">{formatBytes(resultFile?.size ?? 0)}</span>
               {saved && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#1FB65B]/10 dark:bg-[#1FB67E]/15 px-2 py-0.5 text-xs font-semibold text-[#1FB65B] dark:text-[#1FB67E]">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--success)]/10 px-2 py-0.5 text-xs font-semibold text-[var(--success)]">
                   <RefreshCw className="size-3" />
                   {formatBytes(resultFile!.beforeSize!)} → {formatBytes(resultFile!.size)} (−{savedPct}%)
                 </span>
@@ -178,8 +178,8 @@ export function ResultScreen() {
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all",
                 compareMode
-                  ? "border-[#1AA8E0] dark:border-[#2FB2E4] bg-[#EAF7FD] dark:bg-[#0d2330] text-[#1AA8E0] dark:text-[#2FB2E4]"
-                  : "border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]",
+                  ? "border-[var(--brand)] bg-[var(--brand)]/8 text-[var(--brand)]"
+                  : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
               )}
             >
               <Layers className="size-4" /> {compareMode ? "Exit compare" : "Compare before/after"}
@@ -187,7 +187,7 @@ export function ResultScreen() {
           )}
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#23A6D5] to-[#2FE0C6] px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.03]"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.03]"
           >
             <Download className="size-4" /> Download
           </button>
@@ -196,7 +196,7 @@ export function ResultScreen() {
 
       {/* Oversize warning */}
       {isOversize && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#FFE4B0] dark:border-[#5a4810] bg-[#FFF8E6] dark:bg-[#2a2310] p-3 text-sm text-[#7a5a00]">
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 p-3 text-sm text-[var(--warning)]">
           <AlertTriangle className="size-5 shrink-0 text-[#F5A623]" />
           <span className="flex-1">
             This file is quite large ({formatBytes(resultFile!.size)}). Consider compressing it further before sharing.
@@ -212,7 +212,7 @@ export function ResultScreen() {
 
       {/* Preview pane */}
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="overflow-hidden rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
           {showMultiResults ? (
             <MultiResultsGallery results={resultFile!.results!} />
           ) : compareMode && saved && previewUrl && resultFile?.beforePreviewUrl ? (
@@ -232,19 +232,19 @@ export function ResultScreen() {
               )}
             </div>
           ) : isImage && previewUrl ? (
-            <div className="flex h-[70vh] items-center justify-center bg-[#F7F9FC] dark:bg-[#0E1626] p-4">
+            <div className="flex h-[70vh] items-center justify-center bg-[var(--muted)] p-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={previewUrl} alt="Preview" className="max-h-full max-w-full rounded-md shadow-md" />
             </div>
           ) : (
-            <div className="flex h-64 items-center justify-center text-[#5B6B79] dark:text-[#93A4B6]">No preview available</div>
+            <div className="flex h-64 items-center justify-center text-[var(--muted-foreground)]">No preview available</div>
           )}
         </div>
 
         {/* Action toolbar */}
         <div className="space-y-4">
-          <div className="rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-4 shadow-sm">
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#5B6B79] dark:text-[#93A4B6]">Continue working</p>
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Continue working</p>
             <div className="grid grid-cols-2 gap-2">
               {isPdf && (
                 <>
@@ -268,22 +268,22 @@ export function ResultScreen() {
           </div>
 
           {/* Tips */}
-          <div className="rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-4 text-sm shadow-sm">
-            <p className="mb-1 flex items-center gap-1.5 font-semibold text-[#1D2733] dark:text-[#E6EDF6]">
-              <Info className="size-4 text-[#1AA8E0] dark:text-[#2FB2E4]" /> Did you know?
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm shadow-sm">
+            <p className="mb-1 flex items-center gap-1.5 font-semibold text-[var(--foreground)]">
+              <Info className="size-4 text-[var(--brand)]" /> Did you know?
             </p>
-            <p className="text-xs leading-relaxed text-[#5B6B79] dark:text-[#93A4B6]">
+            <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
               You can chain tools without downloading. The current file is held in your browser session until you press Download — feel free to compress again, sign, or merge it with another file.
             </p>
           </div>
 
           {/* Compare tip */}
           {saved && (
-            <div className="rounded-2xl border border-[#1FB65B]/30 dark:border-[#1FB67E]/40 bg-[#EAF8F0] dark:bg-[#0d2818] p-4 text-sm shadow-sm">
-              <p className="flex items-center gap-1.5 font-semibold text-[#1FB65B] dark:text-[#1FB67E]">
+            <div className="rounded-2xl border border-[var(--success)]/30 bg-[var(--success)]/8 p-4 text-sm shadow-sm">
+              <p className="flex items-center gap-1.5 font-semibold text-[var(--success)]">
                 <CheckCircle2 className="size-4" /> You saved {savedPct}%
               </p>
-              <p className="mt-1 text-xs text-[#1D2733] dark:text-[#E6EDF6]/70">
+              <p className="mt-1 text-xs text-[var(--foreground)]/70">
                 Original {formatBytes(resultFile!.beforeSize!)} → Now {formatBytes(resultFile!.size)}. Use the “Compare before/after” button above to visually confirm quality.
               </p>
             </div>
@@ -296,7 +296,7 @@ export function ResultScreen() {
         <div className="mt-4 flex justify-center">
           <button
             onClick={handleDownloadAllZip}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#23A6D5] to-[#2FE0C6] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#C8542A] to-[#E8A87C] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
           >
             <Archive className="size-4" /> Download all as ZIP
           </button>
@@ -323,38 +323,38 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-start gap-1.5 rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] p-3 text-left transition-all hover:border-[#1AA8E0] dark:border-[#2FB2E4] hover:shadow-sm"
+      className="flex flex-col items-start gap-1.5 rounded-xl border border-[var(--border)] p-3 text-left transition-all hover:border-[var(--brand)] hover:shadow-sm"
     >
       <span className="flex size-8 items-center justify-center rounded-lg text-white" style={{ background: color }}>
         <Icon className="size-4" />
       </span>
-      <span className="text-xs font-semibold text-[#1D2733] dark:text-[#E6EDF6] leading-tight">{label}</span>
+      <span className="text-xs font-semibold text-[var(--foreground)] leading-tight">{label}</span>
     </button>
   );
 }
 
 function MultiResultsGallery({ results }: { results: NonNullable<NonNullable<ReturnType<typeof useDocumentSession.getState>["resultFile"]>["results"]> }) {
   return (
-    <div className="bg-[#F7F9FC] dark:bg-[#0E1626] p-4">
+    <div className="bg-[var(--muted)] p-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {results.map((r, i) => (
-          <div key={i} className="overflow-hidden rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] shadow-sm">
-            <div className="aspect-square overflow-hidden bg-[#F7F9FC] dark:bg-[#0E1626] p-2">
+          <div key={i} className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-sm">
+            <div className="aspect-square overflow-hidden bg-[var(--muted)] p-2">
               {r.previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={r.previewUrl} alt={r.name} className="h-full w-full object-contain" />
               ) : (
-                <div className="flex h-full items-center justify-center text-[#5B6B79] dark:text-[#93A4B6]">
+                <div className="flex h-full items-center justify-center text-[var(--muted-foreground)]">
                   <FileText className="size-8" />
                 </div>
               )}
             </div>
-            <div className="border-t border-[#E4E9F0] dark:border-[#1E2A44] p-2">
-              <p className="truncate text-xs font-semibold text-[#1D2733] dark:text-[#E6EDF6]">{r.name}</p>
-              <p className="text-[10px] text-[#5B6B79] dark:text-[#93A4B6]">{formatBytes(r.size)}</p>
+            <div className="border-t border-[var(--border)] p-2">
+              <p className="truncate text-xs font-semibold text-[var(--foreground)]">{r.name}</p>
+              <p className="text-[10px] text-[var(--muted-foreground)]">{formatBytes(r.size)}</p>
               <button
                 onClick={() => downloadBlob(r.blob, r.name)}
-                className="mt-1 inline-flex w-full items-center justify-center gap-1 rounded-md bg-[#1AA8E0] px-2 py-1 text-[10px] font-semibold text-white hover:opacity-90"
+                className="mt-1 inline-flex w-full items-center justify-center gap-1 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold text-white hover:opacity-90"
               >
                 <Download className="size-3" /> Download
               </button>
@@ -390,7 +390,7 @@ function CompareSlider({
   return (
     <div
       ref={containerRef}
-      className="relative h-[70vh] select-none overflow-hidden bg-[#0B1220]"
+      className="relative h-[70vh] select-none overflow-hidden bg-[var(--background)]"
       onMouseMove={(e) => {
         if (e.buttons !== 1) return;
         const rect = containerRef.current?.getBoundingClientRect();
@@ -411,7 +411,7 @@ function CompareSlider({
         className="compare-handle absolute inset-y-0 w-1 cursor-ew-resize"
         style={{ left: `calc(${position}% - 2px)` }}
       >
-        <div className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white dark:bg-[#111A2B] text-[#1AA8E0] dark:text-[#2FB2E4] shadow-lg">
+        <div className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--card)] text-[var(--brand)] shadow-lg">
           <ChevronLeft className="size-4 -mr-1" />
           <ChevronLeft className="size-4 rotate-180" />
         </div>
@@ -475,7 +475,7 @@ function SignatureOverlay({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={dataUrl} alt="Signature" className="h-full w-full object-contain opacity-90" draggable={false} />
         <div
-          className="absolute -right-1 -bottom-1 size-3 cursor-se-resize rounded-full border-2 border-[#1AA8E0] dark:border-[#2FB2E4] bg-white dark:bg-[#111A2B]"
+          className="absolute -right-1 -bottom-1 size-3 cursor-se-resize rounded-full border-2 border-[var(--brand)] bg-[var(--card)]"
           onMouseDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -498,17 +498,17 @@ function SignatureOverlay({
             window.addEventListener("mouseup", up);
           }}
         />
-        <div className="absolute -top-7 left-0 flex items-center gap-1 rounded-md bg-[#1D2733]/90 dark:bg-[#0B1220]/90 px-1.5 py-0.5 text-[10px] text-white">
-          <button onClick={onApply} className="rounded bg-[#1AA8E0] px-1.5 py-0.5 font-semibold">Apply</button>
-          <button onClick={onRemove} className="px-1 hover:text-[#F04438] dark:text-[#FF6B6B]">Remove</button>
+        <div className="absolute -top-7 left-0 flex items-center gap-1 rounded-md bg-[var(--foreground)]/90 px-1.5 py-0.5 text-[10px] text-white">
+          <button onClick={onApply} className="rounded bg-[var(--brand)] px-1.5 py-0.5 font-semibold">Apply</button>
+          <button onClick={onRemove} className="px-1 hover:text-[var(--danger)]">Remove</button>
         </div>
       </div>
-      <div className="pointer-events-auto absolute bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-white dark:bg-[#111A2B]/95 px-2 py-1 shadow-md">
-        <span className="text-[10px] text-[#5B6B79] dark:text-[#93A4B6]">On page</span>
+      <div className="pointer-events-auto absolute bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-[var(--card)]/95 px-2 py-1 shadow-md">
+        <span className="text-[10px] text-[var(--muted-foreground)]">On page</span>
         <select
           value={pos.page}
           onChange={(e) => onChange({ ...pos, page: parseInt(e.target.value, 10) })}
-          className="ml-1 rounded border border-[#E4E9F0] dark:border-[#1E2A44] px-1 py-0.5 text-[10px]"
+          className="ml-1 rounded border border-[var(--border)] px-1 py-0.5 text-[10px]"
         >
           {Array.from({ length: 20 }).map((_, i) => (
             <option key={i} value={i}>

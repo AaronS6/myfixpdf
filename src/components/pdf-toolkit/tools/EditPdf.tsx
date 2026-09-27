@@ -118,7 +118,7 @@ export function EditPdf() {
   if (!target || !liveBlob) {
     return (
       <ToolPageShell tool={tool} ctaLabel="" ctaDisabled>
-        <div className="mt-5 rounded-xl border border-dashed border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-6 text-center text-sm text-[#5B6B79] dark:text-[#93A4B6]">
+        <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
           Drop a PDF above to start editing.
         </div>
       </ToolPageShell>
@@ -269,11 +269,11 @@ export function EditPdf() {
     <ToolPageShell tool={tool} ctaLabel="Save changes" ctaColor="var(--cat-edit)" onCtaClick={save}>
       <div className="mt-5 space-y-4">
         {/* Toolbar */}
-        <div className="sticky top-16 z-20 flex flex-wrap items-center gap-1 rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-2 shadow-sm">
+        <div className="sticky top-16 z-20 flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 shadow-sm">
           <button
             onClick={undo}
             disabled={historyIdx <= 0}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626] disabled:opacity-30"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-30"
             title="Undo"
           >
             <Undo2 className="size-4" />
@@ -281,7 +281,7 @@ export function EditPdf() {
           <button
             onClick={redo}
             disabled={historyIdx >= history2.length - 1}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626] disabled:opacity-30"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] disabled:opacity-30"
             title="Redo"
           >
             <Redo2 className="size-4" />
@@ -289,21 +289,21 @@ export function EditPdf() {
           <div className="mx-1 h-6 w-px bg-[#E4E9F0]" />
           <button
             onClick={() => setTool2("select")}
-            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "select" ? "border-[#FF4B6E] bg-[#FF4B6E]/10 dark:bg-[#FF6B85]/15 text-[#FF4B6E]" : "border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]")}
+            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "select" ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]")}
             title="Select"
           >
             <MousePointer2 className="size-4" />
           </button>
           <button
             onClick={() => setTool2("text")}
-            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "text" ? "border-[#FF4B6E] bg-[#FF4B6E]/10 dark:bg-[#FF6B85]/15 text-[#FF4B6E]" : "border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]")}
+            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "text" ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]")}
             title="Add text"
           >
             <Type className="size-4" />
           </button>
           <button
             onClick={() => setTool2("draw")}
-            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "draw" ? "border-[#FF4B6E] bg-[#FF4B6E]/10 dark:bg-[#FF6B85]/15 text-[#FF4B6E]" : "border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]")}
+            className={cn("flex size-9 items-center justify-center rounded-lg border", tool2 === "draw" ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]")}
             title="Draw"
           >
             <PenLine className="size-4" />
@@ -311,35 +311,35 @@ export function EditPdf() {
           <div className="mx-1 h-6 w-px bg-[#E4E9F0]" />
           <button
             onClick={() => rotate(90)}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
             title={`Rotate page ${pageNum} clockwise (only this page)`}
           >
             <RotateCw className="size-4" />
           </button>
           <button
             onClick={() => rotate(270)}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
             title={`Rotate page ${pageNum} counter-clockwise (only this page)`}
           >
             <RotateCcw className="size-4" />
           </button>
           <button
             onClick={duplicate}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
             title={`Duplicate page ${pageNum}`}
           >
             <Copy className="size-4" />
           </button>
           <button
             onClick={insertBlank}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
             title={`Insert blank page after ${pageNum}`}
           >
             <Plus className="size-4" />
           </button>
           <button
             onClick={del}
-            className="flex size-9 items-center justify-center rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#FEE2E2] dark:bg-[#3a1416] hover:text-[#F04438] dark:text-[#FF6B6B]"
+            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
             title={`Delete page ${pageNum}`}
           >
             <Trash2 className="size-4" />
@@ -356,15 +356,15 @@ export function EditPdf() {
 
         {/* Draw toolbar */}
         {tool2 === "draw" && (
-          <div className="flex items-center gap-3 rounded-xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] p-2 text-sm">
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 text-sm">
             <PenTool className="size-4 text-[#FF4B6E]" />
-            <span className="text-xs font-medium text-[#5B6B79] dark:text-[#93A4B6]">Draw on page {pageNum} — strokes are baked in on Save.</span>
+            <span className="text-xs font-medium text-[var(--muted-foreground)]">Draw on page {pageNum} — strokes are baked in on Save.</span>
             <div className="ml-auto flex items-center gap-2">
               {["#1D2733", "#1AA8E0", "#F04438", "#1FB65B", "#FF8A00"].map((c) => (
                 <button
                   key={c}
                   onClick={() => setPenColor(c)}
-                  className={cn("size-6 rounded-full border-2", penColor === c ? "border-[#1AA8E0] dark:border-[#2FB2E4] scale-110" : "border-[#E4E9F0] dark:border-[#1E2A44]")}
+                  className={cn("size-6 rounded-full border-2", penColor === c ? "border-[var(--brand)] scale-110" : "border-[var(--border)]")}
                   style={{ background: c }}
                 />
               ))}
@@ -380,7 +380,7 @@ export function EditPdf() {
               <span className="text-xs">{penWidth}px</span>
               <button
                 onClick={() => setStrokes((s) => s.filter((st) => st.pageIndex !== pageNum - 1))}
-                className="rounded-md border border-[#E4E9F0] dark:border-[#1E2A44] px-2 py-1 text-xs text-[#5B6B79] dark:text-[#93A4B6] hover:bg-[#F7F9FC] dark:bg-[#0E1626]"
+                className="rounded-md border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
               >
                 Clear
               </button>
@@ -389,7 +389,7 @@ export function EditPdf() {
         )}
 
         {/* PDF preview + overlay */}
-        <div className="overflow-hidden rounded-2xl border border-[#E4E9F0] dark:border-[#1E2A44] bg-white dark:bg-[#111A2B] shadow-sm">
+        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
           <div className="relative h-[70vh]">
             <PdfPreview
               blob={liveBlob}
@@ -419,8 +419,8 @@ export function EditPdf() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
-          <b className="text-[#1D2733] dark:text-[#E6EDF6]">Per-page rotation:</b> rotate / delete / duplicate buttons above operate on the
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
+          <b className="text-[var(--foreground)]">Per-page rotation:</b> rotate / delete / duplicate buttons above operate on the
           page currently in view only — other pages are left untouched. Use the page navigation arrows in the preview
           toolbar to switch pages, or the +/- zoom controls.
         </div>
@@ -531,7 +531,7 @@ function EditOverlay(props: {
         .map((t) => (
           <div
             key={t.id}
-            className="absolute select-none rounded border border-[#1AA8E0] dark:border-[#2FB2E4]/40 bg-white dark:bg-[#111A2B]/80 px-1 text-[#1D2733] dark:text-[#E6EDF6]"
+            className="absolute select-none rounded border border-[var(--brand)]/40 bg-[var(--card)]/80 px-1 text-[var(--foreground)]"
             style={{
               left: t.x * scale,
               top: t.y * scale,
@@ -540,11 +540,11 @@ function EditOverlay(props: {
             }}
           >
             {t.text}
-            {t.baked && <span className="ml-1 text-[8px] text-[#1FB65B] dark:text-[#1FB67E]">baked</span>}
+            {t.baked && <span className="ml-1 text-[8px] text-[var(--success)]">baked</span>}
             {!t.baked && (
               <button
                 onClick={() => setTextItems((items) => items.filter((x) => x.id !== t.id))}
-                className="ml-1 text-[10px] text-[#F04438] dark:text-[#FF6B6B]"
+                className="ml-1 text-[10px] text-[var(--danger)]"
               >
                 ×
               </button>
@@ -572,7 +572,7 @@ function EditOverlay(props: {
               }
             }}
             placeholder="Type text… (Enter to add, Esc to cancel)"
-            className="min-w-[120px] rounded border border-[#1AA8E0] dark:border-[#2FB2E4] bg-white dark:bg-[#111A2B] px-1 py-0.5 text-sm text-[#1D2733] dark:text-[#E6EDF6] outline-none"
+            className="min-w-[120px] rounded border border-[var(--brand)] bg-[var(--card)] px-1 py-0.5 text-sm text-[var(--foreground)] outline-none"
             style={{
               fontSize: textDraft.size * scale,
               color: `rgb(${textDraft.color.map((c) => Math.round(c * 255)).join(",")})`,

@@ -56,6 +56,12 @@ export type ToolId =
   | "reorder-pdf"
   | "extract-text"
   | "page-numbers"
+  | "redact-pdf"
+  | "rotate-pdf"
+  | "delete-pages"
+  | "crop-pdf"
+  | "edit-png"
+  | "translate-pdf"
   | "result";
 
 type ProgressState = {

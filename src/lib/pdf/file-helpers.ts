@@ -120,7 +120,20 @@ export async function imageThumbnail(file: File, maxDim = 220): Promise<string> 
 /** Pick a sensible filename with a given extension. */
 export function withExt(name: string, ext: string): string {
   const base = name.replace(/\.[^.]+$/, "");
-  const cleanExt = ext.startsWith(".") ? ext : `.${ext}`;
+  // Smart ext handling:
+  //  - If ext starts with "." → use as-is (e.g. ".pdf")
+  //  - If ext starts with "-" or "_" → treat as a suffix + keep the original
+  //    extension's family (e.g. "-rotated.pdf" → strip ".pdf" off ext →
+  //    "-rotated" → use base + "-rotated" + ".pdf")
+  let cleanExt: string;
+  if (ext.startsWith(".")) {
+    cleanExt = ext;
+  } else if (ext.startsWith("-") || ext.startsWith("_")) {
+    // Already in form "-suffix.ext" or "-suffix"
+    cleanExt = ext.includes(".") ? ext : `${ext}.pdf`;
+  } else {
+    cleanExt = `.${ext}`;
+  }
   return `${base}${cleanExt}`;
 }
 

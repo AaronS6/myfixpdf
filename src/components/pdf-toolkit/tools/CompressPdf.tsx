@@ -55,7 +55,7 @@ export function CompressPdf() {
   return (
     <ToolPageShell tool={tool} ctaLabel="Compress PDF" ctaColor="var(--cat-compress)" onCtaClick={run}>
       <div className="mt-5">
-        <p className="mb-2 text-sm font-semibold text-[#1D2733] dark:text-[#E6EDF6]">Choose a compression level</p>
+        <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">Choose a compression level</p>
         <div className="grid gap-3 sm:grid-cols-3">
           {(["light", "recommended", "extreme"] as CompressionLevel[]).map((lv) => {
             const preset = COMPRESSION_LEVELS[lv];
@@ -67,31 +67,31 @@ export function CompressPdf() {
                 className={cn(
                   "flex flex-col gap-1 rounded-xl border-2 p-3 text-left transition-all",
                   active
-                    ? "border-[var(--cat-compress)] bg-[#EAF8F0] dark:bg-[#0d2818]"
-                    : "border-[#E4E9F0] dark:border-[#1E2A44] hover:border-[var(--cat-compress)]",
+                    ? "border-[var(--cat-compress)] bg-[var(--success)]/8"
+                    : "border-[var(--border)] hover:border-[var(--cat-compress)]",
                 )}
               >
-                <span className="flex items-center gap-1.5 text-sm font-bold text-[#1D2733] dark:text-[#E6EDF6]">
+                <span className="flex items-center gap-1.5 text-sm font-bold text-[var(--foreground)]">
                   <Sparkles className="size-4" style={{ color: "var(--cat-compress)" }} />
                   {preset.label}
                 </span>
-                <span className="text-xs text-[#5B6B79] dark:text-[#93A4B6]">{preset.desc}</span>
-                <span className="mt-1 text-[10px] font-medium uppercase text-[#5B6B79] dark:text-[#93A4B6]">
+                <span className="text-xs text-[var(--muted-foreground)]">{preset.desc}</span>
+                <span className="mt-1 text-[10px] font-medium uppercase text-[var(--muted-foreground)]">
                   ~{preset.dpi} DPI · JPEG q{(preset.quality * 100).toFixed(0)}
                 </span>
               </button>
             );
           })}
         </div>
-        <div className="mt-3 flex items-start gap-2 rounded-lg border border-[#E4E9F0] dark:border-[#1E2A44] bg-[#F7F9FC] dark:bg-[#0E1626] p-3 text-xs text-[#5B6B79] dark:text-[#93A4B6]">
-          <FileText className="size-4 shrink-0 text-[#1AA8E0] dark:text-[#2FB2E4]" />
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
+          <FileText className="size-4 shrink-0 text-[var(--brand)]" />
           <p>
             Real client-side compression: each page is rasterized at the chosen DPI and re-encoded as JPEG, then re-embedded
             in a fresh PDF. Vector-only PDFs may shrink less than image-heavy ones.
           </p>
         </div>
         {sourceFiles.length > 1 && (
-          <div className="mt-3 flex items-start gap-2 rounded-lg border border-[#FFE4B0] dark:border-[#5a4810] bg-[#FFF8E6] dark:bg-[#2a2310] p-3 text-xs text-[#7a5a00]">
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-[var(--warning)]/30 bg-[var(--warning)]/10 p-3 text-xs text-[var(--warning)]">
             <Archive className="size-4 shrink-0 text-[#F5A623]" />
             <p>Batch mode: the first included file will be compressed first. After compressing it, run again for the next file from the result screen.</p>
           </div>

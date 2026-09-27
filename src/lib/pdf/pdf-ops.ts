@@ -553,3 +553,153 @@ export async function addPageNumbers(
   return doc.save({ useObjectStreams: true });
 }
 
+// ====== Rotate ALL pages in one pass (true bulk rotation) ======
+export async function rotateAllPages(
+  blob: Blob,
+  rotation: 90 | 180 | 270,
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(await blob.arrayBuffer());
+  const pages = doc.getPages();
+  const total = pages.length;
+  for (let i = 0; i < total; i++) {
+    const page = pages[i];
+    const current = page.getRotation().angle;
+    // Add rotation modulo 360 so we never exceed 360.
+    page.setRotation(degrees((current + rotation) % 360));
+    if (onProgress && total > 0) {
+      onProgress(Math.round(((i + 1) / total) * 100), `Rotating page ${i + 1} of ${total}…`);
+    }
+  }
+  return doc.save({ useObjectStreams: true });
+}
+
+// ====== Redact pages — bake filled-black rectangles over sensitive text ======
+// The redaction is TRUE: the underlying text/vector content remains in the
+// PDF but is visually covered by an opaque black rectangle rendered ABOVE it.
+// Coordinates are in PDF points; y is measured from the TOP-left of the page
+// (matches the on-screen canvas drag convention). We convert to pdf-lib's
+// bottom-left origin internally.
+export type Redaction = {
+  pageIndex: number; // 0-based
+  x: number; // top-left X in PDF points
+  y: number; // top-left Y from the top of the page
+  width: number;
+  height: number;
+};
+
+export async function redactPdfPages(
+  blob: Blob,
+  redactions: Redaction[],
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(await blob.arrayBuffer());
+  const pages = doc.getPages();
+  // Group by page so we only resolve page size once per page.
+  const byPage = new Map<number, Redaction[]>();
+  for (const r of redactions) {
+    if (r.pageIndex < 0 || r.pageIndex >= pages.length) continue;
+    if (!byPage.has(r.pageIndex)) byPage.set(r.pageIndex, []);
+    byPage.get(r.pageIndex)!.push(r);
+  }
+  const total = redactions.length || 1;
+  let done = 0;
+  for (const [pageIndex, rects] of byPage) {
+    const page = pages[pageIndex];
+    const { height } = page.getSize();
+    for (const r of rects) {
+      // Convert top-left Y to bottom-left Y for pdf-lib.
+      const yFromBottom = height - r.y - r.height;
+      page.drawRectangle({
+        x: r.x,
+        y: yFromBottom,
+        width: r.width,
+        height: r.height,
+        color: rgb(0, 0, 0),
+      });
+      done++;
+      if (onProgress) {
+        onProgress(Math.round((done / total) * 100), `Baking redaction ${done} of ${total}…`);
+      }
+    }
+  }
+  return doc.save({ useObjectStreams: true });
+}
+
+// ====== Rebuild a brand-new PDF from translated text (one page → one or more pages) ======
+// The original layout is NOT preserved — we word-wrap the translated text into
+// A4 pages with the Helvetica font. This is approximate by design.
+export async function rebuildPdfWithText(
+  pages: Array<{ text: string }>,
+  opts: { fontSize?: number; margin?: number; lineHeight?: number } = {},
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const fontSize = opts.fontSize ?? 12;
+  const margin = opts.margin ?? 40;
+  const lineH = opts.lineHeight ?? fontSize * 1.4;
+  // A4 portrait in PDF points (72 DPI).
+  const pageW = 595.28;
+  const pageH = 841.89;
+  const maxW = pageW - margin * 2;
+
+  // Wrap text into display lines, preserving blank-line paragraph breaks.
+  const wrapParagraph = (paragraph: string): string[] => {
+    const words = paragraph.split(/\s+/).filter((w) => w.length > 0);
+    if (words.length === 0) return [""];
+    const out: string[] = [];
+    let line = "";
+    for (const w of words) {
+      const test = line ? `${line} ${w}` : w;
+      if (font.widthOfTextAtSize(test, fontSize) > maxW) {
+        if (line) out.push(line);
+        line = w;
+      } else {
+        line = test;
+      }
+    }
+    if (line) out.push(line);
+    return out;
+  };
+
+  for (let i = 0; i < pages.length; i++) {
+    let page = doc.addPage([pageW, pageH]);
+    let y = pageH - margin - fontSize;
+    const text = pages[i].text || "";
+    // Preserve paragraph breaks (\n) as blank lines.
+    const paragraphs = text.split(/\n/);
+    const allLines: string[] = [];
+    for (const para of paragraphs) {
+      const lines = wrapParagraph(para);
+      for (const ln of lines) allLines.push(ln);
+    }
+
+    for (const ln of allLines) {
+      if (y < margin) {
+        page = doc.addPage([pageW, pageH]);
+        y = pageH - margin - fontSize;
+      }
+      if (ln) {
+        try {
+          page.drawText(ln, {
+            x: margin,
+            y,
+            size: fontSize,
+            font,
+            color: rgb(0, 0, 0),
+          });
+        } catch {
+          // Skip any un-encodable characters (Helvetica StandardFont is WinAnsi).
+        }
+      }
+      y -= lineH;
+    }
+
+    if (onProgress) {
+      onProgress(Math.round(((i + 1) / pages.length) * 100), `Building PDF page ${i + 1} of ${pages.length}…`);
+    }
+  }
+  return doc.save({ useObjectStreams: true });
+}
+

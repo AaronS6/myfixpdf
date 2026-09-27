@@ -20,6 +20,12 @@ import { WatermarkPdf } from "@/components/pdf-toolkit/tools/WatermarkPdf";
 import { ReorderPdf } from "@/components/pdf-toolkit/tools/ReorderPdf";
 import { ExtractText } from "@/components/pdf-toolkit/tools/ExtractText";
 import { PageNumbers } from "@/components/pdf-toolkit/tools/PageNumbers";
+import { RotatePdf } from "@/components/pdf-toolkit/tools/RotatePdf";
+import { DeletePages } from "@/components/pdf-toolkit/tools/DeletePages";
+import { CropPdf } from "@/components/pdf-toolkit/tools/CropPdf";
+import { RedactPdf } from "@/components/pdf-toolkit/tools/RedactPdf";
+import { TranslatePdf } from "@/components/pdf-toolkit/tools/TranslatePdf";
+import { EditPng } from "@/components/pdf-toolkit/tools/EditPng";
 import { useKeyboardShortcuts } from "@/components/pdf-toolkit/shared/useKeyboardShortcuts";
 
 export default function Page() {
@@ -49,6 +55,12 @@ export default function Page() {
         "reorder-pdf",
         "extract-text",
         "page-numbers",
+        "rotate-pdf",
+        "delete-pages",
+        "crop-pdf",
+        "redact-pdf",
+        "translate-pdf",
+        "edit-png",
         "result",
       ];
       if (h && valid.includes(h)) {
@@ -93,6 +105,12 @@ export default function Page() {
         {view === "reorder-pdf" && <ReorderPdf />}
         {view === "extract-text" && <ExtractText />}
         {view === "page-numbers" && <PageNumbers />}
+        {view === "rotate-pdf" && <RotatePdf />}
+        {view === "delete-pages" && <DeletePages />}
+        {view === "crop-pdf" && <CropPdf />}
+        {view === "redact-pdf" && <RedactPdf />}
+        {view === "translate-pdf" && <TranslatePdf />}
+        {view === "edit-png" && <EditPng />}
         {view === "result" && <ResultScreen />}
       </main>
       <Footer />

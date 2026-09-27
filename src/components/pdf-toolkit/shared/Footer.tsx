@@ -1,6 +1,6 @@
 "use client";
 
-import { Github, Twitter, Linkedin } from "lucide-react";
+import { Github, Mail } from "lucide-react";
 import { useDocumentSession, type ToolId } from "@/store/document-session";
 import { useI18n } from "./I18nProvider";
 
@@ -60,16 +60,24 @@ export function Footer() {
                 : "Every PDF tool you need, in one place. Everything runs in your browser — your files never leave your device."}
             </p>
             <div className="mt-4 flex gap-2">
-              {[Twitter, Linkedin, Github].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)]"
-                  aria-label="Social link"
-                >
-                  <Icon className="size-4" />
-                </a>
-              ))}
+              <a
+                href="https://github.com/AaronS6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] transition-all hover:border-[var(--foreground)] hover:text-[var(--foreground)] hover:scale-105"
+                aria-label="GitHub — AaronS6"
+                title="GitHub @AaronS6"
+              >
+                <Github className="size-4" />
+              </a>
+              <a
+                href="mailto:aaronshansh@gmail.com"
+                className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] transition-all hover:border-[var(--foreground)] hover:text-[var(--foreground)] hover:scale-105"
+                aria-label="Email — aaronshansh@gmail.com"
+                title="aaronshansh@gmail.com"
+              >
+                <Mail className="size-4" />
+              </a>
             </div>
           </div>
           <div>

@@ -50,6 +50,7 @@ export type ToolId =
   | "pdf-to-jpg"
   | "pdf-to-png"
   | "convert-to-pdf"
+  | "image-converter"
   | "split-pdf"
   | "merge-pdf"
   | "edit-pdf"

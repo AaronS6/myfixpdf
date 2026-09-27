@@ -18,6 +18,7 @@ export function Footer() {
     { tool: "pdf-to-jpg" },
     { tool: "pdf-to-png" },
     { tool: "convert-to-pdf" },
+    { tool: "image-converter" },
     { tool: "split-pdf" },
     { tool: "merge-pdf" },
     { tool: "rotate-pdf" },

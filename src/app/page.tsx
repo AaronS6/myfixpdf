@@ -14,6 +14,7 @@ import { WordToPdf } from "@/components/pdf-toolkit/tools/WordToPdf";
 import { PdfToJpg } from "@/components/pdf-toolkit/tools/PdfToJpg";
 import { PdfToPng } from "@/components/pdf-toolkit/tools/PdfToPng";
 import { ConvertToPdf } from "@/components/pdf-toolkit/tools/ConvertToPdf";
+import { ImageConverter } from "@/components/pdf-toolkit/tools/ImageConverter";
 import { SplitPdf } from "@/components/pdf-toolkit/tools/SplitPdf";
 import { MergePdf } from "@/components/pdf-toolkit/tools/MergePdf";
 import { EditPdf } from "@/components/pdf-toolkit/tools/EditPdf";
@@ -48,6 +49,7 @@ export default function Page() {
         "pdf-to-jpg",
         "pdf-to-png",
         "convert-to-pdf",
+        "image-converter",
         "split-pdf",
         "merge-pdf",
         "edit-pdf",
@@ -105,6 +107,7 @@ export default function Page() {
         {view === "pdf-to-jpg" && <PdfToJpg />}
         {view === "pdf-to-png" && <PdfToPng />}
         {view === "convert-to-pdf" && <ConvertToPdf />}
+        {view === "image-converter" && <ImageConverter />}
         {view === "split-pdf" && <SplitPdf />}
         {view === "merge-pdf" && <MergePdf />}
         {view === "edit-pdf" && <EditPdf />}

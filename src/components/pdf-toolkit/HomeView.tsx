@@ -119,40 +119,40 @@ export function HomeView() {
               />
             </div>
 
-            {/* File bubbles — show staged files inside the hero, grow as user adds more */}
+            {/* File bubbles — clean pill chips inside the hero */}
             {sourceFiles.length > 0 && (
               <div className="mx-auto mt-6 max-w-xl animate-fade-up">
-                <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-center gap-2">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 card-shadow">
+                  <div className="flex flex-wrap items-center justify-center gap-2.5">
                     {sourceFiles.map((f) => {
                       const isPdfFile = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
                       return (
                         <div
                           key={f.id}
-                          className="group relative flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--muted)] px-3 py-2 animate-pop-in"
+                          className="group relative flex items-center gap-2.5 rounded-full bg-[var(--muted)] py-1.5 pl-2 pr-1.5 animate-pop-in transition-all hover:bg-[var(--accent)] hover:shadow-sm"
                         >
-                          {/* File type icon bubble */}
+                          {/* File type icon — clean circle */}
                           <span
-                            className="flex size-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
+                            className="flex size-7 shrink-0 items-center justify-center rounded-full text-white"
                             style={{ background: isPdfFile ? "var(--brand)" : "var(--cat-convert)" }}
                           >
                             {isPdfFile ? (
-                              <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+                              <svg viewBox="0 0 24 24" fill="none" className="size-3.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
                             ) : (
-                              <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" /></svg>
+                              <svg viewBox="0 0 24 24" fill="none" className="size-3.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" /></svg>
                             )}
                           </span>
-                          {/* File name + size */}
-                          <div className="min-w-0">
-                            <p className="truncate text-xs font-semibold text-[var(--foreground)] max-w-[120px]">{f.name}</p>
-                            <p className="text-[10px] text-[var(--muted-foreground)]">
+                          {/* File name + size — single line */}
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="truncate text-xs font-semibold text-[var(--foreground)] max-w-[100px]">{f.name}</span>
+                            <span className="text-[10px] text-[var(--muted-foreground)] whitespace-nowrap">
                               {f.pageCount ? `${f.pageCount}p · ` : ""}{formatBytes(f.size)}
-                            </p>
+                            </span>
                           </div>
-                          {/* Remove button */}
+                          {/* Remove — subtle, appears on hover */}
                           <button
                             onClick={() => removeSourceFile(f.id)}
-                            className="flex size-5 items-center justify-center rounded-full text-[var(--muted-foreground)] transition-colors hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+                            className="flex size-5 shrink-0 items-center justify-center rounded-full text-[var(--muted-foreground)] transition-all hover:bg-[var(--danger)] hover:text-white"
                             aria-label="Remove file"
                           >
                             <svg viewBox="0 0 24 24" fill="none" className="size-3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
@@ -161,8 +161,8 @@ export function HomeView() {
                       );
                     })}
                   </div>
-                  {/* Clear all + hint */}
-                  <div className="mt-3 flex items-center justify-center gap-3">
+                  {/* Footer row */}
+                  <div className="mt-3 flex items-center justify-center gap-3 border-t border-[var(--border)] pt-3">
                     <button
                       onClick={() => clearSourceFiles()}
                       className="text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--danger)]"
@@ -171,7 +171,7 @@ export function HomeView() {
                     </button>
                     <span className="text-[var(--border)]">·</span>
                     <span className="text-xs font-medium text-[var(--brand)]">
-                      {lang === "zh" ? "↓ 选择下方工具开始" : "↓ Pick a tool below to start"}
+                      {lang === "zh" ? "选择下方工具开始 →" : "Pick a tool below to start →"}
                     </span>
                   </div>
                 </div>

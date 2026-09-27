@@ -47,7 +47,6 @@ export function Header() {
         { id: "pdf-to-jpg", label: tTool("pdf-to-jpg").name, desc: tTool("pdf-to-jpg").desc },
         { id: "convert-to-pdf", label: tTool("convert-to-pdf").name, desc: tTool("convert-to-pdf").desc },
         { id: "extract-text", label: tTool("extract-text").name, desc: tTool("extract-text").desc },
-        { id: "translate-pdf", label: tTool("translate-pdf").name, desc: tTool("translate-pdf").desc },
       ],
     },
     {
@@ -95,9 +94,13 @@ export function Header() {
             className="flex items-center gap-2.5 transition-transform hover:scale-[1.02]"
             aria-label="myfixpdf — home"
           >
-            <span className="relative flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-md">
-              <FileStack className="size-5" />
-              <span className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-[#60A5FA] ring-2 ring-[var(--card)]" />
+            <span className="relative flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-md overflow-hidden">
+              {/* Custom logo: stylized document with a fold-corner + checkmark */}
+              <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 3 h7 l5 5 v13 a0 0 0 0 1 0 0 h-12 a0 0 0 0 1 0 0 z" fill="rgba(255,255,255,0.18)" stroke="currentColor" />
+                <path d="M13 3 v5 h5" />
+                <path d="m9 14.5 2 2 4-4.5" strokeWidth="2.4" />
+              </svg>
             </span>
             <div className="flex flex-col leading-none">
               <span className="text-[16px] font-bold tracking-tight text-[var(--foreground)]">
@@ -130,7 +133,7 @@ export function Header() {
                 <div className={cn("absolute top-full pt-2 z-50 animate-fade-up", menuPosition(cat))}>
                   <div
                     className={cn(
-                      "grid gap-1 rounded-2xl border border-[var(--border)] glass p-2.5 shadow-xl",
+                      "grid gap-1 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-2.5 shadow-xl",
                       cat.tools.length > 4 ? "grid-cols-2" : "grid-cols-1",
                     )}
                     style={{ width: menuWidth(cat) }}
@@ -191,9 +194,12 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer — scrollable independently of the page */}
       {mobileOpen && (
-        <div className="lg:hidden border-t border-[var(--border)] bg-[var(--card)] animate-fade-in">
+        <div
+          className="lg:hidden border-t border-[var(--border)] bg-[var(--card)] animate-fade-in overflow-y-auto thin-scroll"
+          style={{ maxHeight: "calc(100vh - 4rem)" }}
+        >
           <div className="mx-auto max-w-7xl px-4 py-3">
             {CATS.map((cat) => (
               <div key={cat.id} className="mb-3">
@@ -252,7 +258,6 @@ function ToolIcon({ id, className }: { id: ToolId; className?: string }) {
     "delete-pages": <DeleteIcon className={className} />,
     "crop-pdf": <CropIcon className={className} />,
     "edit-png": <EditIcon className={className} />,
-    "translate-pdf": <TranslateIcon className={className} />,
   };
   return <>{map[id] ?? <FileStack className={className} />}</>;
 }
@@ -352,13 +357,6 @@ function CropIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className ?? "size-5"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" />
-    </svg>
-  );
-}
-function TranslateIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className ?? "size-5"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m5 8 6 6" /><path d="m4 14 6-6 2-3" /><path d="M2 5h12" /><path d="M7 2h1" /><path d="m22 22-5-10-5 10" /><path d="M14 18h6" />
     </svg>
   );
 }

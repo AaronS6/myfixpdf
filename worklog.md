@@ -680,3 +680,34 @@ Stage Summary:
 - 0 lint errors, 16 warnings (unused eslint-disable — non-blocking).
 - Dev server compiles cleanly, page returns 200.
 - Dark mode is premium (VLM: "reminiscent of Linear, Vercel, or Stripe — clean, trustworthy, high-tech").
+
+---
+Task ID: OVERHAUL-3
+Agent: Orchestrator (Z.ai)
+Task: Remove translate-pdf + keyboard shortcuts, switch to Plus Jakarta Sans, better logo, fix mobile menu scroll, opaque dropdowns, bigger preview + click-to-fullscreen, retina rendering.
+
+Work Log:
+- Removed translate-pdf tool entirely: deleted TranslatePdf.tsx + /api/translate route. Removed all references from store type, registry, ToolPageShell glyph, HomeView glyph, Header CATS + ToolIcon map, Footer tool links, i18n strings (EN + ZH), page.tsx (import + view switch + valid hash).
+- Removed keyboard shortcuts entirely: deleted useKeyboardShortcuts.ts. Removed usage from page.tsx. Removed the "? Shortcuts" button from Footer.
+- Switched primary font from Inter Tight → Plus Jakarta Sans (cleaner, more premium feel). Updated layout.tsx to import Plus_Jakarta_Sans with weights 400-800. Updated globals.css --font-sans to use --font-jakarta variable. Also updated the sonner toast font-family override.
+- New custom logo: replaced the generic FileStack lucide icon with a custom SVG — a stylized document with a fold-corner + a checkmark inside (represents "fix pdf"). Used in both Header and Footer. Kept the blue gradient background.
+- Fixed mobile menu scroll bug: the mobile drawer was `overflow: hidden` by default which caused the background to scroll instead of the selections. Added `overflow-y-auto thin-scroll` + `maxHeight: calc(100vh - 4rem)` so the drawer scrolls independently within the viewport.
+- Made dropdown menus fully opaque white: replaced `glass` (blurred, 95% opaque) with `bg-[var(--card)]` (fully opaque, no blur) on the dropdown container. The top bar (header) KEEPS the glass blur — only the dropdown that appears on hover is opaque. This matches the user's request: "make it so the opticity is 0% fully white background for the hovering on the landing bar when you hover on like compress convert, etc. only that, keep the blur for the landing bar".
+- Made the preview take up much more screen space: changed ResultScreen layout from `lg:grid-cols-[1fr_320px]` to `lg:grid-cols-[1fr_280px]` (narrower sidebar). Increased preview height from `h-[70vh]` to `h-[85vh]` for both PDF and image previews. Verified via VLM: preview now takes ~60-65% of screen width.
+- Added click-to-fullscreen on preview: clicking the PDF canvas (when no onCanvasClick handler is set, e.g. in ResultScreen) now toggles fullscreen. Added `cursor-zoom-in` hover cursor + `hover:shadow-xl` for affordance. Same for ImagePreview — clicking the image opens fullscreen.
+- Improved preview quality (retina rendering): PdfPreview now renders at 2x DPI (capped at 3x for very high DPR). The canvas backing store is set to `viewport.width * dpiBoost` while the CSS size stays at the logical viewport size. Fixed `renderPdfPageToCanvas` in pdfjs.ts to accept an `options.keepBackingSize` flag so it doesn't overwrite the configured backing store. Verified: canvas backing is now 1191×1684 while CSS is 595.28×841.89px (true 2x retina).
+
+Stage Summary:
+- All 8 user requests addressed.
+- 0 lint errors, 16 warnings (unused eslint-disable — non-blocking).
+- Dev server compiles cleanly, page returns 200.
+- Verified via agent-browser + VLM:
+  • Custom logo with document+checkmark ✓
+  • Plus Jakarta Sans font (premium feel) ✓
+  • Translate PDF gone from nav ✓
+  • Get Started button gone ✓
+  • Preview takes 60-65% of screen width ✓
+  • Click on PDF canvas opens fullscreen modal ✓
+  • Canvas backing store is 2x DPI (1191×1684 vs 595×841 CSS) ✓
+- Mobile menu scroll fix verified by code (CSS is correct: overflow-y-auto + maxHeight).
+- Dropdown menus are fully opaque white (blur kept only on the top bar).

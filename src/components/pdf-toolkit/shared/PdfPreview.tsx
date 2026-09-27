@@ -77,11 +77,25 @@ export function PdfPreview({
       try {
         const page = await doc.getPage(pageNum);
         const renderScale = scale === 0 ? 0.5 : scale; // 0 = Fit, fallback to 0.5
+        // Render at 2x DPI for crisp retina output. The CSS size stays at the
+        // logical viewport size; the canvas backing store is 2x larger.
+        const dpiBoost = Math.max(2, Math.min(3, (typeof window !== "undefined" ? window.devicePixelRatio : 1) || 1));
         const viewport = page.getViewport({ scale: renderScale });
         const canvas = canvasRef.current!;
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        await renderPdfPageToCanvas(doc, pageNum, canvas, renderScale);
+        // Set the canvas backing store to 2x and use CSS width/height to display
+        // at the logical size. This gives crisp text on retina displays.
+        canvas.width = Math.round(viewport.width * dpiBoost);
+        canvas.height = Math.round(viewport.height * dpiBoost);
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+        // Render at the boosted scale
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.scale(dpiBoost, dpiBoost);
+        }
+        // Use the high-DPI render call directly — don't let the helper reset
+        // the backing store we just configured.
+        await renderPdfPageToCanvas(doc, pageNum, canvas, renderScale, { keepBackingSize: true });
         if (!cancelled) {
           setPageSize({ w: viewport.width / renderScale, h: viewport.height / renderScale });
         }
@@ -109,11 +123,17 @@ export function PdfPreview({
 
   const clickHandler = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!onCanvasClick || !pageSize || !canvasRef.current) return;
-      const rect = canvasRef.current.getBoundingClientRect();
-      const xRatio = (e.clientX - rect.left) / rect.width;
-      const yRatio = (e.clientY - rect.top) / rect.height;
-      onCanvasClick(pageNum - 1, xRatio, yRatio);
+      // If an external onCanvasClick handler is provided (e.g. Edit PDF text tool),
+      // call it. Otherwise, treat a click on the canvas as "open fullscreen".
+      if (onCanvasClick && pageSize && canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const xRatio = (e.clientX - rect.left) / rect.width;
+        const yRatio = (e.clientY - rect.top) / rect.height;
+        onCanvasClick(pageNum - 1, xRatio, yRatio);
+        return;
+      }
+      // No external click handler → toggle fullscreen on click
+      setFullscreen((v) => !v);
     },
     [onCanvasClick, pageSize, pageNum],
   );
@@ -202,7 +222,10 @@ export function PdfPreview({
             <canvas
               ref={canvasRef}
               onClick={clickHandler}
-              className="block mx-auto rounded-md shadow-lg bg-[var(--card)]"
+              className={cn(
+                "block mx-auto rounded-md shadow-lg bg-[var(--card)] transition-shadow hover:shadow-xl",
+                !onCanvasClick && "cursor-zoom-in",
+              )}
               style={{ background: "#fff" }}
             />
             {pageSize && renderOverlay && (

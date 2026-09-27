@@ -171,7 +171,8 @@ export function ImagePreview({ src, className, initialScale = 1 }: Props) {
             src={src}
             alt={lang === "zh" ? "图片预览" : "Image preview"}
             draggable={false}
-            className="block rounded-md shadow-lg bg-[var(--card)]"
+            onClick={() => setFullscreen((v) => !v)}
+            className="block rounded-md shadow-lg bg-[var(--card)] cursor-zoom-in transition-shadow hover:shadow-xl"
             style={{
               width: dimsReady ? dimsReady.w * scale : "auto",
               height: dimsReady ? dimsReady.h * scale : "auto",

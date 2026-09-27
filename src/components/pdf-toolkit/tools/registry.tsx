@@ -22,7 +22,6 @@ export const TOOLS: ToolMeta[] = [
   { id: "pdf-to-jpg", name: "PDF to JPG", short: "Convert", desc: "Turn each page of a PDF into a JPG image — download one or all as a ZIP.", color: "var(--cat-convert)", category: "convert", accept: ".pdf", multiple: false },
   { id: "convert-to-pdf", name: "Convert to PDF", short: "Convert", desc: "Turn any image or document into a PDF — JPG, PNG, even another PDF.", color: "var(--cat-convert)", category: "convert", accept: ".pdf,.png,.jpg,.jpeg", multiple: true },
   { id: "extract-text", name: "Extract Text", short: "Convert", desc: "Pull all the text out of a PDF into a plain text file.", color: "var(--cat-convert)", category: "convert", accept: ".pdf", multiple: false },
-  { id: "translate-pdf", name: "Translate PDF", short: "Convert", desc: "Translate text in a PDF or Word file to any language you want.", color: "var(--cat-convert)", category: "convert", accept: ".pdf,.docx", multiple: false },
 
   { id: "split-pdf", name: "Split PDF", short: "Organize", desc: "Pick exactly which pages to keep — by checkbox or by typing page numbers.", color: "var(--cat-organize)", category: "organize", accept: ".pdf", multiple: false },
   { id: "merge-pdf", name: "Merge PDF", short: "Organize", desc: "Mix PDFs and images into one PDF. Choose which pages to include from each file.", color: "var(--cat-organize)", category: "organize", accept: ".pdf,.png,.jpg,.jpeg", multiple: true },

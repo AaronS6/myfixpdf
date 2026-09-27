@@ -54,13 +54,18 @@ export async function renderPdfPageToCanvas(
   pageNumber: number,
   target: HTMLCanvasElement,
   scale = 1.0,
+  options?: { keepBackingSize?: boolean },
 ): Promise<void> {
   const page = await doc.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
   const ctx = target.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable");
-  target.width = viewport.width;
-  target.height = viewport.height;
+  // If keepBackingSize is set, the caller has already configured the canvas
+  // backing store (e.g. for retina 2x output) — don't overwrite it.
+  if (!options?.keepBackingSize) {
+    target.width = viewport.width;
+    target.height = viewport.height;
+  }
   // @ts-expect-error pdfjs needs the legacy render context type
   await page.render({ canvasContext: ctx, viewport }).promise;
 }

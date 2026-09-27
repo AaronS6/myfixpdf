@@ -242,7 +242,6 @@ export const TOOL_NAMES: Record<Lang, Record<string, { name: string; short: stri
     "delete-pages": { name: "Delete Pages", short: "Organize", desc: "Remove pages you don't need — no need to open the full editor." },
     "crop-pdf": { name: "Crop PDF", short: "Organize", desc: "Trim margins and whitespace from your pages." },
     "edit-png": { name: "Edit Image", short: "Edit & Sign", desc: "Annotate PNG and JPG images — draw, add text, shapes, crop, rotate." },
-    "translate-pdf": { name: "Translate PDF", short: "Convert", desc: "Translate text in a PDF or Word file to any language you want." },
   },
   zh: {
     "compress-pdf": { name: "PDF 压缩", short: "压缩", desc: "把 PDF 缩小到原来的 25% — 自由选择清晰度与大小。" },
@@ -263,6 +262,5 @@ export const TOOL_NAMES: Record<Lang, Record<string, { name: string; short: stri
     "delete-pages": { name: "删除页面", short: "整理", desc: "移除不需要的页面 — 无需打开完整编辑器。" },
     "crop-pdf": { name: "裁剪 PDF", short: "整理", desc: "裁掉页面的边距与空白。" },
     "edit-png": { name: "图片编辑", short: "编辑与签名", desc: "标注 PNG 和 JPG 图片 — 绘制、加文字、加形状、裁剪、旋转。" },
-    "translate-pdf": { name: "翻译 PDF", short: "转换", desc: "把 PDF 或 Word 中的文字翻译成任何语言。" },
   },
 };

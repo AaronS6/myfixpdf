@@ -61,7 +61,6 @@ export type ToolId =
   | "delete-pages"
   | "crop-pdf"
   | "edit-png"
-  | "translate-pdf"
   | "result";
 
 type ProgressState = {

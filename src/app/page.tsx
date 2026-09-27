@@ -24,9 +24,7 @@ import { RotatePdf } from "@/components/pdf-toolkit/tools/RotatePdf";
 import { DeletePages } from "@/components/pdf-toolkit/tools/DeletePages";
 import { CropPdf } from "@/components/pdf-toolkit/tools/CropPdf";
 import { RedactPdf } from "@/components/pdf-toolkit/tools/RedactPdf";
-import { TranslatePdf } from "@/components/pdf-toolkit/tools/TranslatePdf";
 import { EditPng } from "@/components/pdf-toolkit/tools/EditPng";
-import { useKeyboardShortcuts } from "@/components/pdf-toolkit/shared/useKeyboardShortcuts";
 
 export default function Page() {
   const view = useDocumentSession((s) => s.view);
@@ -59,7 +57,6 @@ export default function Page() {
         "delete-pages",
         "crop-pdf",
         "redact-pdf",
-        "translate-pdf",
         "edit-png",
         "result",
       ];
@@ -83,9 +80,6 @@ export default function Page() {
       window.history.replaceState(null, "", hash);
     }
   }, [view]);
-
-  // Enable keyboard shortcuts (number keys jump to tools, ? shows help)
-  useKeyboardShortcuts();
 
   return (
     <div className="flex min-h-screen flex-col relative">
@@ -111,7 +105,6 @@ export default function Page() {
         {view === "delete-pages" && <DeletePages />}
         {view === "crop-pdf" && <CropPdf />}
         {view === "redact-pdf" && <RedactPdf />}
-        {view === "translate-pdf" && <TranslatePdf />}
         {view === "edit-png" && <EditPng />}
         {view === "result" && <ResultScreen />}
       </main>

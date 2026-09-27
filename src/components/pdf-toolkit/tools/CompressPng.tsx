@@ -77,8 +77,13 @@ export function CompressPng() {
       const type = ext === ".png" ? "image/png" : "image/jpeg";
       const blob = result.blob;
       const savedPct = percentSaved(beforeSize, blob.size);
-      if (savedPct < 0) {
-        toast.info(`Output is slightly larger than the original (${formatBytes(blob.size)}). Try a lower quality or smaller max width.`, { duration: 5000 });
+      // percentSaved() clamps to Math.max(0, …) so a negative result is
+      // impossible — the old `savedPct < 0` branch was dead code. The honest
+      // "no reduction" case (savedPct === 0) covers both "same size" and
+      // "output is larger than original", which can happen for already-tiny
+      // PNGs that UPNG.js can't shrink further.
+      if (savedPct === 0) {
+        toast.info(`No reduction — the original is already as small as it gets (${formatBytes(blob.size)}). Try a smaller max width or a JPG instead.`, { duration: 5000 });
       } else {
         toast.success(`Compressed: ${formatBytes(beforeSize)} → ${formatBytes(blob.size)} (−${savedPct}%)`);
       }

@@ -18,6 +18,10 @@ export function PdfToPng() {
   const { t, tt, lang } = useI18n();
   const [scale, setScale] = useState(1.5);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  // Track total page count so onToggleAll(true) can actually add every
+  // page index — PageThumbnailGrid only fires onToggleAll with a boolean,
+  // so we need to know the count ourselves. Populated via onThumbsReady.
+  const [pageCount, setPageCount] = useState(0);
   const target = 
       sourceFiles.find((f) => f.included && isPdf(f.file)) ??
       sourceFiles.find((f) => isPdf(f.file));
@@ -120,16 +124,24 @@ export function PdfToPng() {
                 })
               }
               onToggleAll={(sel) => {
+                // `sel === true` means "select all" — add every page index
+                // 0..pageCount-1. The previous implementation just copied the
+                // existing Set, which made "Select all" a no-op (the bug: the
+                // button stayed useful only because the Odd/Even helpers call
+                // onToggleAll(false) first and then per-index toggles).
+                // The Odd/Even helpers in PageThumbnailGrid still work after
+                // this change because they call onToggleAll(false) then
+                // onToggle(i) for each odd/even index.
                 if (sel) {
-                  setSelected((s) => new Set(s));
+                  const next = new Set<number>();
+                  for (let i = 0; i < pageCount; i++) next.add(i);
+                  setSelected(next);
                 } else {
                   setSelected(new Set());
                 }
               }}
-              onThumbsReady={() => {
-                if (selected.size === 0) {
-                  // empty = export all
-                }
+              onThumbsReady={(pages) => {
+                setPageCount(pages.length);
               }}
             />
           </div>

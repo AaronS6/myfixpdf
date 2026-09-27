@@ -132,19 +132,19 @@ export function ReorderPdf() {
       {target ? (
         <div className="mt-5 space-y-4">
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-sm shadow-sm">
-            <GripVertical className="size-4 text-[#8C54FF]" />
+            <GripVertical className="size-4 text-[var(--cat-organize)]" />
             <span className="font-semibold text-[var(--foreground)]">Drag pages to reorder</span>
             <span className="text-xs text-[var(--muted-foreground)]">· {pages.length} pages total</span>
             <div className="ml-auto flex gap-2">
               <button
                 onClick={() => setPages((p) => [...p].reverse())}
-                className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]"
+                className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[var(--background)]"
               >
                 Reverse order
               </button>
               <button
                 onClick={() => setPages((p) => [...p].sort((a, b) => a.index - b.index))}
-                className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]"
+                className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[var(--background)]"
               >
                 Reset to original
               </button>
@@ -170,7 +170,7 @@ export function ReorderPdf() {
           )}
 
           <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
-            <RotateCw className="size-4 shrink-0 text-[#8C54FF]" />
+            <RotateCw className="size-4 shrink-0 text-[var(--cat-organize)]" />
             <p>Drag tiles to reorder pages. The new order is applied with pdf-lib&apos;s <code className="rounded bg-[var(--muted)] px-1">copyPages</code> — a true reorder, not a render.</p>
           </div>
         </div>
@@ -191,10 +191,10 @@ function SortablePageTile({ page, displayIdx }: { page: Page; displayIdx: number
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 border-[var(--border)] bg-[var(--card)]",
-        isDragging && "border-[#8C54FF] opacity-50 shadow-xl z-10",
+        isDragging && "border-[var(--cat-organize)] opacity-50 shadow-xl z-10",
       )}
     >
-      <div className="absolute left-1 top-1 z-10 flex items-center gap-1 rounded bg-[#8C54FF] px-1.5 py-0.5 text-[10px] font-bold text-white">
+      <div className="absolute left-1 top-1 z-10 flex items-center gap-1 rounded bg-[var(--cat-organize)] px-1.5 py-0.5 text-[10px] font-bold text-white">
         {displayIdx + 1}
       </div>
       <div className="absolute right-1 top-1 z-10 rounded bg-[var(--foreground)]/70 px-1 py-0.5 text-[9px] text-white">
@@ -203,7 +203,7 @@ function SortablePageTile({ page, displayIdx }: { page: Page; displayIdx: number
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={page.thumbnail} alt={`Page ${page.index + 1}`} className="h-full w-full object-contain" />
       <button
-        className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-[#8C54FF] py-1 text-[10px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
+        className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-[var(--cat-organize)] py-1 text-[10px] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-grab active:cursor-grabbing"
         {...attributes}
         {...listeners}
       >

@@ -128,7 +128,7 @@ export function WatermarkPdf() {
               onClick={() => setMode("text")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "text" ? "bg-[var(--card)] text-[#FF4B6E] shadow-sm" : "text-[var(--muted-foreground)]",
+                mode === "text" ? "bg-[var(--card)] text-[var(--cat-edit)] shadow-sm" : "text-[var(--muted-foreground)]",
               )}
             >
               <Type className="size-4" /> {t("tool.watermark.textMode")}
@@ -137,7 +137,7 @@ export function WatermarkPdf() {
               onClick={() => setMode("image")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "image" ? "bg-[var(--card)] text-[#FF4B6E] shadow-sm" : "text-[var(--muted-foreground)]",
+                mode === "image" ? "bg-[var(--card)] text-[var(--cat-edit)] shadow-sm" : "text-[var(--muted-foreground)]",
               )}
             >
               <ImageIcon className="size-4" /> {t("tool.watermark.imageMode")}
@@ -165,14 +165,14 @@ export function WatermarkPdf() {
                         <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.fontSize")}</label>
                         <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{fontSize}pt</span>
                       </div>
-                      <input type="range" min="12" max="120" step="2" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
+                      <input type="range" min="12" max="120" step="2" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value, 10))} className="w-full accent-[var(--cat-edit)]" />
                     </div>
                     <div>
                       <div className="mb-1 flex items-center justify-between">
                         <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.rotation")}</label>
                         <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{rotation}°</span>
                       </div>
-                      <input type="range" min="0" max="360" step="5" value={rotation} onChange={(e) => setRotation(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
+                      <input type="range" min="0" max="360" step="5" value={rotation} onChange={(e) => setRotation(parseInt(e.target.value, 10))} className="w-full accent-[var(--cat-edit)]" />
                     </div>
                   </div>
                 </>
@@ -180,7 +180,7 @@ export function WatermarkPdf() {
                 <>
                   <div>
                     <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.watermarkText")}</label>
-                    <label className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--muted)] py-6 text-sm font-medium text-[var(--muted-foreground)] hover:border-[#FF4B6E] hover:text-[#FF4B6E]">
+                    <label className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--muted)] py-6 text-sm font-medium text-[var(--muted-foreground)] hover:border-[var(--cat-edit)] hover:text-[var(--cat-edit)]">
                       <Upload className="size-4" /> {imageBytes ? t("tool.watermark.imageLoaded") : t("tool.watermark.uploadImage")}
                       <input
                         type="file"
@@ -202,7 +202,7 @@ export function WatermarkPdf() {
                       <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.imageScale")}</label>
                       <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{Math.round(imageScale * 100)}%</span>
                     </div>
-                    <input type="range" min="0.05" max="1" step="0.05" value={imageScale} onChange={(e) => setImageScale(parseFloat(e.target.value))} className="w-full accent-[#FF4B6E]" />
+                    <input type="range" min="0.05" max="1" step="0.05" value={imageScale} onChange={(e) => setImageScale(parseFloat(e.target.value))} className="w-full accent-[var(--cat-edit)]" />
                   </div>
                 </>
               )}
@@ -212,7 +212,7 @@ export function WatermarkPdf() {
                   <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.opacity")}</label>
                   <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{Math.round(opacity * 100)}%</span>
                 </div>
-                <input type="range" min="0.05" max="1" step="0.05" value={opacity} onChange={(e) => setOpacity(parseFloat(e.target.value))} className="w-full accent-[#FF4B6E]" />
+                <input type="range" min="0.05" max="1" step="0.05" value={opacity} onChange={(e) => setOpacity(parseFloat(e.target.value))} className="w-full accent-[var(--cat-edit)]" />
               </div>
 
               {mode === "text" && (
@@ -244,7 +244,7 @@ export function WatermarkPdf() {
                       onClick={() => setPosition(p.id)}
                       className={cn(
                         "rounded-lg border px-2 py-1.5 text-xs font-medium transition-all",
-                        position === p.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
+                        position === p.id ? "border-[var(--cat-edit)] bg-[var(--cat-edit)]/10 text-[var(--cat-edit)]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[var(--background)]",
                       )}
                     >
                       {p.label}
@@ -262,7 +262,7 @@ export function WatermarkPdf() {
                       onClick={() => setTarget(tg.id)}
                       className={cn(
                         "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
-                        target === tg.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
+                        target === tg.id ? "border-[var(--cat-edit)] bg-[var(--cat-edit)]/10 text-[var(--cat-edit)]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[var(--background)]",
                       )}
                     >
                       {tg.label}
@@ -277,9 +277,9 @@ export function WatermarkPdf() {
               <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">{t("tool.watermark.preview")}</p>
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="size-24 rounded-lg bg-gradient-to-br from-[#23A6D5]/20 to-[#2FE0C6]/20" />
-                  <div className="absolute bottom-6 left-6 h-2 w-20 rounded bg-[#E4E9F0] dark:bg-[#1E2A44]" />
-                  <div className="absolute bottom-3 left-6 h-2 w-32 rounded bg-[#E4E9F0] dark:bg-[#1E2A44]" />
+                  <div className="size-24 rounded-lg bg-gradient-to-br from-[#2563EB]/20 to-[#60A5FA]/20" />
+                  <div className="absolute bottom-6 left-6 h-2 w-20 rounded bg-[var(--border)] dark:bg-[var(--border)]" />
+                  <div className="absolute bottom-3 left-6 h-2 w-32 rounded bg-[var(--border)] dark:bg-[var(--border)]" />
                 </div>
                 {/* Watermark preview */}
                 {mode === "text" && text.trim() && (
@@ -358,7 +358,7 @@ export function WatermarkPdf() {
                 <div className="absolute bottom-2 right-2 rounded bg-[var(--foreground)]/70 px-1.5 py-0.5 text-[10px] text-white">page preview</div>
               </div>
               <div className="mt-2 flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
-                <Droplets className="size-4 shrink-0 text-[#FF4B6E]" />
+                <Droplets className="size-4 shrink-0 text-[var(--cat-edit)]" />
                 <p>{t("tool.watermark.info")}</p>
               </div>
             </div>

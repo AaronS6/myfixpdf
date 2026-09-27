@@ -104,7 +104,7 @@ export function Header() {
               </svg>
             </span>
             <div className="flex flex-col leading-none">
-              <span className="text-[17px] font-bold tracking-tight text-[var(--foreground)]" style={{ fontFamily: "var(--font-display), var(--font-sans), system-ui, sans-serif" }}>
+              <span className="text-[17px] font-bold tracking-tight text-[var(--foreground)]">
                 my<span className="brand-gradient-text">fixpdf</span>
               </span>
               <span className="text-[10px] font-medium text-[var(--muted-foreground)]">

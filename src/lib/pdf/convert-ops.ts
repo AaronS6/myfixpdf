@@ -98,7 +98,7 @@ export async function pdfToDocx(
               new ImageRun({
                 data: imgBytes,
                 transformation: { width: canvas.width, height: canvas.height },
-                type: "jpg",
+                type: "jpg", // `type` isn't in docx's TS defs but is required at runtime
               } as any),
             ],
           }),

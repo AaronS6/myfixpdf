@@ -58,7 +58,7 @@ export function FileListItem({
           <span>{formatBytes(file.size)}</span>
           {typeof progress === "number" && (
             <div className="flex-1">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#E4E9F0]">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--border)]">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{

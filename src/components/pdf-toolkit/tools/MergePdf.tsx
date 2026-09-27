@@ -223,7 +223,7 @@ export function MergePdf() {
         <div className="mt-5 space-y-4">
           {/* Review header */}
           <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-sm">
-            <Layers className="size-4 text-[#8C54FF]" />
+            <Layers className="size-4 text-[var(--cat-organize)]" />
             <span className="font-semibold text-[var(--foreground)]">{included.length} pages will be merged</span>
             <span className="text-xs text-[var(--muted-foreground)]">·</span>
             <span className="text-xs text-[var(--muted-foreground)]">{sourceFiles.length} source file{sourceFiles.length > 1 ? "s" : ""}</span>
@@ -264,7 +264,7 @@ export function MergePdf() {
           </DndContext>
 
           {/* Add more files inline */}
-          <label className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--muted)] py-3 text-sm font-medium text-[var(--muted-foreground)] hover:border-[#8C54FF] hover:text-[#8C54FF] cursor-pointer">
+          <label className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--border)] bg-[var(--muted)] py-3 text-sm font-medium text-[var(--muted-foreground)] hover:border-[var(--cat-organize)] hover:text-[var(--cat-organize)] cursor-pointer">
             <Plus className="size-4" /> Add more files
             <input
               type="file"
@@ -295,7 +295,7 @@ export function MergePdf() {
           </label>
 
           <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
-            <Combine className="size-4 shrink-0 text-[#8C54FF]" />
+            <Combine className="size-4 shrink-0 text-[var(--cat-organize)]" />
             <p>
               Accepts mixed PDF + JPG + PNG. Expand any PDF to cherry-pick individual pages. Every page is dragged into the
               exact final order before the merge runs.
@@ -320,7 +320,7 @@ function SortableMergeTile({ page, onToggle, onExpand, isExpanded }: { page: Fla
       className={cn(
         "group relative aspect-[3/4] overflow-hidden rounded-lg border-2 bg-[var(--card)]",
         page.included ? "border-[var(--border)]" : "border-[var(--border)] opacity-50",
-        isDragging && "border-[#8C54FF] opacity-50 shadow-lg",
+        isDragging && "border-[var(--cat-organize)] opacity-50 shadow-lg",
       )}
     >
       <div className="absolute left-1 top-1 z-10 rounded bg-[var(--foreground)]/70 px-1 py-0.5 text-[10px] font-bold text-white">
@@ -330,7 +330,7 @@ function SortableMergeTile({ page, onToggle, onExpand, isExpanded }: { page: Fla
         onClick={onToggle}
         className={cn(
           "absolute right-1 top-1 z-10 flex size-5 items-center justify-center rounded-full border-2 text-white transition-all",
-          page.included ? "border-[#1FB65B] bg-[#1FB65B]" : "border-[var(--border)] bg-[var(--card)]/80 text-transparent",
+          page.included ? "border-[var(--success)] bg-[var(--success)]" : "border-[var(--border)] bg-[var(--card)]/80 text-transparent",
         )}
         aria-label={page.included ? "Exclude" : "Include"}
       >

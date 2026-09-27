@@ -187,126 +187,143 @@ export function EditPng() {
   }, [imageDims, displaySize, rotation]);
 
   // Re-render the canvas: image + annotations + draft.
-  const renderCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    const img = imgElRef.current;
-    if (!canvas || !img || !displaySize) return;
-    canvas.width = displaySize.w;
-    canvas.height = displaySize.h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  // If `target` is supplied, render to that offscreen canvas instead of the
+  // live `canvasRef` (used by applyCrop to extract the crop region without
+  // the draft-rectangle stroke burned into the pixels).
+  // If `skipDraft` is true, the in-progress draft stroke/shape is omitted —
+  // used when extracting a crop so the user's crop rectangle isn't baked
+  // into the resulting image as a black border.
+  const renderCanvas = useCallback(
+    (opts?: { target?: HTMLCanvasElement; skipDraft?: boolean }) => {
+      const canvas = opts?.target ?? canvasRef.current;
+      const img = imgElRef.current;
+      if (!canvas || !img || !displaySize) return;
+      // Always size the target to displaySize — for the live canvas this
+      // matches what the user sees; for an offscreen crop canvas this
+      // establishes the correct backing-store dimensions.
+      canvas.width = displaySize.w;
+      canvas.height = displaySize.h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    // Clear & paint background (white — JPGs may have alpha).
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Clear & paint background (white — JPGs may have alpha).
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw the image with rotation. We translate to center, rotate,
-    // then draw image centered.
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    const rotated = rotation === 90 || rotation === 270;
-    const drawW = rotated ? canvas.height : canvas.width;
-    const drawH = rotated ? canvas.width : canvas.height;
-    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-    ctx.restore();
-
-    // Draw shapes (under strokes for cleaner layering).
-    for (const s of shapes) {
+      // Draw the image with rotation. We translate to center, rotate,
+      // then draw image centered.
       ctx.save();
-      if (s.kind === "rect") {
-        ctx.strokeStyle = s.color;
-        ctx.lineWidth = s.w === 0 ? 1 : 2; // not used; use penWidth style
-        ctx.lineWidth = penWidth;
-        if (s.fill) {
-          ctx.fillStyle = s.color;
-          ctx.fillRect(s.x, s.y, s.w, s.h);
-        } else {
-          ctx.strokeRect(s.x, s.y, s.w, s.h);
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      const rotated = rotation === 90 || rotation === 270;
+      const drawW = rotated ? canvas.height : canvas.width;
+      const drawH = rotated ? canvas.width : canvas.height;
+      ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+      ctx.restore();
+
+      // Draw shapes (under strokes for cleaner layering).
+      for (const s of shapes) {
+        ctx.save();
+        if (s.kind === "rect") {
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = s.w === 0 ? 1 : 2; // not used; use penWidth style
+          ctx.lineWidth = penWidth;
+          if (s.fill) {
+            ctx.fillStyle = s.color;
+            ctx.fillRect(s.x, s.y, s.w, s.h);
+          } else {
+            ctx.strokeRect(s.x, s.y, s.w, s.h);
+          }
+        } else if (s.kind === "circle") {
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = penWidth;
+          ctx.beginPath();
+          const rx = Math.abs(s.w) / 2;
+          const ry = Math.abs(s.h) / 2;
+          ctx.ellipse(
+            s.x + s.w / 2,
+            s.y + s.h / 2,
+            rx,
+            ry,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          if (s.fill) {
+            ctx.fillStyle = s.color;
+            ctx.fill();
+          } else {
+            ctx.stroke();
+          }
         }
-      } else if (s.kind === "circle") {
-        ctx.strokeStyle = s.color;
-        ctx.lineWidth = penWidth;
-        ctx.beginPath();
-        const rx = Math.abs(s.w) / 2;
-        const ry = Math.abs(s.h) / 2;
-        ctx.ellipse(
-          s.x + s.w / 2,
-          s.y + s.h / 2,
-          rx,
-          ry,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        if (s.fill) {
-          ctx.fillStyle = s.color;
-          ctx.fill();
-        } else {
+        ctx.restore();
+      }
+
+      // Draw draft shape (rectangle/circle drag) — skipped when extracting
+      // a crop so the draft rectangle's stroke doesn't end up baked into
+      // the resulting image.
+      if (!opts?.skipDraft) {
+        if (draft && draft.kind === "rect") {
+          const d = draft as Shape;
+          ctx.save();
+          ctx.strokeStyle = d.color;
+          ctx.lineWidth = penWidth;
+          ctx.strokeRect(d.x, d.y, d.w, d.h);
+          ctx.restore();
+        } else if (draft && draft.kind === "circle") {
+          const d = draft as Shape;
+          ctx.save();
+          ctx.strokeStyle = d.color;
+          ctx.lineWidth = penWidth;
+          ctx.beginPath();
+          ctx.ellipse(
+            d.x + d.w / 2,
+            d.y + d.h / 2,
+            Math.abs(d.w) / 2,
+            Math.abs(d.h) / 2,
+            0,
+            0,
+            Math.PI * 2,
+          );
           ctx.stroke();
+          ctx.restore();
+        } else if (draft && (draft.kind === "draw" || draft.kind === "highlighter")) {
+          drawStroke(ctx, draft as Stroke);
         }
       }
-      ctx.restore();
-    }
 
-    // Draw draft shape (rectangle/circle drag).
-    if (draft && draft.kind === "rect") {
-      const d = draft as Shape;
-      ctx.save();
-      ctx.strokeStyle = d.color;
-      ctx.lineWidth = penWidth;
-      ctx.strokeRect(d.x, d.y, d.w, d.h);
-      ctx.restore();
-    } else if (draft && draft.kind === "circle") {
-      const d = draft as Shape;
-      ctx.save();
-      ctx.strokeStyle = d.color;
-      ctx.lineWidth = penWidth;
-      ctx.beginPath();
-      ctx.ellipse(
-        d.x + d.w / 2,
-        d.y + d.h / 2,
-        Math.abs(d.w) / 2,
-        Math.abs(d.h) / 2,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.stroke();
-      ctx.restore();
-    } else if (draft && (draft.kind === "draw" || draft.kind === "highlighter")) {
-      drawStroke(ctx, draft as Stroke);
-    }
-
-    // Draw strokes.
-    for (const s of strokes) {
-      drawStroke(ctx, s);
-    }
-
-    // Draw text items.
-    for (const t of texts) {
-      ctx.save();
-      ctx.fillStyle = t.color;
-      ctx.font = `${t.size}px Inter, Helvetica, Arial, sans-serif`;
-      ctx.textBaseline = "top";
-      // Handle multi-line text.
-      const lines = t.value.split("\n");
-      for (let i = 0; i < lines.length; i++) {
-        ctx.fillText(lines[i], t.x, t.y + i * t.size * 1.2);
+      // Draw strokes.
+      for (const s of strokes) {
+        drawStroke(ctx, s);
       }
-      ctx.restore();
-    }
 
-    // Draw text draft.
-    if (textDraft) {
-      ctx.save();
-      ctx.fillStyle = penColor;
-      ctx.font = `${Math.max(14, penWidth * 4)}px Inter, Helvetica, Arial, sans-serif`;
-      ctx.textBaseline = "top";
-      ctx.fillText(textDraft.value || "", textDraft.x, textDraft.y);
-      ctx.restore();
-    }
-  }, [displaySize, rotation, shapes, strokes, texts, draft, textDraft, penWidth, penColor]);
+      // Draw text items.
+      for (const t of texts) {
+        ctx.save();
+        ctx.fillStyle = t.color;
+        ctx.font = `${t.size}px Inter, Helvetica, Arial, sans-serif`;
+        ctx.textBaseline = "top";
+        // Handle multi-line text.
+        const lines = t.value.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+          ctx.fillText(lines[i], t.x, t.y + i * t.size * 1.2);
+        }
+        ctx.restore();
+      }
+
+      // Draw text draft — also skipped when extracting a crop (otherwise
+      // the half-typed text would be baked into the crop output).
+      if (!opts?.skipDraft && textDraft) {
+        ctx.save();
+        ctx.fillStyle = penColor;
+        ctx.font = `${Math.max(14, penWidth * 4)}px Inter, Helvetica, Arial, sans-serif`;
+        ctx.textBaseline = "top";
+        ctx.fillText(textDraft.value || "", textDraft.x, textDraft.y);
+        ctx.restore();
+      }
+    },
+    [displaySize, rotation, shapes, strokes, texts, draft, textDraft, penWidth, penColor],
+  );
 
   // Re-render whenever state changes.
   useEffect(() => {
@@ -508,19 +525,38 @@ export function EditPng() {
     }
     setBusy(true);
     try {
-      const canvas = canvasRef.current!;
       const scale = getScale();
-      const cropX = Math.max(0, Math.round(rect.x * scale));
-      const cropY = Math.max(0, Math.round(rect.y * scale));
+      // The draft rectangle (rect.x/y/w/h) is in CANVAS backing-store pixel
+      // coords (same coord space the canvas uses). When we call drawImage we
+      // must pass the SOURCE rectangle in those same canvas pixel coords —
+      // NOT in scaled original-image pixels. Earlier code multiplied rect
+      // coords by `scale` before passing them as the source rect, which
+      // shifted + scaled the extracted region to the wrong part of the image
+      // (only correct when scale === 1). The destination canvas is sized to
+      // the original-image pixel resolution (rect.w * scale × rect.h * scale)
+      // so the crop is exported at full source quality.
+      const srcX = Math.max(0, rect.x);
+      const srcY = Math.max(0, rect.y);
+      const srcW = Math.max(1, rect.w);
+      const srcH = Math.max(1, rect.h);
       const cropW = Math.max(1, Math.round(rect.w * scale));
       const cropH = Math.max(1, Math.round(rect.h * scale));
 
-      // Create a new canvas with the cropped region, render to image bitmap.
+      // Render the image (with rotation + existing annotations) to a FRESH
+      // offscreen canvas, skipping the in-progress draft rectangle. The live
+      // canvas has the crop rectangle's stroke baked in — if we extracted
+      // from the live canvas, the black draft stroke would end up as a black
+      // border around the cropped image. By rendering fresh + skipDraft, we
+      // get a clean image (image + committed annotations only) to crop from.
+      const sourceCanvas = document.createElement("canvas");
+      renderCanvas({ target: sourceCanvas, skipDraft: true });
+
+      // Create the destination canvas with the cropped region.
       const tmp = document.createElement("canvas");
       tmp.width = cropW;
       tmp.height = cropH;
       const tctx = tmp.getContext("2d")!;
-      tctx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+      tctx.drawImage(sourceCanvas, srcX, srcY, srcW, srcH, 0, 0, cropW, cropH);
       const dataUrl = tmp.toDataURL(imageFormat === "png" ? "image/png" : "image/jpeg", 0.92);
 
       // Load the new image and replace our imgEl.

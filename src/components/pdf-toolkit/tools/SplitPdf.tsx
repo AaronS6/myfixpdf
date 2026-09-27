@@ -15,7 +15,7 @@ const tool = getTool("split-pdf")!;
 
 type Group = { id: string; pages: number[]; color: string };
 
-const GROUP_COLORS = ["#1AA8E0", "#00C48C", "#FF8A00", "#8C54FF", "#FF4B6E"];
+const GROUP_COLORS = ["var(--brand)", "var(--cat-compress)", "var(--cat-convert)", "var(--cat-organize)", "var(--cat-edit)"];
 
 export function SplitPdf() {
   const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
@@ -142,7 +142,7 @@ export function SplitPdf() {
               onClick={() => setMode("single")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "single" ? "bg-[var(--card)] text-[#8C54FF] shadow-sm" : "text-[var(--muted-foreground)]",
+                mode === "single" ? "bg-[var(--card)] text-[var(--cat-organize)] shadow-sm" : "text-[var(--muted-foreground)]",
               )}
             >
               <Layers3 className="size-4" /> Extract pages into one PDF
@@ -151,7 +151,7 @@ export function SplitPdf() {
               onClick={() => setMode("groups")}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all",
-                mode === "groups" ? "bg-[var(--card)] text-[#8C54FF] shadow-sm" : "text-[var(--muted-foreground)]",
+                mode === "groups" ? "bg-[var(--card)] text-[var(--cat-organize)] shadow-sm" : "text-[var(--muted-foreground)]",
               )}
             >
               <Group className="size-4" /> Split into separate PDFs per group
@@ -181,7 +181,7 @@ export function SplitPdf() {
                     onClick={() => setActiveGroup(i)}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all",
-                      activeGroup === i ? "text-white" : "text-[var(--foreground)] ring-1 ring-[#E4E9F0]",
+                      activeGroup === i ? "text-white" : "text-[var(--foreground)] ring-1 ring-[var(--border)]",
                     )}
                     style={{ background: activeGroup === i ? g.color : "#fff" }}
                   >
@@ -190,7 +190,7 @@ export function SplitPdf() {
                 ))}
                 <button
                   onClick={addGroup}
-                  className="rounded-full border border-dashed border-[#8C54FF] px-3 py-1 text-xs font-semibold text-[#8C54FF] hover:bg-[var(--muted)]"
+                  className="rounded-full border border-dashed border-[var(--cat-organize)] px-3 py-1 text-xs font-semibold text-[var(--cat-organize)] hover:bg-[var(--muted)]"
                 >
                   + New group
                 </button>
@@ -237,7 +237,7 @@ export function SplitPdf() {
             }
           />
           <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
-            <Scissors className="size-4 shrink-0 text-[#8C54FF]" />
+            <Scissors className="size-4 shrink-0 text-[var(--cat-organize)]" />
             <p>Single mode keeps all selected pages in one new PDF. Group mode creates a separate PDF for each group.</p>
           </div>
         </div>

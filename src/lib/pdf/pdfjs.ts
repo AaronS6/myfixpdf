@@ -3,6 +3,11 @@
 /**
  * Thin wrapper around pdfjs-dist for client-side PDF rendering.
  * Loads the worker via a CDN that ships the matching version.
+ *
+ * NOTE: pdfjs-dist v6's TypeScript type defs for PDFDocumentProxy don't
+ * include `cleanup()` (it exists at runtime). All `(doc as any).cleanup?.()`
+ * calls in this codebase are this same pattern — safe because cleanup() is
+ * the correct API (not destroy(), which lives on PDFDocumentLoadingTask).
  */
 import type * as PdfJs from "pdfjs-dist";
 

@@ -269,13 +269,13 @@ export function ResultScreen() {
       {/* Oversize warning */}
       {isOversize && (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 p-3 text-sm text-[var(--warning)]">
-          <AlertTriangle className="size-5 shrink-0 text-[#F5A623]" />
+          <AlertTriangle className="size-5 shrink-0 text-[var(--warning)]" />
           <span className="flex-1">
             {tt("result.oversize.body", { size: formatBytes(resultFile!.size) })}
           </span>
           <button
             onClick={() => chainTo("compress-pdf")}
-            className="inline-flex items-center gap-1.5 rounded-md bg-[#F5A623] px-3 py-1.5 text-xs font-bold text-white hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--warning)] px-3 py-1.5 text-xs font-bold text-white hover:opacity-90"
           >
             <Sparkles className="size-3.5" /> {t("result.compressMore")}
           </button>
@@ -343,7 +343,7 @@ export function ResultScreen() {
                   <ActionButton icon={Pencil} label={t("result.editImage")} color="var(--cat-compress)" onClick={() => chainTo("edit-png")} />
                 </>
               )}
-              <ActionButton icon={RotateCcw} label={t("result.startOver")} color="#5B6B79" onClick={reset} />
+              <ActionButton icon={RotateCcw} label={t("result.startOver")} color="var(--muted-foreground)" onClick={reset} />
             </div>
           </div>
 

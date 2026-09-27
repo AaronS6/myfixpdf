@@ -65,7 +65,7 @@ export function EditPdf() {
   const [textItems, setTextItems] = useState<TextItem[]>([]);
   const [strokes, setStrokes] = useState<DrawStroke[]>([]);
   const [tool2, setTool2] = useState<"select" | "text" | "draw">("select");
-  const [penColor, setPenColor] = useState("#1AA8E0");
+  const [penColor, setPenColor] = useState("var(--brand)");
   const [penWidth, setPenWidth] = useState(3);
   const [textDraft, setTextDraft] = useState<{ x: number; y: number; pageIndex: number; value: string; size: number; color: [number, number, number] } | null>(null);
   const [history2, setHistory2] = useState<Uint8Array[]>([]);
@@ -334,10 +334,10 @@ export function EditPdf() {
         {/* Draw toolbar */}
         {tool2 === "draw" && (
           <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 text-sm">
-            <PenTool className="size-4 text-[#FF4B6E]" />
+            <PenTool className="size-4 text-[var(--cat-edit)]" />
             <span className="text-xs font-medium text-[var(--muted-foreground)]">Draw on page {pageNum} — strokes are baked in on Save.</span>
             <div className="ml-auto flex items-center gap-2">
-              {["#1D2733", "#1AA8E0", "#F04438", "#1FB65B", "#FF8A00"].map((c) => (
+              {["var(--foreground)", "var(--brand)", "var(--danger)", "var(--success)", "var(--cat-convert)"].map((c) => (
                 <button
                   key={c}
                   onClick={() => setPenColor(c)}
@@ -352,7 +352,7 @@ export function EditPdf() {
                 step="0.5"
                 value={penWidth}
                 onChange={(e) => setPenWidth(parseFloat(e.target.value))}
-                className="w-24 accent-[#FF4B6E]"
+                className="w-24 accent-[var(--cat-edit)]"
               />
               <span className="text-xs">{penWidth}px</span>
               <button

@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Inter, Geist_Mono, Dancing_Script, Pacifico, Great_Vibes, Caveat } from "next/font/google";
+import { Inter, Geist_Mono, Dancing_Script, Pacifico, Great_Vibes, Caveat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/pdf-toolkit/shared/ThemeProvider";
 import { I18nProvider } from "@/components/pdf-toolkit/shared/I18nProvider";
 
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
+// Inter — the single UI font for all headings, body, buttons, labels.
+// Tightened tracking on headings (via globals.css) gives it a premium SaaS feel.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -26,6 +21,8 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+// Cursive fonts — used ONLY inside the signature pad modal for typed signatures.
+// Never referenced in body/heading text.
 const dancingScript = Dancing_Script({
   variable: "--font-dancing-script",
   subsets: ["latin"],
@@ -90,7 +87,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${bricolage.variable} ${inter.variable} ${geistMono.variable} ${dancingScript.variable} ${pacifico.variable} ${greatVibes.variable} ${caveat.variable} antialiased bg-background text-foreground`}
+        className={`${inter.variable} ${geistMono.variable} ${dancingScript.variable} ${pacifico.variable} ${greatVibes.variable} ${caveat.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
           <I18nProvider>

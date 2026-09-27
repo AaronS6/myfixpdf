@@ -83,12 +83,12 @@ export function ExtractText() {
 
               {/* Action bar */}
               <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 shadow-sm">
-                <FileText className="size-4 text-[#FF8A00]" />
+                <FileText className="size-4 text-[var(--cat-convert)]" />
                 <span className="text-sm font-semibold text-[var(--foreground)]">Extracted text</span>
                 <div className="ml-auto flex gap-2">
                   <button
                     onClick={copyAll}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--muted)] dark:hover:bg-[var(--background)]"
                   >
                     {copied ? <Check className="size-3.5 text-[var(--success)]" /> : <Copy className="size-3.5" />}
                     {copied ? "Copied!" : "Copy all"}
@@ -107,7 +107,7 @@ export function ExtractText() {
                 {pages.map((p) => (
                   <details key={p.pageNumber} open={pages.length <= 3} className="group rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
                     <summary className="flex cursor-pointer items-center gap-2 p-3 text-sm font-semibold text-[var(--foreground)]">
-                      <span className="flex size-6 items-center justify-center rounded-md bg-[#FF8A00]/15 text-xs font-bold text-[#FF8A00]">
+                      <span className="flex size-6 items-center justify-center rounded-md bg-[var(--cat-convert)]/15 text-xs font-bold text-[var(--cat-convert)]">
                         {p.pageNumber}
                       </span>
                       Page {p.pageNumber}
@@ -124,7 +124,7 @@ export function ExtractText() {
             </>
           ) : (
             <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
-              <FileText className="mx-auto mb-2 size-8 text-[#FF8A00]" />
+              <FileText className="mx-auto mb-2 size-8 text-[var(--cat-convert)]" />
               Click <b className="text-[var(--foreground)]">Extract Text</b> to pull all text content out of your PDF.
               <p className="mt-2 text-xs">Uses pdf.js text-content extraction. Image-only / scanned PDFs may return empty results.</p>
             </div>

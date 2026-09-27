@@ -94,10 +94,10 @@ export function PageNumbers() {
                   onClick={() => setFormat(f.id)}
                   className={cn(
                     "rounded-lg border p-3 text-left transition-all",
-                    format === f.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10" : "border-[var(--border)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
+                    format === f.id ? "border-[var(--cat-edit)] bg-[var(--cat-edit)]/10" : "border-[var(--border)] hover:bg-[var(--muted)] dark:hover:bg-[var(--background)]",
                   )}
                 >
-                  <p className={cn("text-xs font-semibold", format === f.id ? "text-[#FF4B6E]" : "text-[var(--foreground)]")}>{lang === "zh" ? (FORMATS_ZH[f.id] ?? f.label) : f.label}</p>
+                  <p className={cn("text-xs font-semibold", format === f.id ? "text-[var(--cat-edit)]" : "text-[var(--foreground)]")}>{lang === "zh" ? (FORMATS_ZH[f.id] ?? f.label) : f.label}</p>
                   <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">e.g. {f.example(startFrom, startFrom + 4)}</p>
                 </button>
               ))}
@@ -113,7 +113,7 @@ export function PageNumbers() {
                   onClick={() => setPosition(p.id)}
                   className={cn(
                     "rounded-lg border px-2 py-2 text-xs font-medium transition-all",
-                    position === p.id ? "border-[#FF4B6E] bg-[var(--cat-edit)]/10 text-[#FF4B6E]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[#0E1626]",
+                    position === p.id ? "border-[var(--cat-edit)] bg-[var(--cat-edit)]/10 text-[var(--cat-edit)]" : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] dark:hover:bg-[var(--background)]",
                   )}
                 >
                   {lang === "zh" ? (POSITIONS_ZH[p.id] ?? p.label) : p.label}
@@ -128,14 +128,14 @@ export function PageNumbers() {
                 <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.pageNumbers.fontSize")}</label>
                 <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{fontSize}pt</span>
               </div>
-              <input type="range" min="8" max="20" step="1" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
+              <input type="range" min="8" max="20" step="1" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value, 10))} className="w-full accent-[var(--cat-edit)]" />
             </div>
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <label className="text-sm font-semibold text-[var(--foreground)]">{t("tool.pageNumbers.startFrom")}</label>
                 <span className="rounded-md bg-[var(--muted)] px-2 py-0.5 text-xs font-bold text-[var(--foreground)]">{startFrom}</span>
               </div>
-              <input type="range" min="1" max="10" step="1" value={startFrom} onChange={(e) => setStartFrom(parseInt(e.target.value, 10))} className="w-full accent-[#FF4B6E]" />
+              <input type="range" min="1" max="10" step="1" value={startFrom} onChange={(e) => setStartFrom(parseInt(e.target.value, 10))} className="w-full accent-[var(--cat-edit)]" />
             </div>
           </div>
 
@@ -144,11 +144,11 @@ export function PageNumbers() {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">{t("tool.pageNumbers.previewLabel")}</p>
             <div className="relative mx-auto aspect-[3/4] w-48 overflow-hidden rounded border border-[var(--border)] bg-[var(--card)] shadow-sm">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="size-16 rounded-lg bg-gradient-to-br from-[#23A6D5]/20 to-[#2FE0C6]/20" />
+                <div className="size-16 rounded-lg bg-gradient-to-br from-[#2563EB]/20 to-[#60A5FA]/20" />
               </div>
               <span
                 className={cn(
-                  "absolute text-[#3F4A56]",
+                  "absolute text-[var(--muted-foreground)]",
                   position === "bottom-center" && "bottom-2 left-1/2 -translate-x-1/2",
                   position === "bottom-right" && "bottom-2 right-3",
                   position === "top-center" && "top-2 left-1/2 -translate-x-1/2",
@@ -162,7 +162,7 @@ export function PageNumbers() {
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
-            <Hash className="size-4 shrink-0 text-[#FF4B6E]" />
+            <Hash className="size-4 shrink-0 text-[var(--cat-edit)]" />
             <p>{t("tool.pageNumbers.info")}</p>
           </div>
         </div>

@@ -108,7 +108,7 @@ export function CompressPdf() {
         </div>
         {sourceFiles.length > 1 && (
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-[var(--warning)]/30 bg-[var(--warning)]/10 p-3 text-xs text-[var(--warning)]">
-            <Archive className="size-4 shrink-0 text-[#F5A623]" />
+            <Archive className="size-4 shrink-0 text-[var(--warning)]" />
             <p>{t("tool.compress.batchWarning")}</p>
           </div>
         )}

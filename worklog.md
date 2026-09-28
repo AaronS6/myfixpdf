@@ -1151,3 +1151,23 @@ Stage Summary:
 - Edit-pdf: preview renders at full size, PDF text visible.
 - Committed `aa08076`, pushed `32ec6ff..aa08076 main -> main` (14 files: 10 tools via subagent + MergePdf + EditPdf + ConvertToPdf destructure fix + worklog).
 - This was the FOURTH consecutive critical-bug-fix round in this session (after $1 ReferenceError, header dropdown clipping, popular-pills orphan). All resolved.
+
+
+---
+Task ID: EDIT-PDF-MOBILE-FIX
+Agent: Orchestrator (Z.ai)
+Task: Fix "edit pdf on phone doesn't work well, all of the tools are blank or broken in bad order".
+
+Work Log:
+- Reproduced on mobile (375px): EditPdf sidebar is a horizontal scroll strip of 12 tool buttons. agent-browser eval found each button was only 23px wide × 42px tall (way too small for tap targets, icons cramped/blank-looking). PDF canvas was actually fine (309×437px).
+- Bug 1 — ToolButton shrink: the buttons are flex items in a `flex flex-row overflow-x-auto` sidebar. Default `flex-shrink: 1` let them shrink from content-width (~36px) to min-content (~23px) to fit the 343px sidebar. Fix: added `shrink-0` + `w-11 h-11` (44px square tap target) + `sm:w-auto sm:h-auto` (desktop keeps auto sizing, still stretches via align-items in the vertical `sm:flex-col` sidebar).
+- Bug 2 — dividers: the 3 group dividers were `h-px w-full` (1px tall, full WIDTH). In a mobile horizontal flex row, `w-full` resolves to the full row width (~343px), so each divider rendered as a giant horizontal line cutting across the button strip ("bad order"). Fix: `mx-1 h-8 w-px shrink-0 ... sm:mx-0 sm:my-1 sm:h-px sm:w-full` — a thin 8px-tall vertical separator on mobile, and the original horizontal full-width line on desktop.
+- Verified via agent-browser:
+  • Mobile 375px: buttons now 44×44px (was 23×42), 12 buttons in a scrollable strip (scrollW 604 > 343). VLM: "horizontal toolbar of edit buttons, reasonably sized squares with clear icons (undo/redo/rotate/text/draw/delete), PDF preview visible below showing 'Page 1 — myfixpdf test'".
+  • Desktop 1440px: sidebar 64×700px vertical (unchanged), buttons 50×34px (stretched to sidebar content width), canvas 436×616px (unchanged from prior fix).
+- 0 lint errors. Pushed `aa08076..2ef5672 main -> main`.
+
+Stage Summary:
+- EditPdf mobile sidebar now has properly-sized 44px square buttons with clear icons and thin vertical group separators, scrollable horizontally.
+- Desktop layout fully preserved (vertical 64px sidebar, stretched buttons).
+- Fifth critical-bug-fix round this session; all resolved.

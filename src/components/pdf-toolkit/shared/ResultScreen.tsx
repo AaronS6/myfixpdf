@@ -214,7 +214,7 @@ export function ResultScreen() {
               type="text"
               value={rename}
               onChange={(e) => setRename(e.target.value)}
-              className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-lg font-bold text-[var(--foreground)] outline-none hover:border-[var(--border)] focus:border-[var(--brand)]"
+              className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-base font-bold sm:text-lg text-[var(--foreground)] outline-none hover:border-[var(--border)] focus:border-[var(--brand)]"
               style={{ width: `${Math.max(20, rename.length + 2)}ch` }}
               aria-label="Edit filename"
             />
@@ -291,7 +291,7 @@ export function ResultScreen() {
           ) : compareMode && saved && previewUrl && resultFile?.beforePreviewUrl ? (
             <CompareSlider beforeUrl={resultFile.beforePreviewUrl} afterUrl={previewUrl} position={comparePos} onPosition={setComparePos} />
           ) : isPdf && previewUrl ? (
-            <div className="relative h-[60vh] lg:h-[85vh]">
+            <div className="relative h-[50vh] sm:h-[60vh] lg:h-[85vh]">
               <PdfPreview
                 blob={resultFile!.blob}
                 renderOverlay={(pageIndex, pageW, pageH, scale) => {
@@ -313,7 +313,7 @@ export function ResultScreen() {
               />
             </div>
           ) : isImage && previewUrl ? (
-            <div className="relative h-[60vh] lg:h-[85vh]">
+            <div className="relative h-[50vh] sm:h-[60vh] lg:h-[85vh]">
               <ImagePreview src={previewUrl} />
             </div>
           ) : (
@@ -353,7 +353,7 @@ export function ResultScreen() {
 
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
             <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{t("result.continueWorking")}</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {isPdf && (
                 <>
                   <ActionButton icon={Sparkles} label={t("result.compressMore")} color="var(--cat-compress)" onClick={() => chainTo("compress-pdf")} />

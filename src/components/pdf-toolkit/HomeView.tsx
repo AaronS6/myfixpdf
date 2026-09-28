@@ -100,27 +100,27 @@ export function HomeView() {
         <div className="absolute -right-20 -top-5 -z-10 size-96 rounded-full bg-gradient-to-br from-[var(--cat-organize)]/8 to-[var(--brand)]/6 blur-3xl animate-float" />
         <div className="absolute bottom-0 left-1/3 -z-10 size-64 rounded-full bg-gradient-to-br from-[var(--cat-edit)]/6 to-[var(--cat-convert)]/6 blur-3xl animate-float-slow" style={{ animationDelay: "-4s" }} />
 
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-32">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm border border-[var(--border)]/50">
+            <div className="mb-6 inline-flex sm:mb-8 items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm border border-[var(--border)]/50">
               <ShieldCheck className="size-3.5 text-[var(--success)]" />
               {t("hero.badge")}
             </div>
 
             {/* Headline — big, bold, two-tone */}
-            <h1 className="text-4xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.15]" style={{ animationDelay: "60ms" }}>
+            <h1 className="text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.15]" style={{ animationDelay: "60ms" }}>
               {t("hero.title1")}{" "}
               <span className="brand-gradient-text">{t("hero.titleAccent")}</span>
             </h1>
 
             {/* Subtitle — lighter weight, more breathing room */}
-            <p className="mx-auto mt-7 max-w-xl text-base font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.65" }}>
+            <p className="mx-auto mt-5 max-w-xl sm:mt-7 text-sm font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.65" }}>
               {t("hero.subtitle")}
             </p>
 
             {/* Dropzone — prominent, centered, max-width constrained */}
-            <div className="mx-auto mt-10 max-w-xl animate-fade-up" style={{ animationDelay: "180ms" }}>
+            <div className="mx-auto mt-8 max-w-xl animate-fade-up" style={{ animationDelay: "180ms" }}>
               <FileDropzone
                 accept=".pdf,.png,.jpg,.jpeg,.docx,.heic,.heif"
                 multiple
@@ -134,7 +134,7 @@ export function HomeView() {
 
             {/* File bubbles — clean pill chips inside the hero */}
             {sourceFiles.length > 0 && (
-              <div className="mx-auto mt-6 max-w-xl animate-fade-up">
+              <div className="mx-auto mt-5 max-w-xl sm:mt-6 animate-fade-up">
                 <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 card-shadow">
                   <div className="flex flex-wrap items-center justify-center gap-2.5">
                     {sourceFiles.map((f) => {
@@ -192,7 +192,7 @@ export function HomeView() {
             )}
 
             {/* Popular tools quick-access pills */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-1.5 animate-fade-up" style={{ animationDelay: "240ms" }}>
+            <div className="mt-6 flex items-center gap-1.5 overflow-x-auto thin-scroll pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 animate-fade-up" style={{ animationDelay: "240ms" }}>
               <span className="text-xs font-medium text-[var(--muted-foreground)] mr-0.5">{lang === "zh" ? "常用:" : "Popular:"}</span>
               {popularTools.map((tool) => (
                 <button
@@ -226,7 +226,7 @@ export function HomeView() {
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
           </div>
           {/* Filter pills */}
-          <div className="flex flex-wrap items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm">
+          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm thin-scroll sm:flex-wrap sm:overflow-visible">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -270,7 +270,7 @@ export function HomeView() {
             href="https://mybeam.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex items-center gap-5 overflow-hidden rounded-2xl border border-[var(--brand)]/20 bg-gradient-to-r from-[var(--brand)]/5 to-[var(--brand-accent)]/5 p-6 card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:card-shadow-lg"
+            className="group relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border border-[var(--brand)]/20 sm:flex-row sm:items-center sm:gap-5 bg-gradient-to-r from-[var(--brand)]/5 to-[var(--brand-accent)]/5 p-6 card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:card-shadow-lg"
           >
             {/* Floating gradient orb */}
             <div className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-20" style={{ background: "var(--brand)" }} />
@@ -349,15 +349,15 @@ function TrustSection() {
   ];
 
   return (
-    <section className="mx-auto max-w-5xl px-4 pb-12 sm:px-6">
-      <div ref={ref} className="grid grid-cols-1 sm:grid-cols-3 gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
+    <section className="mx-auto max-w-5xl px-4 pb-8 sm:px-6 sm:pb-12">
+      <div ref={ref} className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
         {items.map((item, i) => {
           const Icon = item.icon;
           return (
             <div
               key={i}
               className={cn(
-                "group relative bg-[var(--card)] px-8 py-10 transition-all duration-500",
+                "group relative bg-[var(--card)] px-6 py-8 sm:px-8 sm:py-10 transition-all duration-500",
                 inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
               )}
               style={{ transitionDelay: `${item.delay}ms` }}
@@ -403,14 +403,14 @@ function ToolCard({
         style={{ background: tool.color }}
       />
       <span
-        className="flex size-9 items-center justify-center rounded-lg text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 sm:size-11 sm:rounded-xl"
+        className="flex size-8 items-center justify-center rounded-lg text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 sm:size-11 sm:rounded-xl"
         style={{ background: tool.color }}
       >
         <ToolGlyph id={tool.id} />
       </span>
       <div className="relative z-10">
-        <p className="text-sm font-semibold text-[var(--foreground)]">{name}</p>
-        <p className="mt-0.5 text-xs leading-snug text-[var(--muted-foreground)] line-clamp-2">{desc}</p>
+        <p className="text-xs font-semibold text-[var(--foreground)] sm:text-sm">{name}</p>
+        <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)] line-clamp-2 sm:text-xs">{desc}</p>
       </div>
       <div className="mt-auto flex items-center text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100" style={{ color: tool.color }}>
         {t("common.openTool")} <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-1" />

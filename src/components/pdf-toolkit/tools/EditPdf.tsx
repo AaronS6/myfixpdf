@@ -281,10 +281,10 @@ export function EditPdf() {
 
   return (
     <ToolPageShell tool={tool} ctaLabel="Save changes" ctaColor="var(--cat-edit)" onCtaClick={save}>
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row" style={{ height: "calc(100vh - 200px)", minHeight: "400px" }}>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row" style={{ height: "calc(100vh - 200px)", minHeight: "350px" }}>
         {/* Sidebar — vertical on desktop, horizontal scroll on mobile */}
         <div
-          className="flex flex-row gap-1 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-2 shadow-sm thin-scroll sm:flex-col sm:w-16 sm:overflow-y-auto sm:overflow-x-hidden shrink-0"
+          className="flex flex-row gap-1 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-1.5 shadow-sm thin-scroll sm:flex-col sm:w-16 sm:overflow-y-auto sm:overflow-x-hidden shrink-0"
         >
           <ToolButton onClick={undo} disabled={historyIdx <= 0} label="Undo last change" desc="Step back one change. Other pages stay the same.">
             <Undo2 className="size-4" />

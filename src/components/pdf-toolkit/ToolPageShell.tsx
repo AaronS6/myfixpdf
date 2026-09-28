@@ -132,7 +132,7 @@ export function ToolPageShell({
           <ToolGlyph id={tool.id} />
         </span>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
+          <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
             {tTool(tool.id).name}
           </h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">{tTool(tool.id).desc}</p>
@@ -224,7 +224,7 @@ export function ToolPageShell({
 
       {/* CTA bar */}
       {ctaLabel && hasFiles && (
-        <div className="mt-6 flex items-center justify-end gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+        <div className="mt-6 flex items-center justify-end gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
           <span className="mr-auto text-sm text-[var(--muted-foreground)]">
             {sourceFiles.length} {t("tool.filesReady")}
           </span>
@@ -232,7 +232,7 @@ export function ToolPageShell({
             onClick={onCtaClick}
             disabled={ctaDisabled}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:scale-[1.02]",
+              "inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold w-full sm:w-auto sm:px-5 text-white shadow-sm transition-all hover:scale-[1.02]",
               ctaDisabled && "cursor-not-allowed opacity-50",
             )}
             style={{ background: ctaColor ?? accent }}

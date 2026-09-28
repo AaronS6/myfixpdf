@@ -15,16 +15,37 @@ let _pdfjsPromise: Promise<typeof PdfJs> | null = null;
 
 /**
  * Polyfill: pdfjs-dist v6 calls `.toHex()` on internal hash/fingerprint
- * objects. On older browsers (or when the Crypto API returns unexpected
- * types), this method is missing, causing "n.toHex is not a function".
- * We patch Uint8Array.prototype.toHex (and ArrayBuffer) if they don't
- * already exist, so pdfjs can process Adobe Acrobat PDFs and other
- * complex PDFs on ALL browsers — including old ones.
+ * Uint8Array objects inside the Web Worker. The worker has its OWN JavaScript
+ * context — prototypes patched in the main thread DON'T carry over.
+ *
+ * Solution: fetch the worker source from CDN, PREPEND the polyfill, create a
+ * blob URL, and use THAT as the worker source. This way the polyfill runs
+ * inside the worker before pdfjs code executes.
+ *
+ * If the fetch fails (offline/CDN issues), we fall back to disabling the
+ * worker entirely — pdfjs runs in the main thread where our polyfill IS
+ * active. Slightly slower but 100% reliable.
  */
-function polyfillToHex() {
+const TOHEX_POLYFILL = `
+if (typeof Uint8Array !== 'undefined' && !Uint8Array.prototype.toHex) {
+  Uint8Array.prototype.toHex = function() {
+    var out = '';
+    for (var i = 0; i < this.length; i++) {
+      out += this[i].toString(16).padStart(2, '0');
+    }
+    return out;
+  };
+}
+if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.prototype && !ArrayBuffer.prototype.toHex) {
+  ArrayBuffer.prototype.toHex = function() {
+    return new Uint8Array(this).toHex();
+  };
+}
+`;
+
+function polyfillToHexMainThread() {
   if (typeof Uint8Array !== "undefined" && !(Uint8Array.prototype as any).toHex) {
     (Uint8Array.prototype as any).toHex = function () {
-      // Convert each byte to 2-digit hex, lowercase
       let out = "";
       for (let i = 0; i < this.length; i++) {
         out += this[i].toString(16).padStart(2, "0");
@@ -36,16 +57,34 @@ function polyfillToHex() {
 
 export async function getPdfJs(): Promise<typeof PdfJs> {
   if (_pdfjsPromise) return _pdfjsPromise;
-  // Apply polyfills BEFORE loading pdfjs so the worker can use them
-  polyfillToHex();
+  // Apply polyfill in main thread too (for disableWorker fallback)
+  polyfillToHexMainThread();
   _pdfjsPromise = (async () => {
     const pdfjs = await import("pdfjs-dist");
     const version = pdfjs.version;
     const workerUrl = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
+
+    // Try to create a patched worker with the polyfill prepended.
+    // This ensures the polyfill runs INSIDE the worker context.
     try {
-      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-    } catch (e) {
-      // ignore
+      const resp = await fetch(workerUrl);
+      if (resp.ok) {
+        const workerCode = await resp.text();
+        const patchedCode = TOHEX_POLYFILL + "\n" + workerCode;
+        const blob = new Blob([patchedCode], { type: "application/javascript" });
+        const blobUrl = URL.createObjectURL(blob);
+        pdfjs.GlobalWorkerOptions.workerSrc = blobUrl;
+      } else {
+        // Fallback: use the original CDN URL (main-thread polyfill will catch some cases)
+        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+      }
+    } catch {
+      // Fallback: use the original CDN URL
+      try {
+        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+      } catch {
+        // Last resort: no worker — pdfjs runs in main thread where polyfill is active
+      }
     }
     return pdfjs;
   })();
@@ -55,14 +94,37 @@ export async function getPdfJs(): Promise<typeof PdfJs> {
 export async function loadPdfFromBlob(blob: Blob): Promise<PdfJs.PDFDocumentProxy> {
   const pdfjs = await getPdfJs();
   const buf = await blob.arrayBuffer();
-  const task = pdfjs.getDocument({ data: buf });
-  // Capture password errors explicitly so callers can detect encryption.
+  // Try loading with the worker first. If it fails with toHex, retry
+  // with disableWorker (main thread, where our polyfill is active).
+  const tryLoad = async (opts: Record<string, unknown>) => {
+    const task = pdfjs.getDocument({ data: buf, ...opts });
+    try {
+      return await task.promise;
+    } catch (e: unknown) {
+      const err = e as { name?: string; message?: string };
+      if (err?.name === "PasswordException") {
+        throw new Error("This PDF is encrypted. Please remove the password first.");
+      }
+      throw e;
+    }
+  };
+
   try {
-    return await task.promise;
+    return await tryLoad({});
   } catch (e: unknown) {
-    const err = e as { name?: string; message?: string };
-    if (err?.name === "PasswordException") {
-      throw new Error("This PDF is encrypted. Please remove the password first.");
+    const msg = e instanceof Error ? e.message : String(e);
+    // If the error is about toHex, retry in the main thread (no worker)
+    // where our polyfill is active.
+    if (msg.includes("toHex") || msg.includes("is not a function")) {
+      try {
+        return await tryLoad({ disableWorker: true });
+      } catch (e2: unknown) {
+        const err = e2 as { name?: string; message?: string };
+        if (err?.name === "PasswordException") {
+          throw new Error("This PDF is encrypted. Please remove the password first.");
+        }
+        throw e2;
+      }
     }
     throw e;
   }

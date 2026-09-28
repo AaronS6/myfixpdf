@@ -125,7 +125,6 @@ export function ReorderPdf() {
         icon: "reorder-pdf",
         color: "var(--cat-organize)",
       });
-$1
       toast.success("Pages reordered");
     } catch (e) {
       stopProgress();

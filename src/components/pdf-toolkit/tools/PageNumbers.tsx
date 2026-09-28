@@ -79,7 +79,6 @@ export function PageNumbers() {
         icon: "page-numbers",
         color: "var(--cat-edit)",
       });
-$1
       toast.success(t("toast.pageNumbersAdded"));
     } catch (e) {
       stopProgress();

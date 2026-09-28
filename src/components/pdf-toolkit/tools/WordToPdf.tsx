@@ -40,7 +40,6 @@ export function WordToPdf() {
         icon: "word-to-pdf",
         color: "var(--cat-convert)",
       });
-$1
       toast.success("PDF ready");
     } catch (e) {
       stopProgress();

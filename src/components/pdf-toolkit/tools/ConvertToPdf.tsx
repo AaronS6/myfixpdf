@@ -151,7 +151,6 @@ export function ConvertToPdf() {
         icon: "convert-to-pdf",
         color: "var(--cat-convert)",
       });
-$1
       toast.success("PDF created");
     } catch (e) {
       stopProgress();

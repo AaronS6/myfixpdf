@@ -1023,3 +1023,24 @@ Stage Summary:
 - Root cause of the "filter pills not slideable" bug was a shrink-to-fit flex child overflowing the viewport — fixed by constraining the rail with `w-full`.
 - GitHub auth now persisted via `credential.helper store` so future pushes from this sandbox don't need re-authorization.
 - Commit `5e50b0e` pushed to AaronS6/myfixpdf main; Vercel should auto-deploy.
+
+
+---
+Task ID: DESKTOP-ORPHAN-FIX
+Agent: Orchestrator (Z.ai)
+Task: Fix "landing bar doesn't show stuff anymore on laptop" — popular pills row looked broken/empty on desktop.
+
+Work Log:
+- User reported the landing bar looked empty on laptop post the mobile-polish push. Diagnosed via agent-browser at 1280px and 1024px: the Popular pills row (6 tools) wrapped as 5 pills on row 1 + 1 orphan pill ("Convert to PDF") alone on row 2 — the orphan line made the bar look broken/empty.
+- Root cause: the popular pills container was nested inside the hero's `max-w-3xl` (768px) container. 6 pills (~120px each) + "Popular:" label (~70px) + gaps (~40px) = ~843px, which exceeded 768px, so the 6th pill wrapped.
+- Fix: closed the `max-w-3xl` hero container BEFORE the popular pills and gave them their own `mx-auto mt-6 max-w-5xl` (1024px) container. All 6 pills now fit on a single horizontal row on desktop.
+- Verified via agent-browser eval + VLM:
+  • 1280px: 6 pills, distinct_rows=1 (all on one row), VLM confirms "6 pills on a single horizontal row, no orphan" ✓
+  • 1024px (lg boundary): 6 pills, rows=1 ✓
+  • 375px (mobile): still only 3 visible (PDF Compressor, Merge PDF, PDF to Word) — the `idx >= 3 ? "hidden sm:inline-flex" : "inline-flex"` logic is intact ✓
+- Filter chip rail and header nav unchanged (both were already fine on desktop).
+- 0 lint errors. Pushed `5e50b0e..89c1803 main -> main` using the stored credential (no re-auth needed).
+
+Stage Summary:
+- Desktop orphan-pill regression fixed. Popular pills now render as a clean single row of 6 on laptop widths (1024px+) while preserving the mobile "max 3" behavior.
+- The visual cascade is now: dropzone (max-w-xl) → hero text (max-w-3xl) → popular pills (max-w-5xl) → tool grid (max-w-6xl) — a natural widening toward the grid.

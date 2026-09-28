@@ -61,6 +61,19 @@
 :root {
   --radius: 0.875rem;
 
+  /*
+    Font family stacks. These are now defined here (instead of being injected by
+    next/font/google) because the app loads Google Fonts via <link> tags in
+    layout.tsx. Doing it this way avoids next/font/google's build-time font fetch,
+    which fails on Vercel's build sandbox and produces a module-not-found error.
+    The @theme inline block below references these via var(--font-inter) /
+    var(--font-geist-mono), so Tailwind's `font-sans` / `font-mono` utilities
+    continue to resolve correctly.
+  */
+  --font-inter: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-geist-mono: "Geist Mono", ui-monospace, "SFMono-Regular", "Menlo",
+    monospace;
+
   /* Surfaces — pure white with very subtle blue-tinted neutrals */
   --background: #F8FAFC;             /* slate-50 — subtle cool gray so white cards pop */
   --foreground: #0F172A;             /* slate-900 — near-black ink */

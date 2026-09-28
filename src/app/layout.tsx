@@ -1,55 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono, Dancing_Script, Pacifico, Great_Vibes, Caveat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/pdf-toolkit/shared/ThemeProvider";
 import { I18nProvider } from "@/components/pdf-toolkit/shared/I18nProvider";
-
-// Inter — the single UI font for all headings, body, buttons, labels.
-// Tightened tracking on headings (via globals.css) gives it a premium SaaS feel.
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-// Cursive fonts — used ONLY inside the signature pad modal for typed signatures.
-// Never referenced in body/heading text.
-const dancingScript = Dancing_Script({
-  variable: "--font-dancing-script",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap",
-});
-
-const pacifico = Pacifico({
-  variable: "--font-pacifico",
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
-
-const greatVibes = Great_Vibes({
-  variable: "--font-great-vibes",
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
-
-const caveat = Caveat({
-  variable: "--font-caveat",
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "myfixpdf — Every PDF tool you need, in one place",
@@ -92,10 +46,27 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f[]=Satoshi-300,400,500,700,900&display=swap"
         />
+        {/*
+          Google Fonts loaded via <link> tags (runtime) instead of next/font/google
+          (build-time). next/font/google fetches font files at build time to generate
+          an internal CSS module — on Vercel's build sandbox this fetch can fail and
+          produce a `module-not-found` error for `[next]/internal/font/google/*.module.css`.
+          Loading via <link> sidesteps the build-time fetch entirely and is the most
+          reliable approach for Vercel deploys. The matching CSS variables
+          (--font-inter, --font-geist-mono) are defined in globals.css :root.
+        */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Dancing+Script:wght@400;700&family=Geist+Mono:wght@400;500;600;700&family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Pacifico&display=swap"
+        />
       </head>
-      <body
-        className={`${inter.variable} ${geistMono.variable} ${dancingScript.variable} ${pacifico.variable} ${greatVibes.variable} ${caveat.variable} antialiased font-sans bg-background text-foreground`}
-      >
+      <body className="antialiased font-sans bg-background text-foreground">
         <ThemeProvider>
           <I18nProvider>
             {children}

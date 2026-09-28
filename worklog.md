@@ -974,3 +974,26 @@ Stage Summary:
 - Dev server compiles cleanly.
 - Homepage is now: bold hero with quick-access pills → unified tool grid with filter pills → compact trust section with stats.
 - No regressions.
+
+
+---
+Task ID: VERCEL-FIX
+Agent: Orchestrator (Z.ai)
+Task: Diagnose and fix the Vercel deploy failure ("myfixpdf failed to deploy on vercel") — build error was `module-not-found` for `[next]/internal/font/google/inter_55581303.module.css`.
+
+Work Log:
+- Read dev.log (server healthy, 200 OK) and package.json/next.config.ts/prisma schema.
+- Identified root cause: `src/app/layout.tsx` imported 6 Google fonts via `next/font/google` (Inter, Geist_Mono, Dancing_Script, Pacifico, Great_Vibes, Caveat). `next/font/google` fetches font files at BUILD time to generate an internal CSS module `[next]/internal/font/google/<font>_<hash>.module.css`. On Vercel's build sandbox that fetch fails/times out → Next.js emits `module-not-found` for every weight slot in that CSS module (one error line per weight). The error trace in the user's report (`inter_55581303.module.css:215/224/233/...`) matches this exactly.
+- Confirmed via grep that the cursive font CSS variables (--font-dancing-script etc.) were never actually consumed anywhere — the SignaturePadModal references fonts by family name directly (`'Dancing Script', cursive`), so the `next/font/google` setup for those 4 cursive fonts was dead weight that only added build-time failure surface.
+- Confirmed `@/lib/db` is imported by NO source file — so Prisma/SQLite won't block the build (the DB simply isn't used).
+- Fix 1 — `src/app/layout.tsx`: removed ALL `next/font/google` imports. Added a single combined Google Fonts `<link rel="stylesheet">` (with preconnect hints) covering all 6 font families. Fonts now load at RUNTIME in the browser, sidestepping the build-time font fetch entirely. Simplified body className to `antialiased font-sans bg-background text-foreground` (no more per-font variable classes).
+- Fix 2 — `src/app/globals.css`: added `--font-inter` and `--font-geist-mono` definitions to `:root` (with system fallbacks) so the existing `@theme inline` references (`--font-sans: "Satoshi", var(--font-inter), ...` and `--font-mono: var(--font-geist-mono)`) continue to resolve correctly without next/font.
+- Fix 3 — `package.json`: split the build script. `build` is now `prisma generate && next build` (Vercel-safe; the old `cp -r .next/static .next/standalone/...` commands assumed standalone self-host output and would fail on Vercel). The standalone self-host pipeline moved to `build:standalone`. Added `postinstall: prisma generate` so the Prisma client is always generated on Vercel's install phase even if the node_modules cache is stale.
+- Verified locally: dev server returns 200 OK with no font/module errors; agent-browser screenshot confirms the page renders with the "myfixpdf" logo, clean sans-serif (Inter) headings, full layout — no Times serif fallback. Only console output is the React DevTools promo string (harmless).
+
+Stage Summary:
+- Root cause: `next/font/google` build-time font fetch fails on Vercel's build sandbox → `module-not-found` for the generated internal font CSS module.
+- Fix: switched to runtime `<link>` Google Fonts loading; defined matching CSS variables in globals.css; cleaned up the build script and added a Prisma postinstall hook.
+- Files changed: `src/app/layout.tsx`, `src/app/globals.css`, `package.json`.
+- The lint warning `@next/next/no-page-custom-font` on layout.tsx is expected and NON-FATAL (warning, not error) — Vercel's Next.js build does not fail on warnings.
+- Next step for the user: push to GitHub and let Vercel re-deploy. The build should now succeed.

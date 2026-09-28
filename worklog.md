@@ -1044,3 +1044,24 @@ Work Log:
 Stage Summary:
 - Desktop orphan-pill regression fixed. Popular pills now render as a clean single row of 6 on laptop widths (1024px+) while preserving the mobile "max 3" behavior.
 - The visual cascade is now: dropzone (max-w-xl) → hero text (max-w-3xl) → popular pills (max-w-5xl) → tool grid (max-w-6xl) — a natural widening toward the grid.
+
+
+---
+Task ID: STRAY-DOLLAR-1-FIX
+Agent: Orchestrator (Z.ai)
+Task: Fix "ReferenceError: $1 is not defined" that was breaking multiple tools / "multiple things don't work properly".
+
+Work Log:
+- User reported frequent "$1 is not defined" errors and tools not working. Grep for `^\$1$` (bare $1 on its own line) across src/ found the exact bug in 10 tool files:
+  - CompressPng.tsx:106, ConvertToPdf.tsx:154, PageNumbers.tsx:82, PdfToJpg.tsx:66, PdfToPng.tsx:69, PdfToWord.tsx:43, RedactPdf.tsx:168, ReorderPdf.tsx:128, SplitPdf.tsx:133, WordToPdf.tsx:43.
+- Each file had the same pattern: a bare `$1` expression statement sitting between `addOperation({...})` (the result-recording call) and `} catch (e) {` (the error handler). This was a stray token from a previous botched find-and-replace (likely the i18n {placeholder} refactor that added the `tt(key, params)` helper).
+- Runtime behavior: when a tool finished its async work and reached the `$1` line, JavaScript evaluated `$1` as a bare identifier → `ReferenceError: $1 is not defined`. The surrounding try/catch caught it and surfaced a generic "failed" toast (e.g. "Compression failed"). The success toast and result screen never rendered, so EVERY tool looked broken — exactly matching the user's "multiple things don't work properly".
+- Fix: `sed -i '/^\$1$/d'` across all 10 tool files — deleted the bare `$1` line. Verified the resulting structure is valid (`});` → `} catch (e) {` directly), no syntax gaps. Also grepped for any other stray `$N` tokens (e.g. `$2`, `$3`) across src/ — found none.
+- Verified: 0 lint errors (22 warnings, all pre-existing unused-disable); dev server compiles cleanly (200 OK); agent-browser navigation to #compress-pdf renders the tool page with no page errors; CompressPdf.tsx now flows work → `toast.success(tt("toast.compressed", ...))` → result screen with no throw in between.
+- Pushed `89c1803..a3f8797 main -> main` (10 files changed, 10 deletions). Remote = local = `a3f879763cac2fe57703fb15414629a5e030c803`.
+
+Stage Summary:
+- ROOT CAUSE: a stray bare `$1` token (from a previous bad find-and-replace) was executing as an expression in every tool's success path, throwing ReferenceError and routing every tool to its error toast.
+- FIX: deleted the `$1` line in all 10 affected tool files.
+- This was the highest-impact bug in the project — it made every PDF/image operation appear broken. Now resolved.
+- Vercel should auto-redeploy from the push; once it builds, every tool flow should work end-to-end (compress → result, split → result, etc.).

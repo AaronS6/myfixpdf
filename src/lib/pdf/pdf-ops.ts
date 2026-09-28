@@ -259,6 +259,43 @@ export async function embedImageOnPage(
   return doc.save({ useObjectStreams: true });
 }
 
+/**
+ * Embed a rasterized stroke PNG onto a PDF page at the stroke's ACTUAL
+ * bounding-box position (not stretched to full A4). Handles the Y-axis
+ * flip: stroke points are in screen coords (top-left origin, Y down),
+ * but pdf-lib's drawImage uses PDF coords (bottom-left origin, Y up).
+ *
+ * `strokePng` carries the PNG bytes plus the bounding box in PDF points
+ * (minX/minY/maxX/maxY), the canvas dimensions (w/h), and the padding
+ * that was added around the stroke when rasterizing.
+ */
+export async function embedStrokeOnPage(
+  blob: Blob,
+  pageIndex: number,
+  strokePng: { bytes: Uint8Array; minX: number; minY: number; maxX: number; maxY: number; w: number; h: number; pad: number },
+  onProgress?: (pct: number, message: string) => void,
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(await blob.arrayBuffer());
+  const page = doc.getPages()[pageIndex];
+  if (!page) throw new Error(`Page ${pageIndex + 1} does not exist.`);
+  const pageHeight = page.getHeight();
+  if (strokePng.bytes.length === 0) return doc.save({ useObjectStreams: true });
+  const img = await doc.embedPng(strokePng.bytes);
+  // The PNG covers the stroke's bounding box in screen coords:
+  //   x ∈ [minX - pad, maxX + pad],  y ∈ [minY - pad, maxY + pad]
+  // In PDF coords (Y up from bottom), the image's bottom-left corner is at:
+  //   x = minX - pad
+  //   y = pageHeight - (maxY + pad)   (flip: top of stroke → measured from bottom)
+  page.drawImage(img, {
+    x: strokePng.minX - strokePng.pad,
+    y: pageHeight - (strokePng.maxY + strokePng.pad),
+    width: strokePng.w,
+    height: strokePng.h,
+  });
+  if (onProgress) onProgress(100, "Done");
+  return doc.save({ useObjectStreams: true });
+}
+
 // ====== Set PDF metadata (Subject / Keywords etc.) ======
 export async function setPdfMetadata(
   blob: Blob,

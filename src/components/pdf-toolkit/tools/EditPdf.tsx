@@ -12,7 +12,7 @@ import {
   reorderPdfPages,
   insertBlankPage,
   addTextToPage,
-  embedImageOnPage,
+  embedStrokeOnPage,
   rotateAllPages,
 } from "@/lib/pdf/pdf-ops";
 import { loadPdfFromBlob } from "@/lib/pdf/pdfjs";
@@ -216,15 +216,13 @@ export function EditPdf() {
     // Bake strokes
     for (const s of strokes) {
       try {
-        // Rasterize stroke to a transparent PNG and embed
-        const pngBytes = await strokeToPng(s);
+        // Rasterize stroke to a transparent PNG + its bounding box (in PDF points).
+        const strokePng = await strokeToPng(s);
+        if (strokePng.bytes.length === 0) continue;
         startProgress(`Baking drawing on page ${s.pageIndex + 1}…`);
-        const out = await embedImageOnPage(blob, s.pageIndex, pngBytes, "png", {
-          x: 0,
-          y: 0,
-          width: 595.28, // A4 fallback — overlay scaled in PdfPreview based on page dimensions
-          height: 841.89,
-        });
+        // Embed at the stroke's REAL bounding-box position + size (NOT full A4).
+        // embedStrokeOnPage handles the Y-axis flip (screen top-down → PDF bottom-up).
+        const out = await embedStrokeOnPage(blob, s.pageIndex, strokePng);
         blob = new Blob([out as unknown as BlobPart], { type: "application/pdf" });
       } catch (e) {
         // ignore
@@ -569,10 +567,12 @@ function EditOverlay(props: {
   );
 }
 
-async function strokeToPng(stroke: DrawStroke): Promise<Uint8Array> {
+async function strokeToPng(stroke: DrawStroke): Promise<{ bytes: Uint8Array; minX: number; minY: number; maxX: number; maxY: number; w: number; h: number; pad: number }> {
   // Rasterize the stroke to a transparent PNG sized to the stroke's bounding box + padding.
+  // Returns the PNG bytes AND the bounding box (in PDF points) so the embed step can
+  // place the image at the stroke's REAL position/size (not stretched to full A4).
   const pts = stroke.points;
-  if (pts.length === 0) return new Uint8Array(0);
+  if (pts.length === 0) return { bytes: new Uint8Array(0), minX: 0, minY: 0, maxX: 0, maxY: 0, w: 1, h: 1, pad: 0 };
   const xs = pts.map((p) => p.x);
   const ys = pts.map((p) => p.y);
   const minX = Math.min(...xs);
@@ -582,11 +582,15 @@ async function strokeToPng(stroke: DrawStroke): Promise<Uint8Array> {
   const pad = stroke.width + 2;
   const w = Math.max(1, Math.ceil(maxX - minX + pad * 2));
   const h = Math.max(1, Math.ceil(maxY - minY + pad * 2));
+  // Render at 2x DPI for crisp output, but embed at the 1:1 PDF-point size (w×h)
+  // so the stroke stays at its true dimensions — a small line stays small.
+  const dpi = 2;
   const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = w * dpi;
+  canvas.height = h * dpi;
   const ctx = canvas.getContext("2d");
-  if (!ctx) return new Uint8Array(0);
+  if (!ctx) return { bytes: new Uint8Array(0), minX, minY, maxX, maxY, w, h, pad };
+  ctx.scale(dpi, dpi);
   ctx.clearRect(0, 0, w, h);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -600,7 +604,7 @@ async function strokeToPng(stroke: DrawStroke): Promise<Uint8Array> {
   ctx.stroke();
   const blob: Blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b as Blob), "image/png"));
   const arr = new Uint8Array(await blob.arrayBuffer());
-  return arr;
+  return { bytes: arr, minX, minY, maxX, maxY, w, h, pad };
 }
 
 /**

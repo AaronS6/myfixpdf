@@ -113,7 +113,7 @@ export function WatermarkPdf() {
         icon: "watermark-pdf",
         color: "var(--cat-edit)",
       });
-$1
+      stopProgress();
       toast.success(t("toast.watermarkApplied"));
     } catch (e) {
       stopProgress();

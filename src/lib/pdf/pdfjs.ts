@@ -60,12 +60,15 @@ export async function getPdfJs(): Promise<typeof PdfJs> {
   // Apply polyfill in main thread too (for disableWorker fallback)
   polyfillToHexMainThread();
   _pdfjsPromise = (async () => {
-    const pdfjs = await import("pdfjs-dist");
-    const version = pdfjs.version;
-    const workerUrl = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
+    // Use the LEGACY build — it includes polyfills for getOrInsertComputed,
+    // toHex, and other modern JS APIs that older browsers don't have.
+    // The modern build assumes the browser supports these natively.
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const version = (pdfjs as any).version || "6.3.289";
+    // Legacy worker URL — includes all the same polyfills as the legacy main build
+    const workerUrl = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/legacy/build/pdf.worker.min.mjs`;
 
-    // Try to create a patched worker with the polyfill prepended.
-    // This ensures the polyfill runs INSIDE the worker context.
+    // Try to create a patched worker with the polyfill prepended as extra safety.
     try {
       const resp = await fetch(workerUrl);
       if (resp.ok) {
@@ -73,20 +76,18 @@ export async function getPdfJs(): Promise<typeof PdfJs> {
         const patchedCode = TOHEX_POLYFILL + "\n" + workerCode;
         const blob = new Blob([patchedCode], { type: "application/javascript" });
         const blobUrl = URL.createObjectURL(blob);
-        pdfjs.GlobalWorkerOptions.workerSrc = blobUrl;
+        (pdfjs as any).GlobalWorkerOptions.workerSrc = blobUrl;
       } else {
-        // Fallback: use the original CDN URL (main-thread polyfill will catch some cases)
-        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+        (pdfjs as any).GlobalWorkerOptions.workerSrc = workerUrl;
       }
     } catch {
-      // Fallback: use the original CDN URL
       try {
-        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+        (pdfjs as any).GlobalWorkerOptions.workerSrc = workerUrl;
       } catch {
         // Last resort: no worker — pdfjs runs in main thread where polyfill is active
       }
     }
-    return pdfjs;
+    return pdfjs as typeof PdfJs;
   })();
   return _pdfjsPromise;
 }

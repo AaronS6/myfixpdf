@@ -106,7 +106,7 @@ export default function Page() {
   }, [view]);
 
   return (
-    <div className="flex min-h-screen flex-col relative">
+    <div className="flex min-h-screen flex-col relative overflow-hidden max-w-[100vw]">
       {/* Solid base background (z-0) + blurred colored blobs (z-0, above base) */}
       <div className="page-blobs" aria-hidden="true">
         <div className="page-bg" />
@@ -116,9 +116,9 @@ export default function Page() {
         <div className="blob blob-4" />
       </div>
       {/* All real content sits above the background blobs */}
-      <div className="relative z-10 flex min-h-screen flex-col">
+      <div className="relative z-10 flex min-h-screen flex-col overflow-hidden max-w-[100vw]">
         <Header />
-        <main className="flex-1 relative">
+        <main className="flex-1 relative overflow-hidden">
         {view === "home" && <HomeView />}
         {view === "compress-pdf" && <CompressPdf />}
         {view === "compress-png" && <CompressPng />}

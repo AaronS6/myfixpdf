@@ -91,7 +91,7 @@ export function HomeView() {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden max-w-[100vw]">
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 grain" />
@@ -192,7 +192,7 @@ export function HomeView() {
             )}
 
             {/* Popular tools quick-access pills */}
-            <div className="mt-6 flex items-center gap-1.5 overflow-x-auto thin-scroll pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 animate-fade-up" style={{ animationDelay: "240ms" }}>
+            <div className="mt-6 flex items-center gap-1.5 overflow-x-auto thin-scroll pb-1 max-w-full sm:flex-wrap sm:overflow-visible sm:pb-0 animate-fade-up" style={{ animationDelay: "240ms" }}>
               <span className="text-xs font-medium text-[var(--muted-foreground)] mr-0.5">{lang === "zh" ? "常用:" : "Popular:"}</span>
               {popularTools.map((tool) => (
                 <button
@@ -216,7 +216,7 @@ export function HomeView() {
       </div>
 
       {/* ===== TOOL GRID with category filter pills ===== */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 overflow-hidden">
         {/* Header + filter pills */}
         <div className="mb-10 flex flex-col items-center gap-5 animate-fade-up">
           <div className="text-center">
@@ -226,7 +226,7 @@ export function HomeView() {
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
           </div>
           {/* Filter pills */}
-          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm thin-scroll sm:flex-wrap sm:overflow-visible">
+          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm thin-scroll max-w-full sm:flex-wrap sm:overflow-visible">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
@@ -265,7 +265,7 @@ export function HomeView() {
         </div>
 
         {/* Beam — external app card */}
-        <div className="mt-6">
+        <div className="mt-6 overflow-hidden">
           <a
             href="https://mybeam.vercel.app/"
             target="_blank"
@@ -309,7 +309,7 @@ export function HomeView() {
       <TrustSection />
 
       {/* Subtle gradient line at the very bottom */}
-      <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6 overflow-hidden">
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent animate-gradient-shift" />
         <p className="mt-4 text-center text-xs text-[var(--muted-foreground)]">
           {lang === "zh"
@@ -349,7 +349,7 @@ function TrustSection() {
   ];
 
   return (
-    <section className="mx-auto max-w-5xl px-4 pb-8 sm:px-6 sm:pb-12">
+    <section className="mx-auto max-w-5xl px-4 pb-8 sm:px-6 sm:pb-12 overflow-hidden">
       <div ref={ref} className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
         {items.map((item, i) => {
           const Icon = item.icon;

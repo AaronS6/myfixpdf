@@ -117,7 +117,7 @@ export function ToolPageShell({
   const hasFiles = sourceFiles.length > 0;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 animate-fade-up">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 animate-fade-up overflow-hidden max-w-[100vw]">
       <button
         onClick={() => {
           pushHistory();

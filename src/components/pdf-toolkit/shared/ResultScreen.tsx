@@ -195,7 +195,7 @@ export function ResultScreen() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 overflow-hidden max-w-[100vw]">
       {/* Header row */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">

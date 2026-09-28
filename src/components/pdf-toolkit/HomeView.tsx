@@ -191,8 +191,13 @@ export function HomeView() {
               </div>
             )}
 
-            {/* Popular tools quick-access pills — max 3 on mobile, all 6 on desktop */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 animate-fade-up sm:gap-2.5" style={{ animationDelay: "240ms" }}>
+          </div>
+
+          {/* Popular tools quick-access pills — wider container (max-w-5xl) so all 6 fit
+              on one line on desktop. Previously this row sat inside the hero's max-w-3xl
+              (768px), which wasn't wide enough for 6 pills + label, so the 6th pill
+              wrapped to a lonely second line (the "orphan pill" regression). Max 3 on mobile. */}
+          <div className="mx-auto mt-6 max-w-5xl flex flex-wrap items-center justify-center gap-2 animate-fade-up sm:gap-2.5" style={{ animationDelay: "240ms" }}>
               <span className="w-full text-center text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)] sm:w-auto sm:tracking-normal">
                 {lang === "zh" ? "常用:" : "Popular:"}
               </span>
@@ -211,7 +216,6 @@ export function HomeView() {
                 </button>
               ))}
             </div>
-          </div>
         </div>
       </section>
 

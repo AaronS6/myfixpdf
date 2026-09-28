@@ -1065,3 +1065,24 @@ Stage Summary:
 - FIX: deleted the `$1` line in all 10 affected tool files.
 - This was the highest-impact bug in the project — it made every PDF/image operation appear broken. Now resolved.
 - Vercel should auto-redeploy from the push; once it builds, every tool flow should work end-to-end (compress → result, split → result, etc.).
+
+
+---
+Task ID: HEADER-DROPDOWN-FIX
+Agent: Orchestrator (Z.ai)
+Task: Fix "the dropdown is still not there" — header nav dropdown menus (Compress/Convert/Organize/Edit & Sign) were invisible.
+
+Work Log:
+- User reported the nav dropdown menus not showing. Diagnosed via agent-browser: the dropdown `<div className="absolute top-full pt-2 z-50">` was rendering in the DOM (280×212px, top:51, opacity:1, display:block) but NOT visible on screen.
+- Root cause found by walking the ancestor chain from the dropdown: the `<header>` and `<nav>` elements had computed `overflow: hidden auto` (overflow-x: hidden + overflow-y computed to auto via the CSS spec quirk where visible → auto when the other axis is hidden). The dropdown extends below the 66px header, so it was being clipped.
+- The `overflow-x: hidden` came from a global CSS rule in globals.css line 595: `main, section, footer, header, nav { max-width: 100%; overflow-x: hidden; }` (meant as a horizontal-scroll guard).
+- Fix 1: removed `header` and `nav` from that global rule (they don't need horizontal-overflow protection — the header is a fixed-height bar, no overflowing content). Now `main, section, footer { ... }`.
+- Fix 2 (belt-and-suspenders): the Tailwind `overflow-visible` class on header/nav didn't take effect (CSS cache — the browser kept serving the old `header, nav` rule). Added inline `style={{ overflow: "visible" }}` to both the `<header>` and `<nav>` elements in Header.tsx. Inline styles have specificity 1,0,0,0 (highest non-!important), definitively overriding the global type rule.
+- Verified via agent-browser: header_overflow=visible, nav_overflow=visible, dropdown renders 280×212px below the Compress button. VLM confirms: "a dropdown menu is visible below the 'Compress' button displaying three tools: PDF Compressor, Image Compressor, Edit Image". The fix applies to all 4 nav dropdowns since they share the same header/nav ancestors.
+- 0 lint errors. Pushed `a3f8797..32ec6ff main -> main` (2 files changed).
+
+Stage Summary:
+- ROOT CAUSE: a global `overflow-x: hidden` guard on header/nav triggered the CSS visible→auto quirk, clipping the absolutely-positioned dropdown that extends below the 66px header.
+- FIX: removed header/nav from the global guard + inline `overflow: visible` on the header & nav elements.
+- All 4 header nav dropdowns (Compress/Convert/Organize/Edit & Sign) now render correctly on hover.
+- This was the THIRD critical bug in a row (after the $1 ReferenceError and the popular-pills orphan) — all now fixed and pushed.

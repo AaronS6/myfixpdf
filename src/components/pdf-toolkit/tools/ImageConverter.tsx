@@ -69,6 +69,15 @@ export function ImageConverter() {
       }
 
       setResults(converted);
+      addOperation({
+        tool: "image-converter",
+        toolName: lang === "zh" ? "转换格式" : "Converted format",
+        description: lang === "zh" ? `从 ${imageFiles[0].ext} 转换为 .${targetFormat} (${converted.length} 张)` : `Converted ${imageFiles.length} image(s) to .${targetFormat}`,
+        icon: "image-converter",
+        color: "var(--cat-convert)",
+        beforeSize: imageFiles.reduce((a, f) => a + f.size, 0),
+        afterSize: converted.reduce((a, c) => a + c.size, 0),
+      });
       stopProgress();
 
       if (converted.length === 1) {

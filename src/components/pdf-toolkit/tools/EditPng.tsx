@@ -617,6 +617,15 @@ export function EditPng() {
             size: blob.size,
             beforeSize: target?.size,
           });
+          addOperation({
+            tool: "edit-png",
+            toolName: "Edited image",
+            description: `Annotated and saved as .${imageFormat} (${formatBytes(blob.size)})`,
+            icon: "edit-png",
+            color: "var(--cat-compress)",
+            beforeSize: target?.size,
+            afterSize: blob.size,
+          });
           setBusy(false);
           setView("result");
           toast.success("Image saved");

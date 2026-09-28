@@ -591,8 +591,13 @@ html, body {
 body > * {
   max-width: 100%;
 }
-/* Ensure all containers constrain their children */
-main, section, footer, header, nav {
+/* Ensure content containers constrain their children (horizontal scroll guard).
+   NOTE: `header` and `nav` are deliberately EXCLUDED — the header nav has
+   dropdown menus that extend below the 66px header bar. Applying overflow-x:
+   hidden to header/nav triggers a CSS spec quirk where the other axis computes
+   visible -> auto, which clips the dropdown. The header is a fixed-height bar
+   with no overflowing content, so it doesn't need this guard. */
+main, section, footer {
   max-width: 100%;
   overflow-x: hidden;
 }

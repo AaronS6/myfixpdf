@@ -89,7 +89,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] glass">
+    <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] glass" style={{ overflow: "visible" }}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <button
@@ -113,7 +113,7 @@ export function Header() {
         </div>
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-0.5">
+        <nav className="hidden lg:flex items-center gap-0.5" style={{ overflow: "visible" }}>
           {CATS.map((cat) => (
             <div
               key={cat.id}

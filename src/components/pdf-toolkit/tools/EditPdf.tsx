@@ -71,6 +71,12 @@ export function EditPdf() {
   const [historyIdx, setHistoryIdx] = useState(-1);
   const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef<DrawStroke | null>(null);
+  // Real per-page dimensions (intrinsic PDF points) keyed by pageIndex.
+  // PdfPreview discovers these and EditOverlay pushes them here so the click
+  // handler + save() bake step use the ACTUAL page size — not a hardcoded A4
+  // fallback. Critical for non-A4 or rotated pages where the text would
+  // otherwise land in the wrong X/Y spot.
+  const [pageDims, setPageDims] = useState<Record<number, { w: number; h: number }>>({});
 
   const target = sourceFiles.find((f) => f.included) ?? sourceFiles[0];
 
@@ -201,9 +207,17 @@ export function EditPdf() {
     for (const t of pending) {
       try {
         startProgress(`Baking text on page ${t.pageIndex + 1}…`);
+        const dims = pageDims[t.pageIndex] ?? { w: 595.28, h: 841.89 };
+        // The text item's `t.y` is stored in screen-top-down coords (Y from
+        // top of page), but pdf-lib's page.drawText uses PDF bottom-up
+        // coords (Y from bottom of page). Without this flip, a click near
+        // the TOP of the page baked the text near the BOTTOM of the page.
+        // We also subtract `size` so the text's BASELINE sits where the
+        // user's cursor was (the top of the text box, matching the preview).
+        const pdfY = Math.max(0, dims.h - t.y - t.size);
         const out = await addTextToPage(blob, t.pageIndex, t.text, {
           x: t.x,
-          y: t.y,
+          y: pdfY,
           size: t.size,
           color: t.color,
           font: "Helvetica",
@@ -248,13 +262,12 @@ export function EditPdf() {
   // Click handler: when text tool active, click on canvas drops a text box
   const onCanvasClick = (pageIndex: number, xRatio: number, yRatio: number) => {
     if (tool2 !== "text" || !liveBlob) return;
-    // Get page dimensions (approximate A4 portrait)
-    // We'll defer to actual page size via PdfPreview's overlay; use ratios
-    // Use 595x842 fallback for the PDF coordinate space.
-    const pageW = 595.28;
-    const pageH = 841.89;
-    const x = xRatio * pageW;
-    const y = yRatio * pageH;
+    // Use the REAL page dimensions discovered by EditOverlay (pushed into
+    // pageDims state). Falls back to A4 portrait only if we haven't seen
+    // the page yet (rare race during initial render).
+    const dims = pageDims[pageIndex] ?? { w: 595.28, h: 841.89 };
+    const x = xRatio * dims.w;
+    const y = yRatio * dims.h; // screen-top-down convention (Y measured from top of page)
     setTextDraft({ x, y, pageIndex, value: "", size: 14, color: [0.12, 0.15, 0.2] });
   };
 
@@ -388,6 +401,7 @@ export function EditPdf() {
                   setTextDraft={setTextDraft}
                   commitTextDraft={commitTextDraft}
                   setTextItems={setTextItems}
+                  setPageDims={setPageDims}
                 />
               )}
             />
@@ -425,8 +439,9 @@ function EditOverlay(props: {
   setTextDraft: React.Dispatch<React.SetStateAction<{ x: number; y: number; pageIndex: number; value: string; size: number; color: [number, number, number] } | null>>;
   commitTextDraft: () => void;
   setTextItems: React.Dispatch<React.SetStateAction<TextItem[]>>;
+  setPageDims: React.Dispatch<React.SetStateAction<Record<number, { w: number; h: number }>>>;
 }) {
-  const { pageIndex, pageW, pageH, scale, pageNum, setPageNum, textItems, strokes, setStrokes, tool2, penColor, penWidth, textDraft, setTextDraft, commitTextDraft, setTextItems } = props;
+  const { pageIndex, pageW, pageH, scale, pageNum, setPageNum, textItems, strokes, setStrokes, tool2, penColor, penWidth, textDraft, setTextDraft, commitTextDraft, setTextItems, setPageDims } = props;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef<DrawStroke | null>(null);
 
@@ -434,6 +449,19 @@ function EditOverlay(props: {
   useEffect(() => {
     setPageNum(pageIndex + 1);
   }, [pageIndex, setPageNum]);
+
+  // Push the REAL per-page dimensions back up to EditPdf state so the click
+  // handler + save() bake step can use them. Without this, onCanvasClick
+  // falls back to a hardcoded A4 (595.28×841.89) and a click on a non-A4 or
+  // rotated page maps to the wrong X/Y in PDF points.
+  useEffect(() => {
+    if (!pageW || !pageH) return;
+    setPageDims((d) => {
+      const cur = d[pageIndex];
+      if (cur && cur.w === pageW && cur.h === pageH) return d;
+      return { ...d, [pageIndex]: { w: pageW, h: pageH } };
+    });
+  }, [pageIndex, pageW, pageH, setPageDims]);
 
   // Redraw strokes for this page
   useEffect(() => {

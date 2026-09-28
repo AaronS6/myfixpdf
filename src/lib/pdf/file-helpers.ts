@@ -121,10 +121,14 @@ export async function imageThumbnail(file: File, maxDim = 220): Promise<string> 
 export function withExt(name: string, ext: string): string {
   const base = name.replace(/\.[^.]+$/, "");
   // Smart ext handling:
+  //  - If ext is "" → return base as-is (no trailing dot). Used by callers
+  //    that build the suffix themselves (e.g. PdfToPng does
+  //    `${withExt(name, "")}-page-1.png`).
   //  - If ext starts with "." → use as-is (e.g. ".pdf")
   //  - If ext starts with "-" or "_" → treat as a suffix + keep the original
   //    extension's family (e.g. "-rotated.pdf" → strip ".pdf" off ext →
   //    "-rotated" → use base + "-rotated" + ".pdf")
+  if (ext === "") return base;
   let cleanExt: string;
   if (ext.startsWith(".")) {
     cleanExt = ext;

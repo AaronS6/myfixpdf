@@ -129,9 +129,9 @@ export const useDocumentSession = create<DocumentSessionState>((set, get) => ({
   operations: [],
 
   setView: (v) => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    // Scroll is handled by a useEffect in page.tsx AFTER the view renders.
+    // Calling scrollTo here (before render) doesn't work on mobile — the new
+    // content hasn't laid out yet, so the browser keeps the old scroll position.
     set({ view: v });
   },
   setSourceFiles: (files) => set({ sourceFiles: files }),

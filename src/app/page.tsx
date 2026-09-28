@@ -80,11 +80,29 @@ export default function Page() {
   // Sync view → URL hash (only after we've honored the incoming hash)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!initializedRef.current) return; // wait for mount-effect to read incoming hash first
+    if (!initializedRef.current) return;
     const hash = `#${view}`;
     if (window.location.hash !== hash) {
       window.history.replaceState(null, "", hash);
     }
+  }, [view]);
+
+  // Scroll to top when view changes — runs AFTER the new view's content
+  // is rendered so the browser can correctly scroll to the top of the new
+  // page. On mobile, if you scroll before the DOM updates, the old scroll
+  // position persists and the user sees the bottom of the page.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Use a small timeout to ensure the new view's DOM is fully laid out
+    // before scrolling. requestAnimationFrame can fire before React commits
+    // all the DOM changes for complex views (tool pages with dropzones,
+    // toolbars, etc.).
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      const main = document.querySelector("main");
+      if (main) main.scrollTop = 0;
+    }, 50);
+    return () => clearTimeout(timer);
   }, [view]);
 
   return (

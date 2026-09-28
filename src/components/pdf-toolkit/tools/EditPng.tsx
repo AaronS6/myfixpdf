@@ -98,7 +98,7 @@ function drawStroke(ctx: CanvasRenderingContext2D, s: Stroke) {
 }
 
 export function EditPng() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } =
     useDocumentSession();
   // Pick the first included image file — skip any PDFs/DOCX that may have
   // been left in the persistent session from another tool.

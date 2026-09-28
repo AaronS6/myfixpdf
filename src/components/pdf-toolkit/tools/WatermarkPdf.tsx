@@ -50,7 +50,7 @@ const TARGETS_ZH: Record<"all" | "first" | "last", string> = {
 };
 
 export function WatermarkPdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const { t, lang } = useI18n();
   const [mode, setMode] = useState<"text" | "image">("text");
   const [text, setText] = useState("CONFIDENTIAL");
@@ -106,8 +106,14 @@ export function WatermarkPdf() {
         beforeSize: target0.size,
         beforePreviewUrl: beforeUrl,
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "watermark-pdf",
+        toolName: "Watermarked PDF",
+        description: "Added watermark to the PDF",
+        icon: "watermark-pdf",
+        color: "var(--cat-edit)",
+      });
+$1
       toast.success(t("toast.watermarkApplied"));
     } catch (e) {
       stopProgress();

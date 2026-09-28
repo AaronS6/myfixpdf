@@ -19,7 +19,7 @@ type CropMargins = { left: number; right: number; top: number; bottom: number };
 const ZERO_CROP: CropMargins = { left: 0, right: 0, top: 0, bottom: 0 };
 
 export function CropPdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } =
     useDocumentSession();
   const target = 
       sourceFiles.find((f) => f.included && isPdf(f.file)) ??

@@ -11,7 +11,7 @@ import { FileText } from "lucide-react";
 const tool = getTool("word-to-pdf")!;
 
 export function WordToPdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
 
   const run = async () => {
     const target = 
@@ -33,8 +33,14 @@ export function WordToPdf() {
         size: blob.size,
         beforePreviewUrl: beforeUrl,
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "word-to-pdf",
+        toolName: "Converted to PDF",
+        description: "Converted .docx to PDF",
+        icon: "word-to-pdf",
+        color: "var(--cat-convert)",
+      });
+$1
       toast.success("PDF ready");
     } catch (e) {
       stopProgress();

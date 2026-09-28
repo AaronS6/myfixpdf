@@ -14,7 +14,7 @@ const tool = getTool("image-converter")!;
 type Converted = { blob: Blob; name: string; size: number; previewUrl: string; originalName: string };
 
 export function ImageConverter() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const [targetFormat, setTargetFormat] = useState<"png" | "jpg">("png");
   const [quality, setQuality] = useState(0.9);
   const [results, setResults] = useState<Converted[] | null>(null);

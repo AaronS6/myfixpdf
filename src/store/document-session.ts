@@ -72,14 +72,28 @@ type ProgressState = {
   variant: "indeterminate" | "determinate";
 };
 
+/** A single operation applied to a file — for the "what you've done" history. */
+export type FileOperation = {
+  id: string;
+  tool: ToolId;
+  toolName: string;     // human-readable: "Compressed PDF", "Merged files", etc.
+  description: string;  // "Reduced from 12.4 MB to 3.1 MB (−75%)"
+  icon: string;         // emoji or SVG key: "compress", "merge", "split", etc.
+  color: string;        // CSS var: "var(--cat-compress)", etc.
+  timestamp: number;
+  beforeSize?: number;
+  afterSize?: number;
+};
+
 type DocumentSessionState = {
   view: ToolId;
   sourceFiles: ToolkitFile[];
   resultFile: ResultFile | null;
   history: Array<{ view: ToolId; sourceFiles: ToolkitFile[]; resultFile: ResultFile | null }>;
   progress: ProgressState;
-  /** Pre-loaded tool when chaining from result screen. */
   pendingChainTool?: ToolId;
+  /** Operations applied to the current file — persists across tool chains. */
+  operations: FileOperation[];
 
   setView: (v: ToolId) => void;
   setSourceFiles: (files: ToolkitFile[]) => void;
@@ -88,6 +102,8 @@ type DocumentSessionState = {
   updateSourceFile: (id: string, patch: Partial<ToolkitFile>) => void;
   clearSourceFiles: () => void;
   setResult: (r: ResultFile | null) => void;
+  /** Record an operation to the file history. */
+  addOperation: (op: Omit<FileOperation, "id" | "timestamp">) => void;
   pushHistory: () => void;
   popHistory: () => void;
   startProgress: (message: string, variant?: "indeterminate" | "determinate", percent?: number) => void;
@@ -109,6 +125,7 @@ export const useDocumentSession = create<DocumentSessionState>((set, get) => ({
   history: [],
   progress: { active: false, message: "", variant: "indeterminate" },
   pendingChainTool: undefined,
+  operations: [],
 
   setView: (v) => {
     if (typeof window !== "undefined") {
@@ -127,6 +144,13 @@ export const useDocumentSession = create<DocumentSessionState>((set, get) => ({
     })),
   clearSourceFiles: () => set({ sourceFiles: [] }),
   setResult: (r) => set({ resultFile: r }),
+  addOperation: (op) =>
+    set((s) => ({
+      operations: [
+        ...s.operations,
+        { ...op, id: uid(), timestamp: Date.now() },
+      ],
+    })),
   pushHistory: () =>
     set((s) => ({
       history: [
@@ -160,7 +184,7 @@ export const useDocumentSession = create<DocumentSessionState>((set, get) => ({
   chainTo: (tool) =>
     set((s) => {
       // When chaining from a result, set the current result as the only source file
-      // for the next tool, then navigate to it.
+      // for the next tool, then navigate to it. Operations persist across chains.
       if (s.resultFile) {
         const f = new File([s.resultFile.blob], s.resultFile.name, { type: s.resultFile.type });
         const newSource: ToolkitFile = {
@@ -177,6 +201,7 @@ export const useDocumentSession = create<DocumentSessionState>((set, get) => ({
           sourceFiles: [newSource],
           resultFile: null,
           pendingChainTool: undefined,
+          // operations are NOT cleared — they follow the file across tools
         };
       }
       return { view: tool, pendingChainTool: tool };
@@ -189,6 +214,7 @@ export const useDocumentSession = create<DocumentSessionState>((set, get) => ({
       history: [],
       progress: { active: false, message: "", variant: "indeterminate" },
       pendingChainTool: undefined,
+      operations: [],
     }),
 }));
 

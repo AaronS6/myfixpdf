@@ -15,7 +15,7 @@ import { useI18n } from "../shared/I18nProvider";
 const tool = getTool("rotate-pdf")!;
 
 export function RotatePdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } =
     useDocumentSession();
   const { t, tt, lang } = useI18n();
   const target = 

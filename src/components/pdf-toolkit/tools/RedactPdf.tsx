@@ -24,7 +24,7 @@ type Rect = {
 };
 
 export function RedactPdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } =
     useDocumentSession();
   const target = 
       sourceFiles.find((f) => f.included && isPdf(f.file)) ??
@@ -158,8 +158,14 @@ export function RedactPdf() {
         beforeSize: target.size,
         beforePreviewUrl: makePreviewUrl(target.file),
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "redact-pdf",
+        toolName: "Redacted PDF",
+        description: "Permanently redacted sensitive content",
+        icon: "redact-pdf",
+        color: "var(--cat-edit)",
+      });
+$1
       toast.success(`Applied ${rects.length} redaction${rects.length === 1 ? "" : "s"}`);
     } catch (e) {
       stopProgress();

@@ -25,7 +25,7 @@ const LEVEL_DESCS_ZH: Record<CompressionLevel, string> = {
 };
 
 export function CompressPdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const { t, tt, lang } = useI18n();
   const [level, setLevel] = useState<CompressionLevel>("recommended");
 
@@ -60,6 +60,17 @@ export function CompressPdf() {
         size: blob.size,
         beforeSize,
         beforePreviewUrl: beforeUrl,
+      });
+      addOperation({
+        tool: "compress-pdf",
+        toolName: lang === "zh" ? "压缩 PDF" : "Compressed PDF",
+        description: lang === "zh"
+          ? `从 ${formatBytes(beforeSize)} 压缩到 ${formatBytes(blob.size)}（${savedPct >= 0 ? `−${savedPct}%` : `+${Math.abs(savedPct)}%`}）`
+          : `Reduced from ${formatBytes(beforeSize)} to ${formatBytes(blob.size)} (${savedPct >= 0 ? `−${savedPct}%` : `+${Math.abs(savedPct)}%`})`,
+        icon: "compress",
+        color: "var(--cat-compress)",
+        beforeSize,
+        afterSize: blob.size,
       });
       stopProgress();
       setView("result");

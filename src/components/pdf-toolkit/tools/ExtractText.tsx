@@ -15,7 +15,7 @@ const tool = getTool("extract-text")!;
 type PageText = { pageNumber: number; text: string; lineCount: number };
 
 export function ExtractText() {
-  const { sourceFiles, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const [pages, setPages] = useState<PageText[]>([]);
   const [extracted, setExtracted] = useState(false);
   const [copied, setCopied] = useState(false);

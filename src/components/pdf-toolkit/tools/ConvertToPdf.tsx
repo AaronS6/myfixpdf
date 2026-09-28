@@ -144,8 +144,14 @@ export function ConvertToPdf() {
         beforeSize: included.reduce((a, b) => a + b.size, 0),
         beforePreviewUrl: makePreviewUrl(first.file),
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "convert-to-pdf",
+        toolName: "Converted to PDF",
+        description: "Converted files to PDF",
+        icon: "convert-to-pdf",
+        color: "var(--cat-convert)",
+      });
+$1
       toast.success("PDF created");
     } catch (e) {
       stopProgress();

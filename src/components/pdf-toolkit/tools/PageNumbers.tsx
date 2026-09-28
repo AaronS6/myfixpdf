@@ -41,7 +41,7 @@ const POSITIONS: Array<{ id: "bottom-center" | "bottom-right" | "top-center" | "
 ];
 
 export function PageNumbers() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const { t, lang } = useI18n();
   const [format, setFormat] = useState<(typeof FORMATS)[number]["id"]>("Page 1 of 3");
   const [position, setPosition] = useState<(typeof POSITIONS)[number]["id"]>("bottom-center");
@@ -72,8 +72,14 @@ export function PageNumbers() {
         beforeSize: target.size,
         beforePreviewUrl: beforeUrl,
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "page-numbers",
+        toolName: "Added page numbers",
+        description: "Added page numbers to the PDF",
+        icon: "page-numbers",
+        color: "var(--cat-edit)",
+      });
+$1
       toast.success(t("toast.pageNumbersAdded"));
     } catch (e) {
       stopProgress();

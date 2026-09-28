@@ -33,7 +33,7 @@ const tool = getTool("reorder-pdf")!;
 type Page = { id: string; index: number; thumbnail: string };
 
 export function ReorderPdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const target = 
@@ -118,8 +118,14 @@ export function ReorderPdf() {
         beforeSize: target.size,
         beforePreviewUrl: makePreviewUrl(target.file),
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "reorder-pdf",
+        toolName: "Reordered pages",
+        description: "Reordered pages in the PDF",
+        icon: "reorder-pdf",
+        color: "var(--cat-organize)",
+      });
+$1
       toast.success("Pages reordered");
     } catch (e) {
       stopProgress();

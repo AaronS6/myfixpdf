@@ -18,7 +18,7 @@ type Group = { id: string; pages: number[]; color: string };
 const GROUP_COLORS = ["var(--brand)", "var(--cat-compress)", "var(--cat-convert)", "var(--cat-organize)", "var(--cat-edit)"];
 
 export function SplitPdf() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const [mode, setMode] = useState<"single" | "groups">("single");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [groups, setGroups] = useState<Group[]>([{ id: "g1", pages: [], color: GROUP_COLORS[0] }]);
@@ -123,8 +123,14 @@ export function SplitPdf() {
           results,
         });
       }
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "split-pdf",
+        toolName: "Split PDF",
+        description: "Extracted pages from the PDF",
+        icon: "split-pdf",
+        color: "var(--cat-organize)",
+      });
+$1
       toast.success("Split complete");
     } catch (e) {
       stopProgress();

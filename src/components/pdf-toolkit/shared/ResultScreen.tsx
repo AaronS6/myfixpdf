@@ -10,6 +10,7 @@ import {
   FileText,
   FilePlus2,
   Info,
+  History,
   Image as ImageIcon,
   ChevronLeft,
   AlertTriangle,
@@ -36,7 +37,7 @@ const SIZE_WARNING_PDF_MB = 10;
 const SIZE_WARNING_IMG_MB = 5;
 
 export function ResultScreen() {
-  const { resultFile, setView, chainTo, setResult, reset, startProgress, updateProgress, stopProgress, pushHistory } = useDocumentSession();
+  const { resultFile, setView, chainTo, setResult, reset, startProgress, updateProgress, stopProgress, pushHistory, operations } = useDocumentSession();
   const { t, tt, lang } = useI18n();
   const [compareMode, setCompareMode] = useState(false);
   const [comparePos, setComparePos] = useState(50);
@@ -322,6 +323,34 @@ export function ResultScreen() {
 
         {/* Action toolbar */}
         <div className="space-y-4">
+          {/* What you've done — operation history (moved to top so it's visible) */}
+          {operations.length > 0 && (
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+              <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+                <History className="size-3.5 text-[var(--brand)]" />
+                {lang === "zh" ? "操作历史" : "What you've done"}
+              </p>
+              <div className="space-y-2">
+                {operations.map((op, i) => (
+                  <div key={op.id} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: op.color }}>
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-[var(--foreground)]">{op.toolName}</p>
+                      <p className="text-[11px] leading-snug text-[var(--muted-foreground)]">{op.description}</p>
+                    </div>
+                    {op.beforeSize && op.afterSize && op.beforeSize !== op.afterSize && (
+                      <span className="shrink-0 rounded-full bg-[var(--muted)] px-1.5 py-0.5 text-[10px] font-bold" style={{ color: op.afterSize < op.beforeSize ? "var(--success)" : "var(--warning)" }}>
+                        {formatBytes(op.beforeSize)} → {formatBytes(op.afterSize)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
             <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{t("result.continueWorking")}</p>
             <div className="grid grid-cols-2 gap-2">

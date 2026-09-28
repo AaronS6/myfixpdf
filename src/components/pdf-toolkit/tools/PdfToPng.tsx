@@ -14,7 +14,7 @@ import { useI18n } from "../shared/I18nProvider";
 const tool = getTool("pdf-to-png")!;
 
 export function PdfToPng() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const { t, tt, lang } = useI18n();
   const [scale, setScale] = useState(1.5);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -59,8 +59,14 @@ export function PdfToPng() {
         size: results[0].size,
         results,
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "pdf-to-png",
+        toolName: "Exported as PNG",
+        description: "Converted PDF pages to PNG images",
+        icon: "pdf-to-png",
+        color: "var(--cat-convert)",
+      });
+$1
       toast.success(
         tt("toast.exportedPng", { n: results.length }),
       );

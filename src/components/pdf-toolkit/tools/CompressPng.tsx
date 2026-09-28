@@ -13,7 +13,7 @@ import { Sparkles } from "lucide-react";
 const tool = getTool("compress-png")!;
 
 export function CompressPng() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const [quality, setQuality] = useState(0.6); // 0..1
   const [maxWidth, setMaxWidth] = useState<number>(1920);
   const [debouncedQ, setDebouncedQ] = useState(0.6);
@@ -96,8 +96,14 @@ export function CompressPng() {
         beforeSize,
         beforePreviewUrl: beforeUrl,
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "compress-png",
+        toolName: "Compressed image",
+        description: "Reduced image file size",
+        icon: "compress-png",
+        color: "var(--cat-compress)",
+      });
+$1
     } catch (e) {
       stopProgress();
       toast.error(e instanceof Error ? e.message : "Compression failed");

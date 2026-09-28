@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 const tool = getTool("delete-pages")!;
 
 export function DeletePages() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } =
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } =
     useDocumentSession();
   const target = 
       sourceFiles.find((f) => f.included && isPdf(f.file)) ??

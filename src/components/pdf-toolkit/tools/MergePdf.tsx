@@ -33,7 +33,7 @@ type FlatPage = {
 };
 
 export function MergePdf() {
-  const { sourceFiles, updateSourceFile, setResult, setView, startProgress, updateProgress, stopProgress, addSourceFiles } = useDocumentSession();
+  const { sourceFiles, updateSourceFile, setResult, setView, startProgress, updateProgress, stopProgress, addSourceFiles, addOperation } = useDocumentSession();
   const [flatPages, setFlatPages] = useState<FlatPage[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pageSize, setPageSize] = useState<"fit" | "a4" | "letter">("fit");
@@ -207,6 +207,15 @@ export function MergePdf() {
         size: blob.size,
         beforeSize: totalSize,
         beforePreviewUrl: makePreviewUrl(included[0]?.thumbnail ? dataUrlToBlob(included[0].thumbnail!) : (sourceFiles[0]?.file ?? new Blob())),
+      });
+      addOperation({
+        tool: "merge-pdf",
+        toolName: "Merged files",
+        description: `Combined ${included.length} pages from ${sourceFiles.filter(f => f.included).length} files into one PDF (${formatBytes(blob.size)})`,
+        icon: "merge",
+        color: "var(--cat-organize)",
+        beforeSize: totalSize,
+        afterSize: blob.size,
       });
       stopProgress();
       setView("result");

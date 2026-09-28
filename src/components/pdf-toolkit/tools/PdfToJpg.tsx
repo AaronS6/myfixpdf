@@ -14,7 +14,7 @@ import { useI18n } from "../shared/I18nProvider";
 const tool = getTool("pdf-to-jpg")!;
 
 export function PdfToJpg() {
-  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const { tt, lang } = useI18n();
   const [quality, setQuality] = useState(0.85);
   const [scale, setScale] = useState(1.5);
@@ -56,8 +56,14 @@ export function PdfToJpg() {
         size: results[0].size,
         results,
       });
-      stopProgress();
-      setView("result");
+      addOperation({
+        tool: "pdf-to-jpg",
+        toolName: "Exported as JPG",
+        description: "Converted PDF pages to JPG images",
+        icon: "pdf-to-jpg",
+        color: "var(--cat-convert)",
+      });
+$1
       toast.success(tt("toast.exportedJpg", { n: results.length }));
     } catch (e) {
       stopProgress();

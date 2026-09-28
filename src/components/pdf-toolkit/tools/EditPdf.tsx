@@ -292,7 +292,7 @@ export function EditPdf() {
           <ToolButton onClick={redo} disabled={historyIdx >= history2.length - 1} label="Redo" desc="Re-apply a change you just undid.">
             <Redo2 className="size-4" />
           </ToolButton>
-          <div className="my-1 h-px w-full bg-[var(--border)]" />
+          <div className="mx-1 h-8 w-px shrink-0 bg-[var(--border)] sm:mx-0 sm:my-1 sm:h-px sm:w-full" />
           <ToolButton onClick={() => setTool2("select")} active={tool2 === "select"} label="Select" desc="Move around without drawing anything.">
             <MousePointer2 className="size-4" />
           </ToolButton>
@@ -302,7 +302,7 @@ export function EditPdf() {
           <ToolButton onClick={() => setTool2("draw")} active={tool2 === "draw"} label="Draw freehand" desc="Draw freehand on the page — strokes are baked in on Save.">
             <PenLine className="size-4" />
           </ToolButton>
-          <div className="my-1 h-px w-full bg-[var(--border)]" />
+          <div className="mx-1 h-8 w-px shrink-0 bg-[var(--border)] sm:mx-0 sm:my-1 sm:h-px sm:w-full" />
           <ToolButton onClick={() => rotate(90)} label={`Rotate page ${pageNum} clockwise`} desc={`Rotate this page clockwise (other pages stay the same)`}>
             <RotateCw className="size-4" />
           </ToolButton>
@@ -328,7 +328,7 @@ export function EditPdf() {
           {/* Draw toolbar — inline in sidebar when draw is active */}
           {tool2 === "draw" && (
             <>
-              <div className="my-1 h-px w-full bg-[var(--border)]" />
+              <div className="mx-1 h-8 w-px shrink-0 bg-[var(--border)] sm:mx-0 sm:my-1 sm:h-px sm:w-full" />
               {["var(--foreground)", "var(--brand)", "var(--danger)", "var(--success)", "var(--cat-convert)"].map((c) => (
                 <button
                   key={c}
@@ -632,7 +632,7 @@ function ToolButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed",
+        "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border w-11 h-11 sm:w-auto sm:h-auto px-2.5 py-2 text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed",
         cta
           ? "border-transparent bg-[var(--brand)] px-3 text-white font-bold shadow-sm hover:opacity-90"
           : active

@@ -19,6 +19,7 @@ export function Footer() {
     { tool: "pdf-to-png" },
     { tool: "convert-to-pdf" },
     { tool: "image-converter" },
+    { tool: "image-to-text" },
     { tool: "split-pdf" },
     { tool: "merge-pdf" },
     { tool: "rotate-pdf" },

@@ -51,6 +51,7 @@ export type ToolId =
   | "pdf-to-png"
   | "convert-to-pdf"
   | "image-converter"
+  | "image-to-text"
   | "split-pdf"
   | "merge-pdf"
   | "edit-pdf"

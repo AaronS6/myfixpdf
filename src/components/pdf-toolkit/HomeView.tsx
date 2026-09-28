@@ -251,7 +251,7 @@ export function HomeView() {
         </div>
 
         {/* Cards grid — single unified grid, filtered by the pills */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
           {filteredTools.map((tool, i) => (
             <ToolCard
               key={tool.id}
@@ -392,8 +392,8 @@ function ToolCard({
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)]/60 bg-[var(--card)] p-6 text-left card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:card-shadow-lg hover-ring animate-fade-up"
-      style={{ animationDelay: `${delay}ms`, minHeight: "200px" }}
+      className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border border-[var(--border)]/60 bg-[var(--card)] p-4 text-left card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:card-shadow-lg hover-ring animate-fade-up sm:gap-3 sm:p-6 sm:rounded-2xl"
+      style={{ animationDelay: `${delay}ms`, minHeight: "160px" }}
     >
       {/* Category-colored top accent bar */}
       <div className="absolute inset-x-0 top-0 h-1 opacity-60 transition-opacity group-hover:opacity-100" style={{ background: tool.color }} />
@@ -403,7 +403,7 @@ function ToolCard({
         style={{ background: tool.color }}
       />
       <span
-        className="flex size-11 items-center justify-center rounded-xl text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+        className="flex size-9 items-center justify-center rounded-lg text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 sm:size-11 sm:rounded-xl"
         style={{ background: tool.color }}
       >
         <ToolGlyph id={tool.id} />

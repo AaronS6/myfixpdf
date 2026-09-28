@@ -283,7 +283,7 @@ export function ResultScreen() {
         </div>
       )}
 
-      {/* Preview pane — takes the bulk of the screen, sidebar is narrow */}
+      {/* Preview pane — stacks above sidebar on mobile */}
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
           {showMultiResults ? (
@@ -291,7 +291,7 @@ export function ResultScreen() {
           ) : compareMode && saved && previewUrl && resultFile?.beforePreviewUrl ? (
             <CompareSlider beforeUrl={resultFile.beforePreviewUrl} afterUrl={previewUrl} position={comparePos} onPosition={setComparePos} />
           ) : isPdf && previewUrl ? (
-            <div className="relative h-[85vh]">
+            <div className="relative h-[60vh] lg:h-[85vh]">
               <PdfPreview
                 blob={resultFile!.blob}
                 renderOverlay={(pageIndex, pageW, pageH, scale) => {
@@ -313,7 +313,7 @@ export function ResultScreen() {
               />
             </div>
           ) : isImage && previewUrl ? (
-            <div className="relative h-[85vh]">
+            <div className="relative h-[60vh] lg:h-[85vh]">
               <ImagePreview src={previewUrl} />
             </div>
           ) : (

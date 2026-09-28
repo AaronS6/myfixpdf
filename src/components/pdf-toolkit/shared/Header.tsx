@@ -48,6 +48,7 @@ export function Header() {
         { id: "pdf-to-png", label: tTool("pdf-to-png").name, desc: tTool("pdf-to-png").desc },
         { id: "convert-to-pdf", label: tTool("convert-to-pdf").name, desc: tTool("convert-to-pdf").desc },
         { id: "image-converter", label: tTool("image-converter").name, desc: tTool("image-converter").desc },
+        { id: "image-to-text", label: tTool("image-to-text").name, desc: tTool("image-to-text").desc },
         { id: "extract-text", label: tTool("extract-text").name, desc: tTool("extract-text").desc },
       ],
     },

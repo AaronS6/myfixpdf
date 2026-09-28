@@ -682,10 +682,10 @@ export function EditPng() {
       ctaDisabled={!imageLoaded}
     >
       {target && imageLoaded && imageDims ? (
-        <div className="mt-5 flex gap-3" style={{ height: "calc(100vh - 200px)", minHeight: "500px" }}>
-          {/* Vertical sidebar toolbar */}
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row" style={{ height: "calc(100vh - 200px)", minHeight: "400px" }}>
+          {/* Vertical sidebar toolbar — horizontal on mobile */}
           <div
-            className="flex w-14 flex-col items-center gap-1 overflow-y-auto rounded-xl border p-2 thin-scroll shrink-0"
+            className="flex flex-row gap-1 overflow-x-auto rounded-xl border p-2 thin-scroll sm:flex-col sm:w-14 sm:overflow-y-auto sm:overflow-x-hidden shrink-0"
             style={{ borderColor: "var(--border)", background: "var(--card)" }}
           >
             {TOOLS.map((t) => (

@@ -114,6 +114,7 @@ export function WatermarkPdf() {
         color: "var(--cat-edit)",
       });
       stopProgress();
+      setView("result");
       toast.success(t("toast.watermarkApplied"));
     } catch (e) {
       stopProgress();

@@ -293,6 +293,17 @@
   border: 2px solid transparent;
 }
 
+/* Hidden scrollbar — for scrollable chip rails where the scrollbar
+   would look cluttered (mobile category filters, popular pills, etc.).
+   Keeps touch/mouse scrolling fully working. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ===== Entrance + interaction animations ===== */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }

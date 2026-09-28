@@ -100,7 +100,7 @@ export function HomeView() {
         <div className="absolute -right-20 -top-5 -z-10 size-96 rounded-full bg-gradient-to-br from-[var(--cat-organize)]/8 to-[var(--brand)]/6 blur-3xl animate-float" />
         <div className="absolute bottom-0 left-1/3 -z-10 size-64 rounded-full bg-gradient-to-br from-[var(--cat-edit)]/6 to-[var(--cat-convert)]/6 blur-3xl animate-float-slow" style={{ animationDelay: "-4s" }} />
 
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-24">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
             <div className="mb-6 inline-flex sm:mb-8 items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm border border-[var(--border)]/50">
@@ -191,14 +191,19 @@ export function HomeView() {
               </div>
             )}
 
-            {/* Popular tools quick-access pills */}
-            <div className="mt-6 flex items-center gap-1.5 overflow-x-auto thin-scroll pb-1 max-w-full sm:flex-wrap sm:overflow-visible sm:pb-0 animate-fade-up" style={{ animationDelay: "240ms" }}>
-              <span className="text-xs font-medium text-[var(--muted-foreground)] mr-0.5">{lang === "zh" ? "常用:" : "Popular:"}</span>
-              {popularTools.map((tool) => (
+            {/* Popular tools quick-access pills — max 3 on mobile, all 6 on desktop */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 animate-fade-up sm:gap-2.5" style={{ animationDelay: "240ms" }}>
+              <span className="w-full text-center text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)] sm:w-auto sm:tracking-normal">
+                {lang === "zh" ? "常用:" : "Popular:"}
+              </span>
+              {popularTools.map((tool, idx) => (
                 <button
                   key={tool.id}
                   onClick={() => setView(tool.id)}
-                  className="group inline-flex items-center gap-1.5 rounded-full border border-[var(--border)]/60 bg-[var(--card)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)] transition-all duration-200 hover:border-[var(--brand)] hover:bg-[var(--brand)]/5 hover:shadow-sm hover:scale-105"
+                  className={cn(
+                    "group items-center gap-1.5 rounded-full border border-[var(--border)]/60 bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-all duration-200 hover:border-[var(--brand)] hover:bg-[var(--brand)]/5 hover:shadow-sm hover:scale-105 active:scale-95",
+                    idx >= 3 ? "hidden sm:inline-flex" : "inline-flex",
+                  )}
                 >
                   <span className="size-1.5 rounded-full" style={{ background: tool.color }} />
                   {tTool(tool.id).name}
@@ -216,32 +221,35 @@ export function HomeView() {
       </div>
 
       {/* ===== TOOL GRID with category filter pills ===== */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 overflow-hidden">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-24 overflow-hidden">
         {/* Header + filter pills */}
-        <div className="mb-10 flex flex-col items-center gap-5 animate-fade-up">
+        <div className="mb-8 flex flex-col items-center gap-5 animate-fade-up sm:mb-10">
           <div className="text-center">
             <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
               {t("hero.allTools")}
             </h2>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
           </div>
-          {/* Filter pills */}
-          <div className="flex items-center gap-1 overflow-x-auto rounded-full border border-[var(--border)] bg-[var(--card)] p-1 shadow-sm thin-scroll max-w-full sm:flex-wrap sm:overflow-visible">
+          {/* Filter pills — scrollable chip rail on mobile (inset to page padding),
+              centered wrap on desktop. `w-full` constrains the rail to the parent's
+              width so overflow-x-auto actually scrolls (a shrink-to-fit flex child
+              would otherwise expand to its intrinsic content width and overflow). */}
+          <div className="flex w-full snap-x snap-mandatory items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-200",
+                  "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-95",
                   filter === tab.id
-                    ? "bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-sm"
-                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]",
+                    ? "border-transparent bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-md shadow-[var(--brand)]/20"
+                    : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--brand)]/40 hover:text-[var(--foreground)] hover:shadow-sm",
                 )}
               >
                 {tab.label}
                 <span className={cn(
-                  "inline-flex items-center justify-center rounded-full px-1.5 py-0 text-[10px] font-bold leading-4",
-                  filter === tab.id ? "bg-white/20 text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)]",
+                  "inline-flex items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-4",
+                  filter === tab.id ? "bg-white/25 text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)]",
                 )}>
                   {tab.count}
                 </span>
@@ -309,7 +317,7 @@ export function HomeView() {
       <TrustSection />
 
       {/* Subtle gradient line at the very bottom */}
-      <div className="mx-auto max-w-6xl px-4 pb-8 sm:px-6 overflow-hidden">
+      <div className="mx-auto max-w-6xl px-4 pb-8 pt-2 sm:px-6 sm:pt-0 overflow-hidden">
         <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent animate-gradient-shift" />
         <p className="mt-4 text-center text-xs text-[var(--muted-foreground)]">
           {lang === "zh"
@@ -349,15 +357,15 @@ function TrustSection() {
   ];
 
   return (
-    <section className="mx-auto max-w-5xl px-4 pb-8 sm:px-6 sm:pb-12 overflow-hidden">
-      <div ref={ref} className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
+    <section className="mx-auto max-w-5xl px-4 pb-6 sm:px-6 sm:pb-12 overflow-hidden">
+      <div ref={ref} className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
         {items.map((item, i) => {
           const Icon = item.icon;
           return (
             <div
               key={i}
               className={cn(
-                "group relative bg-[var(--card)] px-6 py-8 sm:px-8 sm:py-10 transition-all duration-500",
+                "group relative bg-[var(--card)] px-5 py-6 sm:px-8 sm:py-10 transition-all duration-500",
                 inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
               )}
               style={{ transitionDelay: `${item.delay}ms` }}

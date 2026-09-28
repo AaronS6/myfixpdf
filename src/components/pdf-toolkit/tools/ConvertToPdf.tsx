@@ -41,7 +41,7 @@ type Orientation = "portrait" | "landscape";
  *   each image embedded on a page sized to the image).
  */
 export function ConvertToPdf() {
-  const { sourceFiles, setSourceFiles, setResult, setView, startProgress, updateProgress, stopProgress } = useDocumentSession();
+  const { sourceFiles, setSourceFiles, setResult, setView, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
   const [pageSize, setPageSize] = useState<OutputPage>("fit");
   const [orientation, setOrientation] = useState<Orientation>("portrait");
   const [margin, setMargin] = useState(20);
@@ -151,6 +151,8 @@ export function ConvertToPdf() {
         icon: "convert-to-pdf",
         color: "var(--cat-convert)",
       });
+      stopProgress();
+      setView("result");
       toast.success("PDF created");
     } catch (e) {
       stopProgress();

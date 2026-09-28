@@ -66,6 +66,8 @@ export function PdfToPng() {
         icon: "pdf-to-png",
         color: "var(--cat-convert)",
       });
+      stopProgress();
+      setView("result");
       toast.success(
         tt("toast.exportedPng", { n: results.length }),
       );

@@ -165,6 +165,8 @@ export function RedactPdf() {
         icon: "redact-pdf",
         color: "var(--cat-edit)",
       });
+      stopProgress();
+      setView("result");
       toast.success(`Applied ${rects.length} redaction${rects.length === 1 ? "" : "s"}`);
     } catch (e) {
       stopProgress();

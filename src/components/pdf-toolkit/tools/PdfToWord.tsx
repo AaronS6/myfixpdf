@@ -40,6 +40,8 @@ export function PdfToWord() {
         icon: "pdf-to-word",
         color: "var(--cat-convert)",
       });
+      stopProgress();
+      setView("result");
       toast.success("Word document ready");
     } catch (e) {
       stopProgress();

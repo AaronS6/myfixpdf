@@ -103,6 +103,9 @@ export function CompressPng() {
         icon: "compress-png",
         color: "var(--cat-compress)",
       });
+      stopProgress();
+      setView("result");
+      toast.success("Image compressed");
     } catch (e) {
       stopProgress();
       toast.error(e instanceof Error ? e.message : "Compression failed");

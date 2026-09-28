@@ -130,6 +130,8 @@ export function SplitPdf() {
         icon: "split-pdf",
         color: "var(--cat-organize)",
       });
+      stopProgress();
+      setView("result");
       toast.success("Split complete");
     } catch (e) {
       stopProgress();

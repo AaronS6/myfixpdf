@@ -63,6 +63,8 @@ export function PdfToJpg() {
         icon: "pdf-to-jpg",
         color: "var(--cat-convert)",
       });
+      stopProgress();
+      setView("result");
       toast.success(tt("toast.exportedJpg", { n: results.length }));
     } catch (e) {
       stopProgress();

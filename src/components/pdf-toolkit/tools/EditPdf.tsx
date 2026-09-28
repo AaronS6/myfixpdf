@@ -366,7 +366,7 @@ export function EditPdf() {
         </div>
 
         {/* Large PDF preview — takes the rest of the space */}
-        <div className="flex-1 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+        <div className="flex-1 min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
           <div className="relative h-full">
             <PdfPreview
               blob={liveBlob}
@@ -395,12 +395,16 @@ export function EditPdf() {
             />
           </div>
         </div>
+      </div>
 
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
-          <b className="text-[var(--foreground)]">Per-page rotation:</b> rotate / delete / duplicate buttons above operate on the
-          page currently in view only — other pages are left untouched. Use the page navigation arrows in the preview
-          toolbar to switch pages, or the +/- zoom controls.
-        </div>
+      {/* Help note — BELOW the sidebar+preview row (full width).
+          Previously this sat INSIDE the sm:flex-row as a third flex item, where
+          its long text ate ~1326px and left only ~2px for the preview, so the
+          PDF canvas Fit-computed to a 30px-wide sliver ("picture not there"). */}
+      <div className="mt-3 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
+        <b className="text-[var(--foreground)]">Per-page rotation:</b> rotate / delete / duplicate buttons above operate on the
+        page currently in view only — other pages are left untouched. Use the page navigation arrows in the preview
+        toolbar to switch pages, or the +/- zoom controls.
       </div>
     </ToolPageShell>
   );

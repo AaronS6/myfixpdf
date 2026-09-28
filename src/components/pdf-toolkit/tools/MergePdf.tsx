@@ -63,7 +63,12 @@ export function MergePdf() {
               // @ts-expect-error pdfjs legacy render context
               await page.render({ canvasContext: ctx, viewport }).promise;
               const thumb = canvas.toDataURL("image/jpeg", 0.6);
-              for (let i = 0; i < f.pageCount!; i++) {
+              // Use the ACTUAL page count from the loaded PDF doc (doc.numPages),
+              // NOT f.pageCount — which is often undefined/stale because the store's
+              // addSourceFiles doesn't compute pageCount. Using f.pageCount caused the
+              // merge to only include ONE file's worth of pages (the loop didn't run
+              // for PDFs with undefined pageCount).
+              for (let i = 0; i < doc.numPages; i++) {
                 pages.push({
                   id: `${f.id}-p${i}`,
                   sourceFileId: f.id,

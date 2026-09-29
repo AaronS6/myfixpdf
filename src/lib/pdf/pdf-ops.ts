@@ -668,12 +668,25 @@ export async function addPageNumbers(
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const pages = doc.getPages();
   const total = pages.length;
+  // Map the user-facing format id (which uses "1"/"3" as examples) to an
+  // UNAMBIGUOUS template with {n}/{total} placeholders. The old code did
+  // format.replace("1", num).replace("3", totalNum) — but "1" and "3" are
+  // ALSO literal digits, so when num or totalNum contained a "1" or "3"
+  // (e.g. page 3, total 13), the sequential replaces corrupted each other
+  // (the "3" inside page number "13" got replaced by the total). Using
+  // {n}/{total} placeholders that can't collide with digit values fixes this.
+  const TEMPLATES: Record<typeof opts.format, string> = {
+    "1/3": "{n}/{total}",
+    "Page 1 of 3": "Page {n} of {total}",
+    "1": "{n}",
+    "1 of 3": "{n} of {total}",
+  };
+  const template = TEMPLATES[opts.format];
+  const totalNum = total + opts.startFrom - 1;
   for (let i = 0; i < total; i++) {
     const page = pages[i];
     const num = i + opts.startFrom;
-    const text = opts.format
-      .replace("1", String(num))
-      .replace("3", String(total + opts.startFrom - 1));
+    const text = template.replace("{n}", String(num)).replace("{total}", String(totalNum));
     const textW = font.widthOfTextAtSize(text, opts.fontSize);
     const { width, height } = page.getSize();
     let x = (width - textW) / 2;

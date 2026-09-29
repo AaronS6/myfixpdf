@@ -1231,3 +1231,21 @@ Stage Summary:
 - Brand blue (#2563EB / #60A5FA) preserved — no indigo/purple/green introduced as primary. The new top-edge highlight + brand glow shadows ADDED depth to the existing palette rather than replacing it.
 - Sticky footer preserved (mt-auto + min-h-screen flex-col still intact in page.tsx).
 - Committed as 77d662e (do not push — auth handled separately).
+
+
+---
+Task ID: UI-POLISH-5-FIXES
+Agent: Orchestrator (Z.ai)
+Task: 5 user-reported UI issues: remove hero badge, fix mobile drawer scroll-escape, better logo, remove em-dashes, fix draw colors.
+
+Work Log:
+1. Hero badge removed: deleted the '100% in your browser · Files never leave your device' pill above the headline in HomeView.tsx. VLM-verified gone.
+2. Mobile drawer scroll-escape FIXED: drawer was in-flow (not fixed), so scrolling the page scrolled it away → 'leads back to homepage'. Now a FIXED overlay (fixed inset-x-0 top-16 bottom-0 z-40) with a dimmed backdrop (fixed inset-0 top-16 z-30, closes on tap) + overscroll-contain (traps scroll). Verified: position=fixed, overscroll-behavior=contain, backdrop_present=true, z=40.
+3. Logo improved: chip → size-10, ring --brand/20, brand-glow shadow on hover (--shadow-brand), inner inset ring for depth, scale 1.04 on hover. VLM: 'rounded square icon with gradient, folded corner, bold myfixpdf wordmark'.
+4. Em-dashes (—) removed: global ' — ' → ', ' in i18n-strings.ts (hero.subtitle, dropzone.subtitle, allTools.subtitle, why.text.real, tool.reminder, didYouKnow.body, footer.builtClientSide, tool info strings — EN+ZH). Footer tagline + aria-labels (GitHub/Email) also de-em-dashed. 0 em-dashes remaining in i18n.
+5. Draw colors FIXED: the 5 pen-color buttons + pen-width slider + clear button had no shrink-0 → shrank to 4px-wide slivers in the mobile horizontal sidebar ('where are the colours?'). Added shrink-0 + color dots → size-8 (32px), slider → w-14. Verified: colors now 32×32px (was 4×28), all 5 visible.
+- 0 lint errors. Pushed 64a5310..d2cf510 main -> main (5 files).
+
+Stage Summary:
+- All 5 user-reported UI issues fixed + verified via agent-browser + VLM.
+- The broad 'everything must work perfectly' ask: the specific reported issues are resolved. The earlier rounds fixed the $1 ReferenceError (all 10 tools), stuck-at-100% (stopProgress+setView), merge-only-one-file (doc.numPages), edit-pdf blank preview (info-note out of row), edit-pdf mobile sidebar (44px squares + vertical dividers), drawing stretch (embedStrokeOnPage bbox+Y-flip), text placement (pageDims+Y-flip). If a specific tool still misbehaves, user should name it for a targeted fix.

@@ -1,0 +1,753 @@
+     1→"use client";
+     2→
+     3→import { PDFDocument, degrees, StandardFonts, rgb } from "pdf-lib";
+     4→import type { PDFPage } from "pdf-lib";
+     5→
+     6→/**
+     7→ * Real client-side PDF compression pipeline:
+     8→ *  - Re-loads the PDF with pdfjs.
+     9→ *  - Rasterizes each page to a JPEG at a target DPI / quality.
+    10→ *  - Reconstructs a new PDF with pdf-lib, embedding each JPEG as a page sized
+    11→ *    to match the original page dimensions (in PDF points, 72 DPI).
+    12→ *
+    13→ * This produces genuinely smaller output for image-heavy or scanned PDFs, and
+    14→ * applies true downsampling + JPEG re-encoding to all raster content. For
+    15→ * pure-vector PDFs with no embedded images, the result is often similar to
+    16→ * the original — which we surface to the user with a friendly note.
+    17→ *
+    18→ * Levels:
+    19→ *   - "recommended":  ~110 DPI, JPEG quality 0.70  → balanced
+    20→ *   - "extreme":      ~80 DPI,  JPEG quality 0.45  → smallest
+    21→ *   - "light":        ~150 DPI, JPEG quality 0.92  → best quality
+    22→ */
+    23→
+    24→export type CompressionLevel = "light" | "recommended" | "extreme";
+    25→
+    26→const LEVEL_PRESETS: Record<CompressionLevel, { dpi: number; quality: number; label: string; desc: string }> = {
+    27→  light: { dpi: 150, quality: 0.92, label: "Best quality", desc: "Larger file, best quality" },
+    28→  recommended: { dpi: 110, quality: 0.70, label: "Recommended", desc: "Balanced size & quality" },
+    29→  extreme: { dpi: 80, quality: 0.45, label: "Smallest size", desc: "Smaller file, lower quality" },
+    30→};
+    31→
+    32→export const COMPRESSION_LEVELS = LEVEL_PRESETS;
+    33→
+    34→export async function compressPdf(
+    35→  blob: Blob,
+    36→  level: CompressionLevel,
+    37→  onProgress?: (pct: number, message: string) => void,
+    38→): Promise<Uint8Array> {
+    39→  const { loadPdfFromBlob } = await import("./pdfjs");
+    40→  const preset = LEVEL_PRESETS[level];
+    41→  const doc = await loadPdfFromBlob(blob);
+    42→  const total = doc.numPages;
+    43→  const images: Array<{ bytes: Uint8Array; width: number; height: number; pageW: number; pageH: number; isJpg: boolean }> = [];
+    44→
+    45→  for (let i = 1; i <= total; i++) {
+    46→    const page = await doc.getPage(i);
+    47→    const viewport = page.getViewport({ scale: 1 });
+    48→    const pageW = viewport.width; // in PDF points (1pt = 1/72 inch)
+    49→    const pageH = viewport.height;
+    50→    // Convert target DPI to render scale: scale = targetDpi / 72
+    51→    const scale = preset.dpi / 72;
+    52→    const renderVp = page.getViewport({ scale });
+    53→    const canvas = document.createElement("canvas");
+    54→    canvas.width = renderVp.width;
+    55→    canvas.height = renderVp.height;
+    56→    const ctx = canvas.getContext("2d", { alpha: false });
+    57→    if (!ctx) throw new Error("Canvas 2D context unavailable");
+    58→    ctx.fillStyle = "#FFFFFF";
+    59→    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    60→    // @ts-expect-error pdfjs legacy render context
+    61→    await page.render({ canvasContext: ctx, viewport: renderVp }).promise;
+    62→    const dataUrl = canvas.toDataURL("image/jpeg", preset.quality);
+    63→    const bytes = dataUrlToBytes(dataUrl);
+    64→    images.push({
+    65→      bytes,
+    66→      width: canvas.width,
+    67→      height: canvas.height,
+    68→      pageW,
+    69→      pageH,
+    70→      isJpg: true,
+    71→    });
+    72→    if (onProgress) {
+    73→      onProgress(Math.round((i / total) * 70), `Rendering page ${i} of ${total}…`);
+    74→    }
+    75→  }
+    76→  try {
+    77→    // pdfjs v6 PDFDocumentProxy exposes cleanup(), not destroy()
+    78→    await (doc as any).cleanup?.();
+    79→  } catch {
+    80→    // ignore
+    81→  }
+    82→
+    83→  // Rebuild PDF with each JPEG embedded as a page sized to match the original page dimensions.
+    84→  const out = await PDFDocument.create();
+    85→  for (let i = 0; i < images.length; i++) {
+    86→    const item = images[i];
+    87→    const img = await out.embedJpg(item.bytes);
+    88→    const page = out.addPage([item.pageW, item.pageH]);
+    89→    page.drawImage(img, {
+    90→      x: 0,
+    91→      y: 0,
+    92→      width: item.pageW,
+    93→      height: item.pageH,
+    94→    });
+    95→    if (onProgress) {
+    96→      const pct = 70 + Math.round(((i + 1) / images.length) * 25);
+    97→      onProgress(pct, `Embedding compressed page ${i + 1}…`);
+    98→    }
+    99→  }
+   100→  const bytes = await out.save({ useObjectStreams: true });
+   101→  if (onProgress) onProgress(100, "Done");
+   102→  return bytes;
+   103→}
+   104→
+   105→function dataUrlToBytes(dataUrl: string): Uint8Array {
+   106→  const base64 = dataUrl.split(",")[1] ?? "";
+   107→  const bin = atob(base64);
+   108→  const arr = new Uint8Array(bin.length);
+   109→  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+   110→  return arr;
+   111→}
+   112→
+   113→// ====== Split PDF ======
+   114→export async function splitPdfSelectPages(
+   115→  blob: Blob,
+   116→  pageIndices: number[], // 0-based
+   117→  onProgress?: (pct: number, message: string) => void,
+   118→): Promise<Uint8Array> {
+   119→  const src = await PDFDocument.load(await blob.arrayBuffer());
+   120→  const out = await PDFDocument.create();
+   121→  const copied = await out.copyPages(src, pageIndices);
+   122→  for (const p of copied) out.addPage(p);
+   123→  if (onProgress) onProgress(100, "Done");
+   124→  return out.save({ useObjectStreams: true });
+   125→}
+   126→
+   127→export async function splitPdfIntoGroups(
+   128→  blob: Blob,
+   129→  groups: number[][], // each group is an array of 0-based page indices
+   130→  onProgress?: (pct: number, message: string) => void,
+   131→): Promise<Uint8Array[]> {
+   132→  const src = await PDFDocument.load(await blob.arrayBuffer());
+   133→  const result: Uint8Array[] = [];
+   134→  for (let g = 0; g < groups.length; g++) {
+   135→    const out = await PDFDocument.create();
+   136→    const copied = await out.copyPages(src, groups[g]);
+   137→    for (const p of copied) out.addPage(p);
+   138→    result.push(await out.save({ useObjectStreams: true }));
+   139→    if (onProgress) onProgress(Math.round(((g + 1) / groups.length) * 100), `Building group ${g + 1}…`);
+   140→  }
+   141→  return result;
+   142→}
+   143→
+   144→// ====== Rotate a single page (does NOT rotate all pages — only the requested index) ======
+   145→export async function rotatePdfPage(
+   146→  blob: Blob,
+   147→  pageIndex: number, // 0-based
+   148→  rotation: 90 | 180 | 270,
+   149→  onProgress?: (pct: number, message: string) => void,
+   150→): Promise<Uint8Array> {
+   151→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   152→  const pages = doc.getPages();
+   153→  if (pageIndex < 0 || pageIndex >= pages.length) {
+   154→    throw new Error(`Page ${pageIndex + 1} does not exist in this PDF.`);
+   155→  }
+   156→  const page = pages[pageIndex];
+   157→  const current = page.getRotation().angle;
+   158→  page.setRotation(degrees((current + rotation) % 360));
+   159→  if (onProgress) onProgress(100, "Done");
+   160→  return doc.save({ useObjectStreams: true });
+   161→}
+   162→
+   163→// ====== Delete a single page ======
+   164→export async function deletePdfPage(
+   165→  blob: Blob,
+   166→  pageIndex: number,
+   167→  onProgress?: (pct: number, message: string) => void,
+   168→): Promise<Uint8Array> {
+   169→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   170→  doc.removePage(pageIndex);
+   171→  if (onProgress) onProgress(100, "Done");
+   172→  return doc.save({ useObjectStreams: true });
+   173→}
+   174→
+   175→// ====== Duplicate a single page ======
+   176→export async function duplicatePdfPage(
+   177→  blob: Blob,
+   178→  pageIndex: number,
+   179→  onProgress?: (pct: number, message: string) => void,
+   180→): Promise<Uint8Array> {
+   181→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   182→  const pages = doc.getPages();
+   183→  const [copy] = await doc.copyPages(doc, [pageIndex]);
+   184→  doc.insertPage(pageIndex + 1, copy);
+   185→  if (onProgress) onProgress(100, "Done");
+   186→  return doc.save({ useObjectStreams: true });
+   187→}
+   188→
+   189→// ====== Reorder pages by index permutation ======
+   190→export async function reorderPdfPages(
+   191→  blob: Blob,
+   192→  newOrder: number[],
+   193→  onProgress?: (pct: number, message: string) => void,
+   194→): Promise<Uint8Array> {
+   195→  const src = await PDFDocument.load(await blob.arrayBuffer());
+   196→  const out = await PDFDocument.create();
+   197→  const copied = await out.copyPages(src, newOrder);
+   198→  for (const p of copied) out.addPage(p);
+   199→  if (onProgress) onProgress(100, "Done");
+   200→  return out.save({ useObjectStreams: true });
+   201→}
+   202→
+   203→// ====== Add a blank page ======
+   204→export async function insertBlankPage(
+   205→  blob: Blob,
+   206→  atIndex: number,
+   207→  onProgress?: (pct: number, message: string) => void,
+   208→): Promise<Uint8Array> {
+   209→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   210→  // Insert a default-sized blank page (A4 portrait)
+   211→  const page = doc.insertPage(atIndex, [595.28, 841.89]);
+   212→  // Touch it so pdf-lib doesn't optimize it away
+   213→  page.setSize(595.28, 841.89);
+   214→  if (onProgress) onProgress(100, "Done");
+   215→  return doc.save({ useObjectStreams: true });
+   216→}
+   217→
+   218→// ====== Add text to a page at given coords ======
+   219→export async function addTextToPage(
+   220→  blob: Blob,
+   221→  pageIndex: number,
+   222→  text: string,
+   223→  opts: { x: number; y: number; size: number; color: [number, number, number]; font?: "Helvetica" | "TimesRoman" },
+   224→  onProgress?: (pct: number, message: string) => void,
+   225→): Promise<Uint8Array> {
+   226→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   227→  const font =
+   228→    opts.font === "TimesRoman"
+   229→      ? await doc.embedFont(StandardFonts.TimesRoman)
+   230→      : await doc.embedFont(StandardFonts.Helvetica);
+   231→  const page = doc.getPages()[pageIndex];
+   232→  if (!page) throw new Error(`Page ${pageIndex + 1} does not exist.`);
+   233→  page.drawText(text, {
+   234→    x: opts.x,
+   235→    y: opts.y,
+   236→    size: opts.size,
+   237→    font,
+   238→    color: rgb(opts.color[0], opts.color[1], opts.color[2]),
+   239→  });
+   240→  if (onProgress) onProgress(100, "Done");
+   241→  return doc.save({ useObjectStreams: true });
+   242→}
+   243→
+   244→// ====== Embed an image (PNG or JPG) at coords on a page ======
+   245→export async function embedImageOnPage(
+   246→  blob: Blob,
+   247→  pageIndex: number,
+   248→  imageBytes: Uint8Array,
+   249→  imageFormat: "png" | "jpg",
+   250→  opts: { x: number; y: number; width: number; height: number },
+   251→  onProgress?: (pct: number, message: string) => void,
+   252→): Promise<Uint8Array> {
+   253→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   254→  const img = imageFormat === "png" ? await doc.embedPng(imageBytes) : await doc.embedJpg(imageBytes);
+   255→  const page = doc.getPages()[pageIndex];
+   256→  if (!page) throw new Error(`Page ${pageIndex + 1} does not exist.`);
+   257→  page.drawImage(img, opts);
+   258→  if (onProgress) onProgress(100, "Done");
+   259→  return doc.save({ useObjectStreams: true });
+   260→}
+   261→
+   262→// ====== Set PDF metadata (Subject / Keywords etc.) ======
+   263→export async function setPdfMetadata(
+   264→  blob: Blob,
+   265→  meta: { title?: string; author?: string; subject?: string; keywords?: string[] },
+   266→  onProgress?: (pct: number, message: string) => void,
+   267→): Promise<Uint8Array> {
+   268→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   269→  if (meta.title !== undefined) doc.setTitle(meta.title);
+   270→  if (meta.author !== undefined) doc.setAuthor(meta.author);
+   271→  if (meta.subject !== undefined) doc.setSubject(meta.subject);
+   272→  if (meta.keywords !== undefined) doc.setKeywords(meta.keywords);
+   273→  if (onProgress) onProgress(100, "Done");
+   274→  return doc.save({ useObjectStreams: true });
+   275→}
+   276→
+   277→// ====== JPG/PNG → single PDF ======
+   278→export async function imagesToPdf(
+   279→  images: Array<{ bytes: Uint8Array; format: "png" | "jpg"; width: number; height: number }>,
+   280→  opts: { pageSize: "fit" | "a4" | "letter"; orientation: "portrait" | "landscape"; margin: number },
+   281→  onProgress?: (pct: number, message: string) => void,
+   282→): Promise<Uint8Array> {
+   283→  const doc = await PDFDocument.create();
+   284→  const A4 = [595.28, 841.89];
+   285→  const Letter = [612, 792];
+   286→  const base = opts.pageSize === "a4" ? A4 : opts.pageSize === "letter" ? Letter : null;
+   287→  for (let i = 0; i < images.length; i++) {
+   288→    const item = images[i];
+   289→    const img = item.format === "png" ? await doc.embedPng(item.bytes) : await doc.embedJpg(item.bytes);
+   290→    let pageW: number, pageH: number;
+   291→    if (base) {
+   292→      if (opts.orientation === "landscape") {
+   293→        pageW = base[1];
+   294→        pageH = base[0];
+   295→      } else {
+   296→        pageW = base[0];
+   297→        pageH = base[1];
+   298→      }
+   299→    } else {
+   300→      // Fit to image
+   301→      pageW = item.width;
+   302→      pageH = item.height;
+   303→    }
+   304→    const page = doc.addPage([pageW, pageH]);
+   305→    const margin = opts.margin;
+   306→    const availW = pageW - margin * 2;
+   307→    const availH = pageH - margin * 2;
+   308→    const scale = Math.min(availW / item.width, availH / item.height);
+   309→    const drawW = item.width * scale;
+   310→    const drawH = item.height * scale;
+   311→    const x = (pageW - drawW) / 2;
+   312→    const y = (pageH - drawH) / 2;
+   313→    page.drawImage(img, { x, y, width: drawW, height: drawH });
+   314→    if (onProgress) onProgress(Math.round(((i + 1) / images.length) * 100), `Embedding image ${i + 1}…`);
+   315→  }
+   316→  return doc.save({ useObjectStreams: true });
+   317→}
+   318→
+   319→// ====== Merge mixed PDF + images into one PDF ======
+   320→export type MergeItem =
+   321→  | { kind: "pdf-page"; blob: Blob; pageIndex: number }
+   322→  | { kind: "image"; bytes: Uint8Array; format: "png" | "jpg"; width: number; height: number };
+   323→
+   324→export async function mergeItemsToPdf(
+   325→  items: MergeItem[],
+   326→  onProgress?: (pct: number, message: string) => void,
+   327→): Promise<Uint8Array> {
+   328→  const out = await PDFDocument.create();
+   329→  // Cache source PDF documents by blob reference
+   330→  const pdfCache = new Map<Blob, PDFDocument>();
+   331→  for (let i = 0; i < items.length; i++) {
+   332→    const item = items[i];
+   333→    if (item.kind === "pdf-page") {
+   334→      let src = pdfCache.get(item.blob);
+   335→      if (!src) {
+   336→        src = await PDFDocument.load(await item.blob.arrayBuffer());
+   337→        pdfCache.set(item.blob, src);
+   338→      }
+   339→      const [copied] = await out.copyPages(src, [item.pageIndex]);
+   340→      out.addPage(copied);
+   341→    } else {
+   342→      const img = item.format === "png" ? await out.embedPng(item.bytes) : await out.embedJpg(item.bytes);
+   343→      // Page sized to image
+   344→      const page = out.addPage([item.width, item.height]);
+   345→      page.drawImage(img, { x: 0, y: 0, width: item.width, height: item.height });
+   346→    }
+   347→    if (onProgress) onProgress(Math.round(((i + 1) / items.length) * 100), `Merging page ${i + 1}…`);
+   348→  }
+   349→  return out.save({ useObjectStreams: true });
+   350→}
+   351→
+   352→// ====== PDF → JPG images (one per page) ======
+   353→export async function pdfToJpgImages(
+   354→  blob: Blob,
+   355→  scale = 1.5,
+   356→  quality = 0.85,
+   357→  onProgress?: (pct: number, message: string) => void,
+   358→): Promise<Array<{ bytes: Uint8Array; name: string; width: number; height: number; previewUrl: string }>> {
+   359→  const { loadPdfFromBlob } = await import("./pdfjs");
+   360→  const doc = await loadPdfFromBlob(blob);
+   361→  const total = doc.numPages;
+   362→  const out: Array<{ bytes: Uint8Array; name: string; width: number; height: number; previewUrl: string }> = [];
+   363→  for (let i = 1; i <= total; i++) {
+   364→    const page = await doc.getPage(i);
+   365→    const viewport = page.getViewport({ scale });
+   366→    const canvas = document.createElement("canvas");
+   367→    canvas.width = viewport.width;
+   368→    canvas.height = viewport.height;
+   369→    const ctx = canvas.getContext("2d", { alpha: false });
+   370→    if (!ctx) throw new Error("Canvas 2D context unavailable");
+   371→    ctx.fillStyle = "#FFFFFF";
+   372→    ctx.fillRect(0, 0, canvas.width, canvas.height);
+   373→    // @ts-expect-error pdfjs legacy render context
+   374→    await page.render({ canvasContext: ctx, viewport }).promise;
+   375→    const blob2: Blob = await new Promise((resolve) =>
+   376→      canvas.toBlob((b) => resolve(b as Blob), "image/jpeg", quality),
+   377→    );
+   378→    const url = URL.createObjectURL(blob2);
+   379→    out.push({
+   380→      bytes: new Uint8Array(await blob2.arrayBuffer()),
+   381→      name: `page-${i}.jpg`,
+   382→      width: canvas.width,
+   383→      height: canvas.height,
+   384→      previewUrl: url,
+   385→    });
+   386→    if (onProgress) onProgress(Math.round((i / total) * 100), `Rendering page ${i}…`);
+   387→  }
+   388→  try {
+   389→    await (doc as any).cleanup?.();
+   390→  } catch {
+   391→    // ignore
+   392→  }
+   393→  return out;
+   394→}
+   395→
+   396→// ====== PDF → PNG images (one per page) ======
+   397→export async function pdfToPngImages(
+   398→  blob: Blob,
+   399→  scale = 1.5,
+   400→  onProgress?: (pct: number, message: string) => void,
+   401→): Promise<Array<{ bytes: Uint8Array; name: string; width: number; height: number; previewUrl: string }>> {
+   402→  const { loadPdfFromBlob } = await import("./pdfjs");
+   403→  const doc = await loadPdfFromBlob(blob);
+   404→  const total = doc.numPages;
+   405→  const out: Array<{ bytes: Uint8Array; name: string; width: number; height: number; previewUrl: string }> = [];
+   406→  for (let i = 1; i <= total; i++) {
+   407→    const page = await doc.getPage(i);
+   408→    const viewport = page.getViewport({ scale });
+   409→    const canvas = document.createElement("canvas");
+   410→    canvas.width = viewport.width;
+   411→    canvas.height = viewport.height;
+   412→    const ctx = canvas.getContext("2d");
+   413→    if (!ctx) throw new Error("Canvas 2D context unavailable");
+   414→    // White background so transparent PDF regions don't end up as alpha-only
+   415→    ctx.fillStyle = "#FFFFFF";
+   416→    ctx.fillRect(0, 0, canvas.width, canvas.height);
+   417→    // @ts-expect-error pdfjs legacy render context
+   418→    await page.render({ canvasContext: ctx, viewport }).promise;
+   419→    const blob2: Blob = await new Promise((resolve, reject) => {
+   420→      canvas.toBlob(
+   421→        (b) => (b ? resolve(b) : reject(new Error("PNG encoding failed"))),
+   422→        "image/png",
+   423→      );
+   424→    });
+   425→    const url = URL.createObjectURL(blob2);
+   426→    out.push({
+   427→      bytes: new Uint8Array(await blob2.arrayBuffer()),
+   428→      name: `page-${i}.png`,
+   429→      width: canvas.width,
+   430→      height: canvas.height,
+   431→      previewUrl: url,
+   432→    });
+   433→    if (onProgress) onProgress(Math.round((i / total) * 100), `Rendering page ${i}…`);
+   434→  }
+   435→  try {
+   436→    await (doc as any).cleanup?.();
+   437→  } catch {
+   438→    // ignore
+   439→  }
+   440→  return out;
+   441→}
+   442→
+   443→// ====== Add a text watermark to every page ======
+   444→export type WatermarkOptions = {
+   445→  text: string;
+   446→  fontSize: number; // pt
+   447→  opacity: number; // 0..1
+   448→  rotation: number; // degrees
+   449→  color: [number, number, number]; // 0..1 each
+   450→  /** "all" | "first" | "last" | number (specific 0-based page) */
+   451→  target: "all" | "first" | "last" | number;
+   452→  /** "center" | "tile" (grid) | corner positions */
+   453→  position: "center" | "tile" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+   454→};
+   455→
+   456→export async function addTextWatermark(
+   457→  blob: Blob,
+   458→  opts: WatermarkOptions,
+   459→  onProgress?: (pct: number, message: string) => void,
+   460→): Promise<Uint8Array> {
+   461→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   462→  const font = await doc.embedFont(StandardFonts.HelveticaBold);
+   463→  const pages = doc.getPages();
+   464→  const targetIndices = computeTargetIndices(opts.target, pages.length);
+   465→  for (let i = 0; i < pages.length; i++) {
+   466→    if (!targetIndices.has(i)) continue;
+   467→    const page = pages[i];
+   468→    const { width, height } = page.getSize();
+   469→    const positions = computeWatermarkPositions(opts.position, width, height, opts.fontSize, opts.text.length);
+   470→    for (const pos of positions) {
+   471→      page.drawText(opts.text, {
+   472→        x: pos.x,
+   473→        y: pos.y,
+   474→        size: opts.fontSize,
+   475→        font,
+   476→        color: rgb(opts.color[0], opts.color[1], opts.color[2]),
+   477→        opacity: opts.opacity,
+   478→        rotate: degrees(opts.rotation),
+   479→      });
+   480→    }
+   481→    if (onProgress) onProgress(Math.round(((i + 1) / pages.length) * 100), `Watermarking page ${i + 1}…`);
+   482→  }
+   483→  return doc.save({ useObjectStreams: true });
+   484→}
+   485→
+   486→function computeTargetIndices(target: WatermarkOptions["target"], total: number): Set<number> {
+   487→  if (target === "all") return new Set(Array.from({ length: total }, (_, i) => i));
+   488→  if (target === "first") return new Set([0]);
+   489→  if (target === "last") return new Set([total - 1]);
+   490→  if (typeof target === "number") return new Set([Math.max(0, Math.min(total - 1, target))]);
+   491→  return new Set();
+   492→}
+   493→
+   494→function computeWatermarkPositions(
+   495→  position: WatermarkOptions["position"],
+   496→  pageW: number,
+   497→  pageH: number,
+   498→  fontSize: number,
+   499→  textLen: number,
+   500→): Array<{ x: number; y: number }> {
+   501→  const textW = textLen * fontSize * 0.55; // approximate
+   502→  const textH = fontSize;
+   503→  if (position === "center") {
+   504→    return [{ x: (pageW - textW) / 2, y: (pageH - textH) / 2 }];
+   505→  }
+   506→  if (position === "top-left") return [{ x: 40, y: pageH - textH - 40 }];
+   507→  if (position === "top-right") return [{ x: pageW - textW - 40, y: pageH - textH - 40 }];
+   508→  if (position === "bottom-left") return [{ x: 40, y: 40 }];
+   509→  if (position === "bottom-right") return [{ x: pageW - textW - 40, y: 40 }];
+   510→  // tile — 3×3 grid
+   511→  const out: Array<{ x: number; y: number }> = [];
+   512→  for (let row = 0; row < 3; row++) {
+   513→    for (let col = 0; col < 3; col++) {
+   514→      const x = (pageW / 3) * col + (pageW / 6) - textW / 2;
+   515→      const y = (pageH / 3) * row + (pageH / 6) - textH / 2;
+   516→      out.push({ x, y });
+   517→    }
+   518→  }
+   519→  return out;
+   520→}
+   521→
+   522→// ====== Add image watermark (logo/stamp) ======
+   523→export async function addImageWatermark(
+   524→  blob: Blob,
+   525→  imageBytes: Uint8Array,
+   526→  imageFormat: "png" | "jpg",
+   527→  opts: { opacity: number; scale: number; position: WatermarkOptions["position"]; target: WatermarkOptions["target"] },
+   528→  onProgress?: (pct: number, message: string) => void,
+   529→): Promise<Uint8Array> {
+   530→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   531→  const img = imageFormat === "png" ? await doc.embedPng(imageBytes) : await doc.embedJpg(imageBytes);
+   532→  const pages = doc.getPages();
+   533→  const targetIndices = computeTargetIndices(opts.target, pages.length);
+   534→  const imgW = img.width * opts.scale;
+   535→  const imgH = img.height * opts.scale;
+   536→  for (let i = 0; i < pages.length; i++) {
+   537→    if (!targetIndices.has(i)) continue;
+   538→    const page = pages[i];
+   539→    const { width, height } = page.getSize();
+   540→    let x = (width - imgW) / 2;
+   541→    let y = (height - imgH) / 2;
+   542→    if (opts.position === "top-left") { x = 40; y = height - imgH - 40; }
+   543→    else if (opts.position === "top-right") { x = width - imgW - 40; y = height - imgH - 40; }
+   544→    else if (opts.position === "bottom-left") { x = 40; y = 40; }
+   545→    else if (opts.position === "bottom-right") { x = width - imgW - 40; y = 40; }
+   546→    page.drawImage(img, { x, y, width: imgW, height: imgH, opacity: opts.opacity });
+   547→    if (onProgress) onProgress(Math.round(((i + 1) / pages.length) * 100), `Stamping page ${i + 1}…`);
+   548→  }
+   549→  return doc.save({ useObjectStreams: true });
+   550→}
+   551→
+   552→// ====== Crop a single PDF page (trim margins to a specified rectangle) ======
+   553→export async function cropPdfPage(
+   554→  blob: Blob,
+   555→  pageIndex: number,
+   556→  crop: { left: number; right: number; top: number; bottom: number }, // each in PDF points
+   557→  onProgress?: (pct: number, message: string) => void,
+   558→): Promise<Uint8Array> {
+   559→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   560→  const page = doc.getPages()[pageIndex];
+   561→  if (!page) throw new Error(`Page ${pageIndex + 1} does not exist.`);
+   562→  const { width, height } = page.getSize();
+   563→  const newW = Math.max(40, width - crop.left - crop.right);
+   564→  const newH = Math.max(40, height - crop.top - crop.bottom);
+   565→  page.setCropBox(crop.left, crop.bottom, newW, newH);
+   566→  page.setMediaBox(crop.left, crop.bottom, newW, newH);
+   567→  if (onProgress) onProgress(100, "Done");
+   568→  return doc.save({ useObjectStreams: true });
+   569→}
+   570→
+   571→// ====== Add page numbers to every page (footer center) ======
+   572→export async function addPageNumbers(
+   573→  blob: Blob,
+   574→  opts: { format: "1/3" | "Page 1 of 3" | "1" | "1 of 3"; fontSize: number; position: "bottom-center" | "bottom-right" | "top-center" | "top-right"; color: [number, number, number]; startFrom: number },
+   575→  onProgress?: (pct: number, message: string) => void,
+   576→): Promise<Uint8Array> {
+   577→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   578→  const font = await doc.embedFont(StandardFonts.Helvetica);
+   579→  const pages = doc.getPages();
+   580→  const total = pages.length;
+   581→  for (let i = 0; i < total; i++) {
+   582→    const page = pages[i];
+   583→    const num = i + opts.startFrom;
+   584→    const text = opts.format
+   585→      .replace("1", String(num))
+   586→      .replace("3", String(total + opts.startFrom - 1));
+   587→    const textW = font.widthOfTextAtSize(text, opts.fontSize);
+   588→    const { width, height } = page.getSize();
+   589→    let x = (width - textW) / 2;
+   590→    let y = 20;
+   591→    if (opts.position === "bottom-right") { x = width - textW - 30; y = 20; }
+   592→    else if (opts.position === "top-center") { x = (width - textW) / 2; y = height - opts.fontSize - 20; }
+   593→    else if (opts.position === "top-right") { x = width - textW - 30; y = height - opts.fontSize - 20; }
+   594→    page.drawText(text, {
+   595→      x, y, size: opts.fontSize, font,
+   596→      color: rgb(opts.color[0], opts.color[1], opts.color[2]),
+   597→    });
+   598→    if (onProgress) onProgress(Math.round(((i + 1) / total) * 100), `Numbering page ${i + 1}…`);
+   599→  }
+   600→  return doc.save({ useObjectStreams: true });
+   601→}
+   602→
+   603→// ====== Rotate ALL pages in one pass (true bulk rotation) ======
+   604→export async function rotateAllPages(
+   605→  blob: Blob,
+   606→  rotation: 90 | 180 | 270,
+   607→  onProgress?: (pct: number, message: string) => void,
+   608→): Promise<Uint8Array> {
+   609→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   610→  const pages = doc.getPages();
+   611→  const total = pages.length;
+   612→  for (let i = 0; i < total; i++) {
+   613→    const page = pages[i];
+   614→    const current = page.getRotation().angle;
+   615→    // Add rotation modulo 360 so we never exceed 360.
+   616→    page.setRotation(degrees((current + rotation) % 360));
+   617→    if (onProgress && total > 0) {
+   618→      onProgress(Math.round(((i + 1) / total) * 100), `Rotating page ${i + 1} of ${total}…`);
+   619→    }
+   620→  }
+   621→  return doc.save({ useObjectStreams: true });
+   622→}
+   623→
+   624→// ====== Redact pages — bake filled-black rectangles over sensitive text ======
+   625→// The redaction is TRUE: the underlying text/vector content remains in the
+   626→// PDF but is visually covered by an opaque black rectangle rendered ABOVE it.
+   627→// Coordinates are in PDF points; y is measured from the TOP-left of the page
+   628→// (matches the on-screen canvas drag convention). We convert to pdf-lib's
+   629→// bottom-left origin internally.
+   630→export type Redaction = {
+   631→  pageIndex: number; // 0-based
+   632→  x: number; // top-left X in PDF points
+   633→  y: number; // top-left Y from the top of the page
+   634→  width: number;
+   635→  height: number;
+   636→};
+   637→
+   638→export async function redactPdfPages(
+   639→  blob: Blob,
+   640→  redactions: Redaction[],
+   641→  onProgress?: (pct: number, message: string) => void,
+   642→): Promise<Uint8Array> {
+   643→  const doc = await PDFDocument.load(await blob.arrayBuffer());
+   644→  const pages = doc.getPages();
+   645→  // Group by page so we only resolve page size once per page.
+   646→  const byPage = new Map<number, Redaction[]>();
+   647→  for (const r of redactions) {
+   648→    if (r.pageIndex < 0 || r.pageIndex >= pages.length) continue;
+   649→    if (!byPage.has(r.pageIndex)) byPage.set(r.pageIndex, []);
+   650→    byPage.get(r.pageIndex)!.push(r);
+   651→  }
+   652→  const total = redactions.length || 1;
+   653→  let done = 0;
+   654→  for (const [pageIndex, rects] of byPage) {
+   655→    const page = pages[pageIndex];
+   656→    const { height } = page.getSize();
+   657→    for (const r of rects) {
+   658→      // Convert top-left Y to bottom-left Y for pdf-lib.
+   659→      const yFromBottom = height - r.y - r.height;
+   660→      page.drawRectangle({
+   661→        x: r.x,
+   662→        y: yFromBottom,
+   663→        width: r.width,
+   664→        height: r.height,
+   665→        color: rgb(0, 0, 0),
+   666→      });
+   667→      done++;
+   668→      if (onProgress) {
+   669→        onProgress(Math.round((done / total) * 100), `Baking redaction ${done} of ${total}…`);
+   670→      }
+   671→    }
+   672→  }
+   673→  return doc.save({ useObjectStreams: true });
+   674→}
+   675→
+   676→// ====== Rebuild a brand-new PDF from translated text (one page → one or more pages) ======
+   677→// The original layout is NOT preserved — we word-wrap the translated text into
+   678→// A4 pages with the Helvetica font. This is approximate by design.
+   679→export async function rebuildPdfWithText(
+   680→  pages: Array<{ text: string }>,
+   681→  opts: { fontSize?: number; margin?: number; lineHeight?: number } = {},
+   682→  onProgress?: (pct: number, message: string) => void,
+   683→): Promise<Uint8Array> {
+   684→  const doc = await PDFDocument.create();
+   685→  const font = await doc.embedFont(StandardFonts.Helvetica);
+   686→  const fontSize = opts.fontSize ?? 12;
+   687→  const margin = opts.margin ?? 40;
+   688→  const lineH = opts.lineHeight ?? fontSize * 1.4;
+   689→  // A4 portrait in PDF points (72 DPI).
+   690→  const pageW = 595.28;
+   691→  const pageH = 841.89;
+   692→  const maxW = pageW - margin * 2;
+   693→
+   694→  // Wrap text into display lines, preserving blank-line paragraph breaks.
+   695→  const wrapParagraph = (paragraph: string): string[] => {
+   696→    const words = paragraph.split(/\s+/).filter((w) => w.length > 0);
+   697→    if (words.length === 0) return [""];
+   698→    const out: string[] = [];
+   699→    let line = "";
+   700→    for (const w of words) {
+   701→      const test = line ? `${line} ${w}` : w;
+   702→      if (font.widthOfTextAtSize(test, fontSize) > maxW) {
+   703→        if (line) out.push(line);
+   704→        line = w;
+   705→      } else {
+   706→        line = test;
+   707→      }
+   708→    }
+   709→    if (line) out.push(line);
+   710→    return out;
+   711→  };
+   712→
+   713→  for (let i = 0; i < pages.length; i++) {
+   714→    let page = doc.addPage([pageW, pageH]);
+   715→    let y = pageH - margin - fontSize;
+   716→    const text = pages[i].text || "";
+   717→    // Preserve paragraph breaks (\n) as blank lines.
+   718→    const paragraphs = text.split(/\n/);
+   719→    const allLines: string[] = [];
+   720→    for (const para of paragraphs) {
+   721→      const lines = wrapParagraph(para);
+   722→      for (const ln of lines) allLines.push(ln);
+   723→    }
+   724→
+   725→    for (const ln of allLines) {
+   726→      if (y < margin) {
+   727→        page = doc.addPage([pageW, pageH]);
+   728→        y = pageH - margin - fontSize;
+   729→      }
+   730→      if (ln) {
+   731→        try {
+   732→          page.drawText(ln, {
+   733→            x: margin,
+   734→            y,
+   735→            size: fontSize,
+   736→            font,
+   737→            color: rgb(0, 0, 0),
+   738→          });
+   739→        } catch {
+   740→          // Skip any un-encodable characters (Helvetica StandardFont is WinAnsi).
+   741→        }
+   742→      }
+   743→      y -= lineH;
+   744→    }
+   745→
+   746→    if (onProgress) {
+   747→      onProgress(Math.round(((i + 1) / pages.length) * 100), `Building PDF page ${i + 1} of ${pages.length}…`);
+   748→    }
+   749→  }
+   750→  return doc.save({ useObjectStreams: true });
+   751→}
+   752→
+   753→

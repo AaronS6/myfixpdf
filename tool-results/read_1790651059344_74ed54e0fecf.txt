@@ -1,0 +1,458 @@
+     1→"use client";
+     2→
+     3→import { useState, useMemo, useRef, useEffect } from "react";
+     4→import { FileDropzone } from "./shared/FileDropzone";
+     5→import { useDocumentSession, newFileId, type ToolkitFile } from "@/store/document-session";
+     6→import { TOOLS, CATEGORY_LABELS, CATEGORY_COLORS, type ToolMeta } from "./tools/registry";
+     7→import { imageThumbnail, isPdf, getExt, formatBytes } from "@/lib/pdf/file-helpers";
+     8→import { getPageCount } from "@/lib/pdf/pdfjs";
+     9→import { isHeic, convertHeicToPng } from "@/lib/pdf/heic";
+    10→import { toast } from "sonner";
+    11→import { ArrowRight, ShieldCheck, Zap, Layers, FileStack } from "lucide-react";
+    12→import { useDocumentSession as useSession } from "@/store/document-session";
+    13→import { useI18n } from "./shared/I18nProvider";
+    14→import { cn } from "@/lib/utils";
+    15→
+    16→type FilterCat = "all" | "compress" | "convert" | "organize" | "edit";
+    17→
+    18→export function HomeView() {
+    19→  const setView = useSession((s) => s.setView);
+    20→  const addSourceFiles = useSession((s) => s.addSourceFiles);
+    21→  const removeSourceFile = useSession((s) => s.removeSourceFile);
+    22→  const clearSourceFiles = useSession((s) => s.clearSourceFiles);
+    23→  const sourceFiles = useSession((s) => s.sourceFiles);
+    24→  const [busy, setBusy] = useState(false);
+    25→  const [filter, setFilter] = useState<FilterCat>("all");
+    26→  const { t, tTool, tt, lang } = useI18n();
+    27→
+    28→  const handleFiles = async (files: File[]) => {
+    29→    setBusy(true);
+    30→    try {
+    31→      const toolkitFiles: ToolkitFile[] = [];
+    32→      for (let fi = 0; fi < files.length; fi++) {
+    33→        let f = files[fi];
+    34→        // Auto-convert HEIC → PNG so the browser can render + process it
+    35→        if (isHeic(f)) {
+    36→          try {
+    37→            toast.info(lang === "zh" ? `正在转换 HEIC → PNG: ${f.name}` : `Converting HEIC → PNG: ${f.name}`, { duration: 3000 });
+    38→            f = await convertHeicToPng(f);
+    39→            toast.success(lang === "zh" ? `已转换: ${f.name}` : `Converted: ${f.name}`);
+    40→          } catch {
+    41→            toast.error(lang === "zh" ? `无法转换 HEIC 文件: ${files[fi].name}` : `Could not convert HEIC file: ${files[fi].name}`);
+    42→            continue;
+    43→          }
+    44→        }
+    45→        const ext = getExt(f.name);
+    46→        const tf: ToolkitFile = {
+    47→          id: newFileId(), file: f, name: f.name,
+    48→          type: f.type || (isPdf(f) ? "application/pdf" : ext === ".png" ? "image/png" : "image/jpeg"),
+    49→          ext, size: f.size, included: true,
+    50→        };
+    51→        if (isPdf(f)) {
+    52→          try { tf.pageCount = await getPageCount(f); }
+    53→          catch (e) {
+    54→            const msg = e instanceof Error ? e.message : String(e);
+    55→            if (/encrypted/i.test(msg)) { toast.error(tt("toast.encryptedPdf", { name: f.name })); continue; }
+    56→            toast.error(tt("toast.readPdfError", { name: f.name, msg })); continue;
+    57→          }
+    58→        } else if (f.type.startsWith("image/")) {
+    59→          try { tf.thumbnail = await imageThumbnail(f); } catch {}
+    60→        }
+    61→        toolkitFiles.push(tf);
+    62→      }
+    63→      if (toolkitFiles.length === 0) { setBusy(false); return; }
+    64→      // Add files — don't auto-route. Show bubbles and let user pick a tool.
+    65→      addSourceFiles(toolkitFiles);
+    66→      toast.success(
+    67→        lang === "zh" ? `已添加 ${toolkitFiles.length} 个文件` : `Added ${toolkitFiles.length} file${toolkitFiles.length > 1 ? "s" : ""}`,
+    68→        { description: lang === "zh" ? "选择下方工具开始使用" : "Pick a tool below to get started", duration: 4000 },
+    69→      );
+    70→    } finally { setBusy(false); }
+    71→  };
+    72→
+    73→  // Popular tools for quick-access pills in the hero
+    74→  const popularTools = useMemo(() => {
+    75→    const ids = ["compress-pdf", "merge-pdf", "pdf-to-word", "edit-pdf", "split-pdf", "convert-to-pdf"];
+    76→    return ids.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as ToolMeta[];
+    77→  }, []);
+    78→
+    79→  // Filtered tools based on the active category filter
+    80→  const filteredTools = useMemo(() => {
+    81→    if (filter === "all") return TOOLS;
+    82→    return TOOLS.filter(t => t.category === filter);
+    83→  }, [filter]);
+    84→
+    85→  const filterTabs: Array<{ id: FilterCat; label: string; count: number }> = [
+    86→    { id: "all", label: lang === "zh" ? "全部" : "All", count: TOOLS.length },
+    87→    { id: "compress", label: CATEGORY_LABELS.compress, count: TOOLS.filter(t => t.category === "compress").length },
+    88→    { id: "convert", label: CATEGORY_LABELS.convert, count: TOOLS.filter(t => t.category === "convert").length },
+    89→    { id: "organize", label: CATEGORY_LABELS.organize, count: TOOLS.filter(t => t.category === "organize").length },
+    90→    { id: "edit", label: CATEGORY_LABELS.edit, count: TOOLS.filter(t => t.category === "edit").length },
+    91→  ];
+    92→
+    93→  return (
+    94→    <div className="relative overflow-hidden max-w-[100vw]">
+    95→      {/* ===== HERO ===== */}
+    96→      <section className="relative overflow-hidden">
+    97→        <div className="absolute inset-0 -z-10 grain" />
+    98→        {/* Floating decorative orbs — larger, more visible */}
+    99→        <div className="absolute -left-20 top-10 -z-10 size-80 rounded-full bg-gradient-to-br from-[var(--brand)]/12 to-[var(--brand-accent)]/8 blur-3xl animate-float-slow" />
+   100→        <div className="absolute -right-20 -top-5 -z-10 size-96 rounded-full bg-gradient-to-br from-[var(--cat-organize)]/8 to-[var(--brand)]/6 blur-3xl animate-float" />
+   101→        <div className="absolute bottom-0 left-1/3 -z-10 size-64 rounded-full bg-gradient-to-br from-[var(--cat-edit)]/6 to-[var(--cat-convert)]/6 blur-3xl animate-float-slow" style={{ animationDelay: "-4s" }} />
+   102→
+   103→        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-24">
+   104→          <div className="mx-auto max-w-3xl text-center">
+   105→            {/* Badge */}
+   106→            <div className="mb-6 inline-flex sm:mb-8 items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm border border-[var(--border)]/50">
+   107→              <ShieldCheck className="size-3.5 text-[var(--success)]" />
+   108→              {t("hero.badge")}
+   109→            </div>
+   110→
+   111→            {/* Headline — big, bold, two-tone */}
+   112→            <h1 className="text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.15]" style={{ animationDelay: "60ms" }}>
+   113→              {t("hero.title1")}{" "}
+   114→              <span className="brand-gradient-text">{t("hero.titleAccent")}</span>
+   115→            </h1>
+   116→
+   117→            {/* Subtitle — lighter weight, more breathing room */}
+   118→            <p className="mx-auto mt-5 max-w-xl sm:mt-7 text-sm font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.65" }}>
+   119→              {t("hero.subtitle")}
+   120→            </p>
+   121→
+   122→            {/* Dropzone — prominent, centered, max-width constrained */}
+   123→            <div className="mx-auto mt-8 max-w-xl animate-fade-up" style={{ animationDelay: "180ms" }}>
+   124→              <FileDropzone
+   125→                accept=".pdf,.png,.jpg,.jpeg,.docx,.heic,.heif"
+   126→                multiple
+   127→                onFiles={handleFiles}
+   128→                accentColor="var(--brand)"
+   129→                title={t("hero.dropzone.title")}
+   130→                subtitle={t("hero.dropzone.subtitle")}
+   131→                ctaText={busy ? t("tool.loading") : t("hero.dropzone.cta")}
+   132→              />
+   133→            </div>
+   134→
+   135→            {/* File bubbles — clean pill chips inside the hero */}
+   136→            {sourceFiles.length > 0 && (
+   137→              <div className="mx-auto mt-5 max-w-xl sm:mt-6 animate-fade-up">
+   138→                <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 card-shadow">
+   139→                  <div className="flex flex-wrap items-center justify-center gap-2.5">
+   140→                    {sourceFiles.map((f) => {
+   141→                      const isPdfFile = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+   142→                      return (
+   143→                        <div
+   144→                          key={f.id}
+   145→                          className="group relative flex items-center gap-2.5 rounded-full bg-[var(--muted)] py-1.5 pl-2 pr-1.5 animate-pop-in transition-all hover:bg-[var(--accent)] hover:shadow-sm"
+   146→                        >
+   147→                          {/* File type icon — clean circle */}
+   148→                          <span
+   149→                            className="flex size-7 shrink-0 items-center justify-center rounded-full text-white"
+   150→                            style={{ background: isPdfFile ? "var(--brand)" : "var(--cat-convert)" }}
+   151→                          >
+   152→                            {isPdfFile ? (
+   153→                              <svg viewBox="0 0 24 24" fill="none" className="size-3.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+   154→                            ) : (
+   155→                              <svg viewBox="0 0 24 24" fill="none" className="size-3.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" /></svg>
+   156→                            )}
+   157→                          </span>
+   158→                          {/* File name + size — single line */}
+   159→                          <div className="flex items-center gap-1.5 min-w-0">
+   160→                            <span className="truncate text-xs font-semibold text-[var(--foreground)] max-w-[100px]">{f.name}</span>
+   161→                            <span className="text-[10px] text-[var(--muted-foreground)] whitespace-nowrap">
+   162→                              {f.pageCount ? `${f.pageCount}p · ` : ""}{formatBytes(f.size)}
+   163→                            </span>
+   164→                          </div>
+   165→                          {/* Remove — subtle, appears on hover */}
+   166→                          <button
+   167→                            onClick={() => removeSourceFile(f.id)}
+   168→                            className="flex size-5 shrink-0 items-center justify-center rounded-full text-[var(--muted-foreground)] transition-all hover:bg-[var(--danger)] hover:text-white"
+   169→                            aria-label="Remove file"
+   170→                          >
+   171→                            <svg viewBox="0 0 24 24" fill="none" className="size-3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+   172→                          </button>
+   173→                        </div>
+   174→                      );
+   175→                    })}
+   176→                  </div>
+   177→                  {/* Footer row */}
+   178→                  <div className="mt-3 flex items-center justify-center gap-3 border-t border-[var(--border)] pt-3">
+   179→                    <button
+   180→                      onClick={() => clearSourceFiles()}
+   181→                      className="text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--danger)]"
+   182→                    >
+   183→                      {lang === "zh" ? "清除全部" : "Clear all"}
+   184→                    </button>
+   185→                    <span className="text-[var(--border)]">·</span>
+   186→                    <span className="text-xs font-medium text-[var(--brand)]">
+   187→                      {lang === "zh" ? "选择下方工具开始 →" : "Pick a tool below to start →"}
+   188→                    </span>
+   189→                  </div>
+   190→                </div>
+   191→              </div>
+   192→            )}
+   193→
+   194→          </div>
+   195→
+   196→          {/* Popular tools quick-access pills — wider container (max-w-5xl) so all 6 fit
+   197→              on one line on desktop. Previously this row sat inside the hero's max-w-3xl
+   198→              (768px), which wasn't wide enough for 6 pills + label, so the 6th pill
+   199→              wrapped to a lonely second line (the "orphan pill" regression). Max 3 on mobile. */}
+   200→          <div className="mx-auto mt-6 max-w-5xl flex flex-wrap items-center justify-center gap-2 animate-fade-up sm:gap-2.5" style={{ animationDelay: "240ms" }}>
+   201→              <span className="w-full text-center text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)] sm:w-auto sm:tracking-normal">
+   202→                {lang === "zh" ? "常用:" : "Popular:"}
+   203→              </span>
+   204→              {popularTools.map((tool, idx) => (
+   205→                <button
+   206→                  key={tool.id}
+   207→                  onClick={() => setView(tool.id)}
+   208→                  className={cn(
+   209→                    "group items-center gap-1.5 rounded-full border border-[var(--border)]/60 bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-all duration-200 hover:border-[var(--brand)] hover:bg-[var(--brand)]/5 hover:shadow-sm hover:scale-105 active:scale-95",
+   210→                    idx >= 3 ? "hidden sm:inline-flex" : "inline-flex",
+   211→                  )}
+   212→                >
+   213→                  <span className="size-1.5 rounded-full" style={{ background: tool.color }} />
+   214→                  {tTool(tool.id).name}
+   215→                  <ArrowRight className="size-3 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-0.5" />
+   216→                </button>
+   217→              ))}
+   218→            </div>
+   219→        </div>
+   220→      </section>
+   221→
+   222→      {/* Divider */}
+   223→      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+   224→        <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
+   225→      </div>
+   226→
+   227→      {/* ===== TOOL GRID with category filter pills ===== */}
+   228→      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-24 overflow-hidden">
+   229→        {/* Header + filter pills */}
+   230→        <div className="mb-8 flex flex-col items-center gap-5 animate-fade-up sm:mb-10">
+   231→          <div className="text-center">
+   232→            <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
+   233→              {t("hero.allTools")}
+   234→            </h2>
+   235→            <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
+   236→          </div>
+   237→          {/* Filter pills — scrollable chip rail on mobile (inset to page padding),
+   238→              centered wrap on desktop. `w-full` constrains the rail to the parent's
+   239→              width so overflow-x-auto actually scrolls (a shrink-to-fit flex child
+   240→              would otherwise expand to its intrinsic content width and overflow). */}
+   241→          <div className="flex w-full snap-x snap-mandatory items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
+   242→            {filterTabs.map((tab) => (
+   243→              <button
+   244→                key={tab.id}
+   245→                onClick={() => setFilter(tab.id)}
+   246→                className={cn(
+   247→                  "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-95",
+   248→                  filter === tab.id
+   249→                    ? "border-transparent bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-md shadow-[var(--brand)]/20"
+   250→                    : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--brand)]/40 hover:text-[var(--foreground)] hover:shadow-sm",
+   251→                )}
+   252→              >
+   253→                {tab.label}
+   254→                <span className={cn(
+   255→                  "inline-flex items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-4",
+   256→                  filter === tab.id ? "bg-white/25 text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)]",
+   257→                )}>
+   258→                  {tab.count}
+   259→                </span>
+   260→              </button>
+   261→            ))}
+   262→          </div>
+   263→        </div>
+   264→
+   265→        {/* Cards grid — single unified grid, filtered by the pills */}
+   266→        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+   267→          {filteredTools.map((tool, i) => (
+   268→            <ToolCard
+   269→              key={tool.id}
+   270→              tool={tool}
+   271→              name={tTool(tool.id).name}
+   272→              desc={tTool(tool.id).desc}
+   273→              onClick={() => setView(tool.id)}
+   274→              delay={i * 30}
+   275→            />
+   276→          ))}
+   277→        </div>
+   278→
+   279→        {/* Beam — external app card */}
+   280→        <div className="mt-6 overflow-hidden">
+   281→          <a
+   282→            href="https://mybeam.vercel.app/"
+   283→            target="_blank"
+   284→            rel="noopener noreferrer"
+   285→            className="group relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border border-[var(--brand)]/20 sm:flex-row sm:items-center sm:gap-5 bg-gradient-to-r from-[var(--brand)]/5 to-[var(--brand-accent)]/5 p-6 card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:card-shadow-lg"
+   286→          >
+   287→            {/* Floating gradient orb */}
+   288→            <div className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-20" style={{ background: "var(--brand)" }} />
+   289→            {/* Icon */}
+   290→            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+   291→              <svg viewBox="0 0 24 24" fill="none" className="size-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+   292→                <path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" />
+   293→              </svg>
+   294→            </span>
+   295→            {/* Text */}
+   296→            <div className="relative z-10 flex-1">
+   297→              <div className="flex items-center gap-2">
+   298→                <p className="text-base font-bold text-[var(--foreground)]">Beam</p>
+   299→                <span className="rounded-full bg-[var(--brand)]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--brand)]">New App</span>
+   300→              </div>
+   301→              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+   302→                {lang === "zh"
+   303→                  ? "通过扫描二维码或在网络中搜索，即时传输文件和图片 — 无需注册。"
+   304→                  : "Transfer files and photos instantly by scanning a QR code or searching on your network — no sign-up needed."}
+   305→              </p>
+   306→            </div>
+   307→            {/* Arrow */}
+   308→            <div className="relative z-10 flex items-center text-sm font-bold text-[var(--brand)] opacity-0 transition-opacity group-hover:opacity-100">
+   309→              {lang === "zh" ? "打开" : "Open"} <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-1" />
+   310→            </div>
+   311→          </a>
+   312→        </div>
+   313→      </section>
+   314→
+   315→      {/* Divider */}
+   316→      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+   317→        <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--border)] to-transparent" />
+   318→      </div>
+   319→
+   320→      {/* ===== TRUST SECTION — clean, no numbers ===== */}
+   321→      <TrustSection />
+   322→
+   323→      {/* Subtle gradient line at the very bottom */}
+   324→      <div className="mx-auto max-w-6xl px-4 pb-8 pt-2 sm:px-6 sm:pt-0 overflow-hidden">
+   325→        <div className="h-px w-full bg-gradient-to-r from-transparent via-[var(--brand)]/30 to-transparent animate-gradient-shift" />
+   326→        <p className="mt-4 text-center text-xs text-[var(--muted-foreground)]">
+   327→          {lang === "zh"
+   328→            ? "由 Aaron Shan (温哥华 11 年级学生) 用 pdf-lib、pdf.js 和你的浏览器构建"
+   329→            : "Built with pdf-lib, pdf.js, and your browser — by Aaron Shan, Vancouver BC Grade 11 Student"}
+   330→        </p>
+   331→      </div>
+   332→    </div>
+   333→  );
+   334→}
+   335→
+   336→/** Intersection Observer hook — returns true once the element enters the viewport. */
+   337→function useInView<T extends HTMLElement>(): [React.RefObject<T | null>, boolean] {
+   338→  const ref = useRef<T>(null);
+   339→  const [inView, setInView] = useState(false);
+   340→  useEffect(() => {
+   341→    const el = ref.current;
+   342→    if (!el) return;
+   343→    const ro = new IntersectionObserver(
+   344→      ([entry]) => { if (entry.isIntersecting) { setInView(true); ro.disconnect(); } },
+   345→      { threshold: 0.15 },
+   346→    );
+   347→    ro.observe(el);
+   348→    return () => ro.disconnect();
+   349→  }, []);
+   350→  return [ref, inView];
+   351→}
+   352→
+   353→function TrustSection() {
+   354→  const { t, lang } = useI18n();
+   355→  const [ref, inView] = useInView<HTMLDivElement>();
+   356→
+   357→  const items = [
+   358→    { icon: ShieldCheck, color: "var(--success)", title: t("hero.why.title.private"), text: t("hero.why.text.private"), delay: 0 },
+   359→    { icon: Zap, color: "var(--brand)", title: t("hero.why.title.real"), text: t("hero.why.text.real"), delay: 150 },
+   360→    { icon: Layers, color: "var(--cat-organize)", title: t("hero.why.title.chain"), text: t("hero.why.text.chain"), delay: 300 },
+   361→  ];
+   362→
+   363→  return (
+   364→    <section className="mx-auto max-w-5xl px-4 pb-6 sm:px-6 sm:pb-12 overflow-hidden">
+   365→      <div ref={ref} className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] card-shadow">
+   366→        {items.map((item, i) => {
+   367→          const Icon = item.icon;
+   368→          return (
+   369→            <div
+   370→              key={i}
+   371→              className={cn(
+   372→                "group relative bg-[var(--card)] px-5 py-6 sm:px-8 sm:py-10 transition-all duration-500",
+   373→                inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
+   374→              )}
+   375→              style={{ transitionDelay: `${item.delay}ms` }}
+   376→            >
+   377→              {/* Hover gradient wash */}
+   378→              <div
+   379→                className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+   380→                style={{ background: `radial-gradient(circle at 50% 0%, ${item.color}10, transparent 70%)` }}
+   381→              />
+   382→              <div className="relative z-10 flex flex-col items-center text-center">
+   383→                <Icon
+   384→                  className="size-8 transition-transform duration-500 group-hover:scale-110"
+   385→                  style={{ color: item.color }}
+   386→                />
+   387→                <p className="mt-4 text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
+   388→                <p className="mt-1.5 text-xs leading-relaxed text-[var(--muted-foreground)] max-w-[220px]">{item.text}</p>
+   389→              </div>
+   390→            </div>
+   391→          );
+   392→        })}
+   393→      </div>
+   394→    </section>
+   395→  );
+   396→}
+   397→
+   398→function ToolCard({
+   399→  tool, name, desc, onClick, delay = 0,
+   400→}: {
+   401→  tool: ToolMeta; name: string; desc: string; onClick: () => void; delay?: number;
+   402→}) {
+   403→  const { t } = useI18n();
+   404→  return (
+   405→    <button
+   406→      onClick={onClick}
+   407→      className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border border-[var(--border)]/60 bg-[var(--card)] p-4 text-left card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:card-shadow-lg hover-ring animate-fade-up sm:gap-3 sm:p-6 sm:rounded-2xl"
+   408→      style={{ animationDelay: `${delay}ms`, minHeight: "160px" }}
+   409→    >
+   410→      {/* Category-colored top accent bar */}
+   411→      <div className="absolute inset-x-0 top-0 h-1 opacity-60 transition-opacity group-hover:opacity-100" style={{ background: tool.color }} />
+   412→      {/* Floating gradient orb */}
+   413→      <div
+   414→        className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-25"
+   415→        style={{ background: tool.color }}
+   416→      />
+   417→      <span
+   418→        className="flex size-8 items-center justify-center rounded-lg text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 sm:size-11 sm:rounded-xl"
+   419→        style={{ background: tool.color }}
+   420→      >
+   421→        <ToolGlyph id={tool.id} />
+   422→      </span>
+   423→      <div className="relative z-10">
+   424→        <p className="text-xs font-semibold text-[var(--foreground)] sm:text-sm">{name}</p>
+   425→        <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)] line-clamp-2 sm:text-xs">{desc}</p>
+   426→      </div>
+   427→      <div className="mt-auto flex items-center text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100" style={{ color: tool.color }}>
+   428→        {t("common.openTool")} <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-1" />
+   429→      </div>
+   430→    </button>
+   431→  );
+   432→}
+   433→
+   434→function ToolGlyph({ id }: { id: string }) {
+   435→  const map: Record<string, React.ReactNode> = {
+   436→    "compress-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9V5a2 2 0 0 1 2-2h4" /><path d="M20 9V5a2 2 0 0 0-2-2h-4" /><path d="M4 15v4a2 2 0 0 0 2 2h4" /><path d="M20 15v4a2 2 0 0 1-2 2h-4" /><path d="M12 8v8" /><path d="m9 11 3 3 3-3" /></svg>,
+   437→    "compress-png": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" /></svg>,
+   438→    "pdf-to-word": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="m9 13 6 6" /><path d="m15 13-6 6" /></svg>,
+   439→    "word-to-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="m9 13 6 6" /><path d="m15 13-6 6" /></svg>,
+   440→    "pdf-to-jpg": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" /></svg>,
+   441→    "pdf-to-png": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.5-3.5L13 16" /></svg>,
+   442→    "convert-to-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M9 13h6" /></svg>,
+   443→    "split-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="18" rx="1.5" /><rect x="13" y="3" width="8" height="18" rx="1.5" /></svg>,
+   444→    "merge-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 6 4 4 4-4" /><path d="M12 10v8" /><path d="M5 22h14" /></svg>,
+   445→    "edit-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>,
+   446→    "watermark-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z" opacity="0.3" /><path d="M9 12l2 2 4-4" /></svg>,
+   447→    "reorder-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
+   448→    "extract-text": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3" /><path d="M9 20h6" /><path d="M12 4v16" /></svg>,
+   449→    "page-numbers": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9h16" /><path d="M4 15h16" /><path d="M10 3 8 21" /><path d="M16 3l-2 18" /></svg>,
+   450→    "redact-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><rect x="7" y="13" width="10" height="4" fill="currentColor" stroke="none" /></svg>,
+   451→    "rotate-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>,
+   452→    "delete-pages": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /></svg>,
+   453→    "crop-pdf": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14" /><path d="M18 22V8a2 2 0 0 0-2-2H2" /></svg>,
+   454→    "edit-png": <svg viewBox="0 0 24 24" fill="none" className="size-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>,
+   455→  };
+   456→  return <>{map[id] ?? <FileStack className="size-5" />}</>;
+   457→}
+   458→

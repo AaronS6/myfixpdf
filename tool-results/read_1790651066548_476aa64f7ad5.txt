@@ -1,0 +1,754 @@
+     1→"use client";
+     2→
+     3→import { useEffect, useMemo, useRef, useState } from "react";
+     4→import {
+     5→  Download,
+     6→  RefreshCw,
+     7→  Combine,
+     8→  Scissors,
+     9→  PenLine,
+    10→  FileText,
+    11→  FilePlus2,
+    12→  Info,
+    13→  History,
+    14→  Image as ImageIcon,
+    15→  ChevronLeft,
+    16→  AlertTriangle,
+    17→  CheckCircle2,
+    18→  Layers,
+    19→  Archive,
+    20→  RotateCcw,
+    21→  RotateCw,
+    22→  Pencil,
+    23→  Sparkles,
+    24→} from "lucide-react";
+    25→import { useDocumentSession, type ToolId } from "@/store/document-session";
+    26→import { formatBytes, percentSaved, downloadBlob, makePreviewUrl } from "@/lib/pdf/file-helpers";
+    27→import { PdfPreview } from "./PdfPreview";
+    28→import { ImagePreview } from "./ImagePreview";
+    29→import { SignaturePadModal } from "./SignaturePadModal";
+    30→import { DescriptionModal } from "./DescriptionModal";
+    31→import { toast } from "sonner";
+    32→import { cn } from "@/lib/utils";
+    33→import { embedImageOnPage, setPdfMetadata, rotatePdfPage } from "@/lib/pdf/pdf-ops";
+    34→import { useI18n } from "./I18nProvider";
+    35→
+    36→const SIZE_WARNING_PDF_MB = 10;
+    37→const SIZE_WARNING_IMG_MB = 5;
+    38→
+    39→export function ResultScreen() {
+    40→  const { resultFile, setView, chainTo, setResult, reset, startProgress, updateProgress, stopProgress, pushHistory, operations } = useDocumentSession();
+    41→  const { t, tt, lang } = useI18n();
+    42→  const [compareMode, setCompareMode] = useState(false);
+    43→  const [comparePos, setComparePos] = useState(50);
+    44→  const [rename, setRename] = useState<string>("");
+    45→  const [sigModal, setSigModal] = useState(false);
+    46→  const [descModal, setDescModal] = useState(false);
+    47→  const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
+    48→  // sigPos is in CSS pixels relative to the page canvas (top-left origin).
+    49→  // The scale + page dims are captured at render time into the ref below.
+    50→  const [sigPos, setSigPos] = useState<{ x: number; y: number; w: number; h: number; page: number }>({
+    51→    x: 80,
+    52→    y: 80,
+    53→    w: 200,
+    54→    h: 80,
+    55→    page: 0,
+    56→  });
+    57→  // Live ref to the page dims/scale the overlay was last rendered with.
+    58→  // Used at bake time to convert CSS pixels → PDF points (and flip Y).
+    59→  const sigOverlayInfoRef = useRef<{ pageW: number; pageH: number; scale: number; pageIndex: number }>({
+    60→    pageW: 595.28,
+    61→    pageH: 841.89,
+    62→    scale: 1,
+    63→    pageIndex: 0,
+    64→  });
+    65→  const fileInputRef = useRef<HTMLInputElement | null>(null);
+    66→
+    67→  useEffect(() => {
+    68→    if (resultFile) setRename(resultFile.name);
+    69→  }, [resultFile]);
+    70→
+    71→  const isPdf = resultFile?.type === "application/pdf";
+    72→  const isImage = resultFile?.type?.startsWith("image/");
+    73→  const showMultiResults = !!(resultFile?.results && resultFile.results.length > 0);
+    74→
+    75→  // Memoize preview URL — must be called BEFORE any early return to satisfy rules-of-hooks.
+    76→  const previewUrl = useMemo(() => (resultFile ? makePreviewUrl(resultFile.blob) : null), [resultFile]);
+    77→
+    78→  if (!resultFile && !showMultiResults) {
+    79→    return (
+    80→      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+    81→        <p className="text-[var(--muted-foreground)]">{t("result.noResult")}</p>
+    82→        <button onClick={() => setView("home")} className="mt-3 rounded-lg bg-[var(--brand)] px-4 py-2 text-white">
+    83→          {t("result.backHome")}
+    84→        </button>
+    85→      </div>
+    86→    );
+    87→  }
+    88→
+    89→  const oversizeThreshold = isPdf ? SIZE_WARNING_PDF_MB : isImage ? SIZE_WARNING_IMG_MB : SIZE_WARNING_PDF_MB;
+    90→  const isOversize = resultFile && resultFile.size > oversizeThreshold * 1024 * 1024;
+    91→  const savedPct = resultFile?.beforeSize ? percentSaved(resultFile.beforeSize, resultFile.size) : 0;
+    92→  const saved = !!resultFile?.beforeSize && resultFile.beforeSize > resultFile.size;
+    93→
+    94→  const handleDownload = () => {
+    95→    if (!resultFile) return;
+    96→    downloadBlob(resultFile.blob, rename || resultFile.name);
+    97→    toast.success(t("result.downloadStarted"), { description: rename || resultFile.name });
+    98→  };
+    99→
+   100→  const handleDownloadAllZip = async () => {
+   101→    if (!resultFile?.results) return;
+   102→    const { downloadAsZip } = await import("@/lib/pdf/convert-ops");
+   103→    await downloadAsZip(
+   104→      resultFile.results.map((r) => ({ blob: r.blob, name: r.name })),
+   105→      "pdf-toolkit-export.zip",
+   106→    );
+   107→    toast.success(t("result.zipDownloaded"));
+   108→  };
+   109→
+   110→  // Rotate the current preview 90° clockwise.
+   111→  // - PDF: bake rotation into the requested page via pdf-lib (rotatePdfPage).
+   112→  // - Image: rotate the pixels via canvas and replace the result blob.
+   113→  const handleRotate = async () => {
+   114→    if (!resultFile) return;
+   115→    try {
+   116→      if (isPdf) {
+   117→        const pageIndex = Math.max(0, sigOverlayInfoRef.current?.pageIndex ?? 0);
+   118→        startProgress(lang === "zh" ? `正在旋转第 ${pageIndex + 1} 页…` : `Rotating page ${pageIndex + 1}…`, "determinate", 0);
+   119→        const out = await rotatePdfPage(resultFile.blob, pageIndex, 90, (pct, msg) => updateProgress(msg, pct));
+   120→        const newBlob = new Blob([out as unknown as BlobPart], { type: "application/pdf" });
+   121→        setResult({ ...resultFile, blob: newBlob, size: newBlob.size, name: rename || resultFile.name });
+   122→        stopProgress();
+   123→        toast.success(lang === "zh" ? `已旋转第 ${pageIndex + 1} 页 90° 顺时针` : `Rotated page ${pageIndex + 1} 90° clockwise`);
+   124→      } else if (isImage) {
+   125→        startProgress(lang === "zh" ? "正在旋转图片…" : "Rotating image…", "determinate", 0);
+   126→        const rotated = await rotateImageBlobCw(resultFile.blob);
+   127→        // Preserve ext; mime may shift from jpeg to png if rotated blob becomes png.
+   128→        const ext = resultFile.ext || (rotated.type === "image/png" ? ".png" : ".jpg");
+   129→        const name = rename || resultFile.name;
+   130→        const finalName = ext === resultFile.ext ? name : name.replace(/\.(png|jpe?g)$/i, "") + ext;
+   131→        setResult({
+   132→          ...resultFile,
+   133→          blob: rotated,
+   134→          type: rotated.type,
+   135→          ext,
+   136→          size: rotated.size,
+   137→          name: finalName,
+   138→        });
+   139→        stopProgress();
+   140→        toast.success(lang === "zh" ? "已旋转图片 90° 顺时针" : "Rotated image 90° clockwise");
+   141→      }
+   142→    } catch (e) {
+   143→      stopProgress();
+   144→      toast.error(e instanceof Error ? e.message : (lang === "zh" ? "旋转失败" : "Rotate failed"));
+   145→    }
+   146→  };
+   147→
+   148→  const handleAddSignature = async (sig: { dataUrl: string; format: "drawn" | "typed"; color: string }) => {
+   149→    if (!resultFile) return;
+   150→    setSigModal(false);
+   151→    setSignaturePreview(sig.dataUrl);
+   152→    // The signature will be baked in when the user clicks "Apply signature" via the apply button below
+   153→    toast.success(t("result.signatureReady"), { duration: 4000 });
+   154→  };
+   155→
+   156→  const applySignature = async () => {
+   157→    if (!resultFile || !signaturePreview) return;
+   158→    try {
+   159→      startProgress("Baking signature into the PDF…");
+   160→      // Convert dataURL → bytes
+   161→      const base64 = signaturePreview.split(",")[1] ?? "";
+   162→      const bin = atob(base64);
+   163→      const bytes = new Uint8Array(bin.length);
+   164→      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+   165→      // Convert overlay CSS pixels → PDF points (Y measured from bottom-left in PDF space).
+   166→      const { pageW, pageH, scale, pageIndex } = sigOverlayInfoRef.current;
+   167→      const safeScale = scale > 0 ? scale : 1;
+   168→      const pdfX = sigPos.x / safeScale;
+   169→      // Y-up conversion: pdfY is the bottom-left Y of the signature rectangle.
+   170→      const pdfY = pageH - (sigPos.y + sigPos.h) / safeScale;
+   171→      const pdfW = sigPos.w / safeScale;
+   172→      const pdfH = sigPos.h / safeScale;
+   173→      const out = await embedImageOnPage(
+   174→        resultFile.blob,
+   175→        pageIndex,
+   176→        bytes,
+   177→        "png",
+   178→        {
+   179→          x: pdfX,
+   180→          y: pdfY,
+   181→          width: Math.max(1, pdfW),
+   182→          height: Math.max(1, pdfH),
+   183→        },
+   184→        (pct, msg) => useDocumentSession.getState().updateProgress(msg, pct),
+   185→      );
+   186→      const newBlob = new Blob([out as unknown as BlobPart], { type: "application/pdf" });
+   187→      setResult({ ...resultFile, blob: newBlob, size: newBlob.size, name: rename || resultFile.name });
+   188→      setSignaturePreview(null);
+   189→      stopProgress();
+   190→      toast.success(t("result.signatureApplied"));
+   191→    } catch (e) {
+   192→      stopProgress();
+   193→      toast.error(e instanceof Error ? e.message : (lang === "zh" ? "应用签名失败" : "Failed to apply signature"));
+   194→    }
+   195→  };
+   196→
+   197→  return (
+   198→    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 overflow-hidden max-w-[100vw]">
+   199→      {/* Header row */}
+   200→      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+   201→        <div className="flex items-center gap-2">
+   202→          <button
+   203→            onClick={() => {
+   204→              pushHistory();
+   205→              setView("home");
+   206→            }}
+   207→            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+   208→            aria-label="Back"
+   209→          >
+   210→            <ChevronLeft className="size-4" />
+   211→          </button>
+   212→          <div>
+   213→            <input
+   214→              type="text"
+   215→              value={rename}
+   216→              onChange={(e) => setRename(e.target.value)}
+   217→              className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-base font-bold sm:text-lg text-[var(--foreground)] outline-none hover:border-[var(--border)] focus:border-[var(--brand)]"
+   218→              style={{ width: `${Math.max(20, rename.length + 2)}ch` }}
+   219→              aria-label="Edit filename"
+   220→            />
+   221→            <div className="mt-1 flex items-center gap-2 px-2">
+   222→              <span className="inline-flex items-center gap-1 rounded-md bg-[var(--muted)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--muted-foreground)]">
+   223→                {isPdf ? <FileText className="size-3" /> : isImage ? <ImageIcon className="size-3" /> : null}
+   224→                {resultFile?.ext.toUpperCase().replace(".", "") || "FILE"}
+   225→              </span>
+   226→              <span className="text-sm font-semibold text-[var(--foreground)]">{formatBytes(resultFile?.size ?? 0)}</span>
+   227→              {saved && (
+   228→                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--success)]/10 px-2 py-0.5 text-xs font-semibold text-[var(--success)]">
+   229→                  <RefreshCw className="size-3" />
+   230→                  {formatBytes(resultFile!.beforeSize!)} → {formatBytes(resultFile!.size)} (−{savedPct}%)
+   231→                </span>
+   232→              )}
+   233→            </div>
+   234→          </div>
+   235→        </div>
+   236→        <div className="flex items-center gap-2">
+   237→          {saved && (
+   238→            <button
+   239→              onClick={() => setCompareMode((v) => !v)}
+   240→              className={cn(
+   241→                "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all",
+   242→                compareMode
+   243→                  ? "border-[var(--brand)] bg-[var(--brand)]/8 text-[var(--brand)]"
+   244→                  : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
+   245→              )}
+   246→            >
+   247→              <Layers className="size-4" /> {compareMode ? t("result.compare.exit") : t("result.compare")}
+   248→            </button>
+   249→          )}
+   250→          {/* Rotate button — for PDF bakes rotation into the current page; for images rotates via canvas */}
+   251→          {(isPdf || isImage) && (
+   252→            <button
+   253→              onClick={handleRotate}
+   254→              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-all hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+   255→              aria-label={t("result.rotate")}
+   256→              title={t("result.rotate")}
+   257→            >
+   258→              <RotateCw className="size-4" /> {t("result.rotate")}
+   259→            </button>
+   260→          )}
+   261→          <button
+   262→            onClick={handleDownload}
+   263→            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.03]"
+   264→          >
+   265→            <Download className="size-4" /> {t("result.download")}
+   266→          </button>
+   267→        </div>
+   268→      </div>
+   269→
+   270→      {/* Oversize warning */}
+   271→      {isOversize && (
+   272→        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 p-3 text-sm text-[var(--warning)]">
+   273→          <AlertTriangle className="size-5 shrink-0 text-[var(--warning)]" />
+   274→          <span className="flex-1">
+   275→            {tt("result.oversize.body", { size: formatBytes(resultFile!.size) })}
+   276→          </span>
+   277→          <button
+   278→            onClick={() => chainTo("compress-pdf")}
+   279→            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--warning)] px-3 py-1.5 text-xs font-bold text-white hover:opacity-90"
+   280→          >
+   281→            <Sparkles className="size-3.5" /> {t("result.compressMore")}
+   282→          </button>
+   283→        </div>
+   284→      )}
+   285→
+   286→      {/* Preview pane — stacks above sidebar on mobile */}
+   287→      <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
+   288→        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+   289→          {showMultiResults ? (
+   290→            <MultiResultsGallery results={resultFile!.results!} />
+   291→          ) : compareMode && saved && previewUrl && resultFile?.beforePreviewUrl ? (
+   292→            <CompareSlider beforeUrl={resultFile.beforePreviewUrl} afterUrl={previewUrl} position={comparePos} onPosition={setComparePos} />
+   293→          ) : isPdf && previewUrl ? (
+   294→            <div className="relative h-[50vh] sm:h-[60vh] lg:h-[85vh]">
+   295→              <PdfPreview
+   296→                blob={resultFile!.blob}
+   297→                renderOverlay={(pageIndex, pageW, pageH, scale) => {
+   298→                  // Capture page/scale info for bake-time conversion. Writing to a ref during
+   299→                  // render is safe (does not trigger re-render).
+   300→                  sigOverlayInfoRef.current = { pageW, pageH, scale, pageIndex };
+   301→                  if (!signaturePreview) return null;
+   302→                  return (
+   303→                    <SignatureOverlay
+   304→                      dataUrl={signaturePreview}
+   305→                      pos={sigPos}
+   306→                      onChange={setSigPos}
+   307→                      onApply={applySignature}
+   308→                      onRemove={() => setSignaturePreview(null)}
+   309→                      pageIndex={pageIndex}
+   310→                    />
+   311→                  );
+   312→                }}
+   313→              />
+   314→            </div>
+   315→          ) : isImage && previewUrl ? (
+   316→            <div className="relative h-[50vh] sm:h-[60vh] lg:h-[85vh]">
+   317→              <ImagePreview src={previewUrl} />
+   318→            </div>
+   319→          ) : (
+   320→            <div className="flex h-64 items-center justify-center text-[var(--muted-foreground)]">{t("result.noPreview")}</div>
+   321→          )}
+   322→        </div>
+   323→
+   324→        {/* Action toolbar */}
+   325→        <div className="space-y-4">
+   326→          {/* What you've done — operation history (moved to top so it's visible) */}
+   327→          {operations.length > 0 && (
+   328→            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+   329→              <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+   330→                <History className="size-3.5 text-[var(--brand)]" />
+   331→                {lang === "zh" ? "操作历史" : "What you've done"}
+   332→              </p>
+   333→              <div className="space-y-2">
+   334→                {operations.map((op, i) => (
+   335→                  <div key={op.id} className="flex items-start gap-2.5">
+   336→                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: op.color }}>
+   337→                      {i + 1}
+   338→                    </span>
+   339→                    <div className="min-w-0 flex-1">
+   340→                      <p className="text-xs font-semibold text-[var(--foreground)]">{op.toolName}</p>
+   341→                      <p className="text-[11px] leading-snug text-[var(--muted-foreground)]">{op.description}</p>
+   342→                    </div>
+   343→                    {op.beforeSize && op.afterSize && op.beforeSize !== op.afterSize && (
+   344→                      <span className="shrink-0 rounded-full bg-[var(--muted)] px-1.5 py-0.5 text-[10px] font-bold" style={{ color: op.afterSize < op.beforeSize ? "var(--success)" : "var(--warning)" }}>
+   345→                        {formatBytes(op.beforeSize)} → {formatBytes(op.afterSize)}
+   346→                      </span>
+   347→                    )}
+   348→                  </div>
+   349→                ))}
+   350→              </div>
+   351→            </div>
+   352→          )}
+   353→
+   354→          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+   355→            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{t("result.continueWorking")}</p>
+   356→            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+   357→              {isPdf && (
+   358→                <>
+   359→                  <ActionButton icon={Sparkles} label={t("result.compressMore")} color="var(--cat-compress)" onClick={() => chainTo("compress-pdf")} />
+   360→                  <ActionButton icon={Combine} label={t("result.mergeMore")} color="var(--cat-organize)" onClick={() => chainTo("merge-pdf")} />
+   361→                  <ActionButton icon={Scissors} label={t("result.splitThis")} color="var(--cat-organize)" onClick={() => chainTo("split-pdf")} />
+   362→                  <ActionButton icon={PenLine} label={t("result.signAnnotate")} color="var(--cat-edit)" onClick={() => setSigModal(true)} />
+   363→                  <ActionButton icon={FileText} label={t("result.addDescription")} color="var(--cat-edit)" onClick={() => setDescModal(true)} />
+   364→                  <ActionButton icon={Layers} label={t("result.editPages")} color="var(--cat-edit)" onClick={() => chainTo("edit-pdf")} />
+   365→                </>
+   366→              )}
+   367→              {isImage && (
+   368→                <>
+   369→                  <ActionButton icon={Sparkles} label={t("result.compressMore")} color="var(--cat-compress)" onClick={() => chainTo("compress-png")} />
+   370→                  <ActionButton icon={Combine} label={t("result.addToMerge")} color="var(--cat-organize)" onClick={() => chainTo("merge-pdf")} />
+   371→                  <ActionButton icon={FilePlus2} label={t("result.addToConvertPdf")} color="var(--cat-convert)" onClick={() => chainTo("convert-to-pdf")} />
+   372→                  <ActionButton icon={Pencil} label={t("result.editImage")} color="var(--cat-compress)" onClick={() => chainTo("edit-png")} />
+   373→                </>
+   374→              )}
+   375→              <ActionButton icon={RotateCcw} label={t("result.startOver")} color="var(--muted-foreground)" onClick={reset} />
+   376→            </div>
+   377→          </div>
+   378→
+   379→          {/* Tips */}
+   380→          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm shadow-sm">
+   381→            <p className="mb-1 flex items-center gap-1.5 font-semibold text-[var(--foreground)]">
+   382→              <Info className="size-4 text-[var(--brand)]" /> {t("result.didYouKnow")}
+   383→            </p>
+   384→            <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+   385→              {t("result.didYouKnow.body")}
+   386→            </p>
+   387→          </div>
+   388→
+   389→          {/* Compare tip */}
+   390→          {saved && (
+   391→            <div className="rounded-2xl border border-[var(--success)]/30 bg-[var(--success)]/8 p-4 text-sm shadow-sm">
+   392→              <p className="flex items-center gap-1.5 font-semibold text-[var(--success)]">
+   393→                <CheckCircle2 className="size-4" /> {t("result.saved")} {savedPct}%
+   394→              </p>
+   395→              <p className="mt-1 text-xs text-[var(--foreground)]/70">
+   396→                {lang === "zh"
+   397→                  ? `原文件 ${formatBytes(resultFile!.beforeSize!)} → 现在 ${formatBytes(resultFile!.size)}。可用上方「对比前后效果」按钮查看质量。`
+   398→                  : `Original ${formatBytes(resultFile!.beforeSize!)} → Now ${formatBytes(resultFile!.size)}. Use the “Compare before/after” button above to visually confirm quality.`}
+   399→              </p>
+   400→            </div>
+   401→          )}
+   402→        </div>
+   403→      </div>
+   404→
+   405→      {/* Hidden ZIP-download helper if multi-result */}
+   406→      {showMultiResults && (
+   407→        <div className="mt-4 flex justify-center">
+   408→          <button
+   409→            onClick={handleDownloadAllZip}
+   410→            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
+   411→          >
+   412→            <Archive className="size-4" /> {t("result.downloadAllZip")}
+   413→          </button>
+   414→        </div>
+   415→      )}
+   416→
+   417→      {sigModal && <SignaturePadModal open={sigModal} onClose={() => setSigModal(false)} onConfirm={handleAddSignature} />}
+   418→      {descModal && <DescriptionModal open={descModal} onClose={() => setDescModal(false)} />}
+   419→    </div>
+   420→  );
+   421→}
+   422→
+   423→function ActionButton({
+   424→  icon: Icon,
+   425→  label,
+   426→  color,
+   427→  onClick,
+   428→}: {
+   429→  icon: React.ComponentType<{ className?: string }>;
+   430→  label: string;
+   431→  color: string;
+   432→  onClick: () => void;
+   433→}) {
+   434→  return (
+   435→    <button
+   436→      onClick={onClick}
+   437→      className="flex flex-col items-start gap-1.5 rounded-xl border border-[var(--border)] p-3 text-left transition-all hover:border-[var(--brand)] hover:shadow-sm"
+   438→    >
+   439→      <span className="flex size-8 items-center justify-center rounded-lg text-white" style={{ background: color }}>
+   440→        <Icon className="size-4" />
+   441→      </span>
+   442→      <span className="text-xs font-semibold text-[var(--foreground)] leading-tight">{label}</span>
+   443→    </button>
+   444→  );
+   445→}
+   446→
+   447→function MultiResultsGallery({ results }: { results: NonNullable<NonNullable<ReturnType<typeof useDocumentSession.getState>["resultFile"]>["results"]> }) {
+   448→  const { t } = useI18n();
+   449→  return (
+   450→    <div className="bg-[var(--muted)] p-4">
+   451→      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+   452→        {results.map((r, i) => (
+   453→          <div key={i} className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-sm">
+   454→            <div className="aspect-square overflow-hidden bg-[var(--muted)] p-2">
+   455→              {r.previewUrl ? (
+   456→                // eslint-disable-next-line @next/next/no-img-element
+   457→                <img src={r.previewUrl} alt={r.name} className="h-full w-full object-contain" />
+   458→              ) : (
+   459→                <div className="flex h-full items-center justify-center text-[var(--muted-foreground)]">
+   460→                  <FileText className="size-8" />
+   461→                </div>
+   462→              )}
+   463→            </div>
+   464→            <div className="border-t border-[var(--border)] p-2">
+   465→              <p className="truncate text-xs font-semibold text-[var(--foreground)]">{r.name}</p>
+   466→              <p className="text-[10px] text-[var(--muted-foreground)]">{formatBytes(r.size)}</p>
+   467→              <button
+   468→                onClick={() => downloadBlob(r.blob, r.name)}
+   469→                className="mt-1 inline-flex w-full items-center justify-center gap-1 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-semibold text-white hover:opacity-90"
+   470→              >
+   471→                <Download className="size-3" /> {t("result.download")}
+   472→              </button>
+   473→            </div>
+   474→          </div>
+   475→        ))}
+   476→      </div>
+   477→    </div>
+   478→  );
+   479→}
+   480→
+   481→/**
+   482→ * Rotate an image blob 90° clockwise via canvas. Returns a fresh PNG blob to preserve quality across rotations.
+   483→ */
+   484→async function rotateImageBlobCw(src: Blob): Promise<Blob> {
+   485→  const bitmap = await loadBitmap(src);
+   486→  const w = bitmap.width;
+   487→  const h = bitmap.height;
+   488→  const canvas = document.createElement("canvas");
+   489→  canvas.width = h;
+   490→  canvas.height = w;
+   491→  const ctx = canvas.getContext("2d");
+   492→  if (!ctx) throw new Error("Canvas 2D context unavailable");
+   493→  ctx.fillStyle = "#FFFFFF";
+   494→  ctx.fillRect(0, 0, canvas.width, canvas.height);
+   495→  // Translate to the new center, rotate 90° CW, then draw centered.
+   496→  ctx.translate(canvas.width / 2, canvas.height / 2);
+   497→  ctx.rotate(Math.PI / 2);
+   498→  ctx.drawImage(bitmap as CanvasImageSource, -w / 2, -h / 2, w, h);
+   499→  try {
+   500→    if (bitmap instanceof ImageBitmap) bitmap.close?.();
+   501→  } catch {
+   502→    // ignore
+   503→  }
+   504→  return await new Promise<Blob>((resolve, reject) => {
+   505→    canvas.toBlob(
+   506→      (b) => (b ? resolve(b) : reject(new Error("Failed to encode rotated image"))),
+   507→      "image/png",
+   508→    );
+   509→  });
+   510→}
+   511→
+   512→/** Load an image blob into either an ImageBitmap or an HTMLImageElement. */
+   513→async function loadBitmap(src: Blob): Promise<ImageBitmap | HTMLImageElement> {
+   514→  if (typeof createImageBitmap === "function") {
+   515→    try {
+   516→      return await createImageBitmap(src);
+   517→    } catch {
+   518→      // fall through to <img> path
+   519→    }
+   520→  }
+   521→  const url = URL.createObjectURL(src);
+   522→  try {
+   523→    return await new Promise<HTMLImageElement>((resolve, reject) => {
+   524→      const img = new Image();
+   525→      img.onload = () => resolve(img);
+   526→      img.onerror = () => reject(new Error("Failed to load image for rotation"));
+   527→      img.src = url;
+   528→    });
+   529→  } finally {
+   530→    // Revoke later (after drawImage in caller). Slight leak acceptable.
+   531→    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+   532→  }
+   533→}
+   534→
+   535→/** Check if a blob URL points to a PDF by fetching its type. */
+   536→async function isPdfBlobUrl(url: string): Promise<boolean> {
+   537→  try {
+   538→    const resp = await fetch(url);
+   539→    const blob = await resp.blob();
+   540→    return blob.type === "application/pdf";
+   541→  } catch {
+   542→    return false;
+   543→  }
+   544→}
+   545→
+   546→/** Render the first page of a PDF (from a blob URL) to a data URL. */
+   547→async function renderPdfFirstPageToDataUrl(blobUrl: string): Promise<string> {
+   548→  const { loadPdfFromBlob, renderPdfPageToCanvas } = await import("@/lib/pdf/pdfjs");
+   549→  const resp = await fetch(blobUrl);
+   550→  const blob = await resp.blob();
+   551→  const doc = await loadPdfFromBlob(blob);
+   552→  const canvas = document.createElement("canvas");
+   553→  // Render at a reasonable scale for the compare slider
+   554→  const page = await doc.getPage(1);
+   555→  const viewport = page.getViewport({ scale: 1.5 });
+   556→  canvas.width = viewport.width;
+   557→  canvas.height = viewport.height;
+   558→  await renderPdfPageToCanvas(doc, 1, canvas, 1.5);
+   559→  try { await (doc as any).cleanup?.(); } catch { /* ignore */ }
+   560→  return canvas.toDataURL("image/jpeg", 0.85);
+   561→}
+   562→
+   563→function CompareSlider({
+   564→  beforeUrl,
+   565→  afterUrl,
+   566→  position,
+   567→  onPosition,
+   568→}: {
+   569→  beforeUrl: string;
+   570→  afterUrl: string;
+   571→  position: number;
+   572→  onPosition: (p: number) => void;
+   573→}) {
+   574→  const containerRef = useRef<HTMLDivElement | null>(null);
+   575→  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+   576→  const [beforeImg, setBeforeImg] = useState<string | null>(null);
+   577→  const [afterImg, setAfterImg] = useState<string | null>(null);
+   578→  const { t } = useI18n();
+   579→
+   580→  useEffect(() => {
+   581→    if (!containerRef.current) return;
+   582→    const update = () => setContainerWidth(containerRef.current?.clientWidth ?? null);
+   583→    update();
+   584→    const ro = new ResizeObserver(update);
+   585→    ro.observe(containerRef.current);
+   586→    return () => ro.disconnect();
+   587→  }, []);
+   588→
+   589→  // Convert blob URLs to renderable image URLs. If the blob is a PDF,
+   590→  // render the first page to a canvas and use the data URL. If it's already
+   591→  // an image, use the URL directly.
+   592→  useEffect(() => {
+   593→    let cancelled = false;
+   594→    (async () => {
+   595→      try {
+   596→        const beforeIsPdf = await isPdfBlobUrl(beforeUrl);
+   597→        const afterIsPdf = await isPdfBlobUrl(afterUrl);
+   598→        const beforeImage = beforeIsPdf ? await renderPdfFirstPageToDataUrl(beforeUrl) : beforeUrl;
+   599→        const afterImage = afterIsPdf ? await renderPdfFirstPageToDataUrl(afterUrl) : afterUrl;
+   600→        if (!cancelled) {
+   601→          setBeforeImg(beforeImage);
+   602→          setAfterImg(afterImage);
+   603→        }
+   604→      } catch {
+   605→        // Fallback: use the URLs directly (will show broken img for PDFs, but at least doesn't crash)
+   606→        if (!cancelled) {
+   607→          setBeforeImg(beforeUrl);
+   608→          setAfterImg(afterUrl);
+   609→        }
+   610→      }
+   611→    })();
+   612→    return () => { cancelled = true; };
+   613→  }, [beforeUrl, afterUrl]);
+   614→
+   615→  return (
+   616→    <div
+   617→      ref={containerRef}
+   618→      className="relative h-[70vh] select-none overflow-hidden bg-[var(--background)]"
+   619→      onMouseMove={(e) => {
+   620→        if (e.buttons !== 1) return;
+   621→        const rect = containerRef.current?.getBoundingClientRect();
+   622→        if (!rect) return;
+   623→        const p = ((e.clientX - rect.left) / rect.width) * 100;
+   624→        onPosition(Math.max(0, Math.min(100, p)));
+   625→      }}
+   626→    >
+   627→      <div className="absolute inset-0 flex items-center justify-center">
+   628→        {afterImg ? (
+   629→          /* eslint-disable-next-line @next/next/no-img-element */
+   630→          <img src={afterImg} alt="After" className="h-full w-full object-contain" />
+   631→        ) : (
+   632→          <span className="text-sm text-[var(--muted-foreground)]">{t("result.loading")}</span>
+   633→        )}
+   634→      </div>
+   635→      <div className="absolute inset-0 overflow-hidden" style={{ width: `${position}%` }}>
+   636→        {beforeImg ? (
+   637→          /* eslint-disable-next-line @next/next/no-img-element */
+   638→          <img src={beforeImg} alt="Before" className="h-full w-full object-contain" style={{ width: containerWidth ?? "100%" }} />
+   639→        ) : null}
+   640→      </div>
+   641→      <div
+   642→        className="compare-handle absolute inset-y-0 w-1 cursor-ew-resize"
+   643→        style={{ left: `calc(${position}% - 2px)` }}
+   644→      >
+   645→        <div className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--card)] text-[var(--brand)] shadow-lg">
+   646→          <ChevronLeft className="size-4 -mr-1" />
+   647→          <ChevronLeft className="size-4 rotate-180" />
+   648→        </div>
+   649→      </div>
+   650→      <div className="absolute left-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{t("result.compare.before")}</div>
+   651→      <div className="absolute right-3 top-3 rounded-md bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{t("result.compare.after")}</div>
+   652→    </div>
+   653→  );
+   654→}
+   655→
+   656→function SignatureOverlay({
+   657→  dataUrl,
+   658→  pos,
+   659→  onChange,
+   660→  onApply,
+   661→  onRemove,
+   662→  pageIndex,
+   663→}: {
+   664→  dataUrl: string;
+   665→  pos: { x: number; y: number; w: number; h: number; page: number };
+   666→  onChange: (p: { x: number; y: number; w: number; h: number; page: number }) => void;
+   667→  onApply: () => void;
+   668→  onRemove: () => void;
+   669→  pageIndex: number;
+   670→}) {
+   671→  const dragRef = useRef<{ kind: "move" | "resize"; startX: number; startY: number; start: typeof pos } | null>(null);
+   672→  const { t, tt } = useI18n();
+   673→
+   674→  // The overlay is always rendered on the page currently shown by PdfPreview.
+   675→  // Sync pos.page so applySignature bakes onto the right page.
+   676→  useEffect(() => {
+   677→    if (pos.page !== pageIndex) {
+   678→      onChange({ ...pos, page: pageIndex });
+   679→    }
+   680→    // eslint-disable-next-line react-hooks/exhaustive-deps
+   681→  }, [pageIndex]);
+   682→
+   683→  return (
+   684→    <div className="pointer-events-none absolute inset-0">
+   685→      <div
+   686→        className="pointer-events-auto absolute select-none"
+   687→        style={{
+   688→          left: pos.x,
+   689→          top: pos.y,
+   690→          width: pos.w,
+   691→          height: pos.h,
+   692→          cursor: "move",
+   693→        }}
+   694→        onMouseDown={(e) => {
+   695→          e.preventDefault();
+   696→          dragRef.current = { kind: "move", startX: e.clientX, startY: e.clientY, start: { ...pos } };
+   697→          const move = (ev: MouseEvent) => {
+   698→            if (!dragRef.current) return;
+   699→            const dx = ev.clientX - dragRef.current.startX;
+   700→            const dy = ev.clientY - dragRef.current.startY;
+   701→            onChange({
+   702→              ...dragRef.current.start,
+   703→              x: dragRef.current.start.x + dx,
+   704→              y: dragRef.current.start.y + dy,
+   705→              page: pageIndex,
+   706→            });
+   707→          };
+   708→          const up = () => {
+   709→            dragRef.current = null;
+   710→            window.removeEventListener("mousemove", move);
+   711→            window.removeEventListener("mouseup", up);
+   712→          };
+   713→          window.addEventListener("mousemove", move);
+   714→          window.addEventListener("mouseup", up);
+   715→        }}
+   716→      >
+   717→        {/* eslint-disable-next-line @next/next/no-img-element */}
+   718→        <img src={dataUrl} alt="Signature" className="h-full w-full object-contain opacity-90" draggable={false} />
+   719→        <div
+   720→          className="absolute -right-1 -bottom-1 size-3 cursor-se-resize rounded-full border-2 border-[var(--brand)] bg-[var(--card)]"
+   721→          onMouseDown={(e) => {
+   722→            e.preventDefault();
+   723→            e.stopPropagation();
+   724→            dragRef.current = { kind: "resize", startX: e.clientX, startY: e.clientY, start: { ...pos } };
+   725→            const move = (ev: MouseEvent) => {
+   726→              if (!dragRef.current) return;
+   727→              const dx = ev.clientX - dragRef.current.startX;
+   728→              const dy = ev.clientY - dragRef.current.startY;
+   729→              const ar = dragRef.current.start.w / Math.max(1, dragRef.current.start.h);
+   730→              const w = Math.max(40, dragRef.current.start.w + dx);
+   731→              const h = w / ar;
+   732→              onChange({ ...dragRef.current.start, w, h, page: pageIndex });
+   733→            };
+   734→            const up = () => {
+   735→              dragRef.current = null;
+   736→              window.removeEventListener("mousemove", move);
+   737→              window.removeEventListener("mouseup", up);
+   738→            };
+   739→            window.addEventListener("mousemove", move);
+   740→            window.addEventListener("mouseup", up);
+   741→          }}
+   742→        />
+   743→        <div className="absolute -top-7 left-0 flex items-center gap-1 rounded-md bg-[var(--foreground)]/90 px-1.5 py-0.5 text-[10px] text-white">
+   744→          <button onClick={onApply} className="rounded bg-[var(--brand)] px-1.5 py-0.5 font-semibold">{t("result.applySignature")}</button>
+   745→          <button onClick={onRemove} className="px-1 hover:text-[var(--danger)]">{t("result.removeSignature")}</button>
+   746→        </div>
+   747→      </div>
+   748→      <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-[var(--card)]/95 px-2 py-1 shadow-md">
+   749→        <span className="text-[10px] text-[var(--muted-foreground)]">{tt("result.onPage", { n: pageIndex + 1 })}</span>
+   750→      </div>
+   751→    </div>
+   752→  );
+   753→}
+   754→

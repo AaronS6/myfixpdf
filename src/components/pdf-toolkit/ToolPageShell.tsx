@@ -123,19 +123,26 @@ export function ToolPageShell({
           pushHistory();
           setView("home");
         }}
-        className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+        className="group mb-4 inline-flex items-center gap-1 rounded-lg px-1.5 py-1 -ml-1.5 text-sm font-medium text-[var(--muted-foreground)] transition-all duration-200 hover:bg-[var(--muted)]/60 hover:text-[var(--foreground)] active:scale-95"
       >
-        <ChevronLeft className="size-4" /> {t("tool.back")}
+        <ChevronLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" /> {t("tool.back")}
       </button>
-      <div className="mb-5 flex items-start gap-3 animate-fade-up">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-md" style={{ background: accent }}>
+      <div className="mb-6 flex items-start gap-3.5 animate-fade-up">
+        <span
+          className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-white shadow-md sm:size-14"
+          style={{
+            background: `linear-gradient(180deg, ${accent} 0%, color-mix(in oklch, ${accent} 80%, black) 100%)`,
+            boxShadow: `0 4px 14px ${accent}30, inset 0 1px 0 0 rgba(255, 255, 255, 0.28)`,
+          }}
+        >
+          <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
           <ToolGlyph id={tool.id} />
         </span>
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-bold tracking-[-0.03em] text-[var(--foreground)] sm:text-3xl leading-tight">
             {tTool(tool.id).name}
           </h1>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">{tTool(tool.id).desc}</p>
+          <p className="mt-1 text-sm leading-relaxed text-[var(--muted-foreground)]">{tTool(tool.id).desc}</p>
         </div>
       </div>
 
@@ -166,14 +173,20 @@ export function ToolPageShell({
             handleFiles(Array.from(e.dataTransfer.files));
           }}
           className={cn(
-            "flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 transition-all",
+            "flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 transition-all duration-200",
             dragOver
-              ? "border-[var(--brand)] bg-[var(--brand)]/5 scale-[1.01]"
-              : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--brand)]",
+              ? "dropzone-active border-[var(--brand)] bg-[var(--brand)]/5"
+              : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--brand)]/60",
           )}
         >
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]" style={{ background: accent }}>
-            <Plus className="size-4" /> {t("tool.addMore")}
+          <label
+            className="group inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-all duration-200 hover:brightness-105 active:scale-95"
+            style={{
+              background: `linear-gradient(180deg, ${accent} 0%, color-mix(in oklch, ${accent} 85%, black) 100%)`,
+              boxShadow: `0 1px 2px ${accent}30, inset 0 1px 0 0 rgba(255, 255, 255, 0.24)`,
+            }}
+          >
+            <Plus className="size-4 transition-transform duration-200 group-hover:rotate-90" /> {t("tool.addMore")}
             <input
               type="file"
               accept={tool.accept}
@@ -188,7 +201,7 @@ export function ToolPageShell({
           <span className="text-sm text-[var(--muted-foreground)]">{t("tool.dropHere")}</span>
           <button
             onClick={() => clearSourceFiles()}
-            className="ml-auto text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:text-[var(--danger)]"
+            className="ml-auto text-xs font-medium text-[var(--muted-foreground)] transition-colors duration-200 hover:text-[var(--danger)] active:scale-95"
           >
             {t("tool.clearAll")}
           </button>
@@ -214,17 +227,17 @@ export function ToolPageShell({
 
       {children}
 
-      {/* Reminder banner — subtle persistent hint */}
+      {/* Reminder banner — subtle persistent hint, now with soft accent wash */}
       {hasFiles && (
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--muted)] p-3 text-xs text-[var(--muted-foreground)]">
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--muted)]/70 p-3 text-xs text-[var(--muted-foreground)]">
           <Info className="size-4 shrink-0 text-[var(--brand)]" />
-          <p>{t("tool.reminder")}</p>
+          <p className="leading-relaxed">{t("tool.reminder")}</p>
         </div>
       )}
 
-      {/* CTA bar */}
+      {/* CTA bar — premium sticky-action feel */}
       {ctaLabel && hasFiles && (
-        <div className="mt-6 flex items-center justify-end gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+        <div className="mt-6 flex items-center justify-end gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-md)]">
           <span className="mr-auto text-sm text-[var(--muted-foreground)]">
             {sourceFiles.length} {t("tool.filesReady")}
           </span>
@@ -232,10 +245,9 @@ export function ToolPageShell({
             onClick={onCtaClick}
             disabled={ctaDisabled}
             className={cn(
-              "inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold w-full sm:w-auto sm:px-5 text-white shadow-sm transition-all hover:scale-[1.02]",
-              ctaDisabled && "cursor-not-allowed opacity-50",
+              "btn-primary inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold w-full sm:w-auto sm:px-5",
+              ctaDisabled && "cursor-not-allowed",
             )}
-            style={{ background: ctaColor ?? accent }}
           >
             {ctaLabel} <ArrowRight className="size-4" />
           </button>

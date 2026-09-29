@@ -89,23 +89,25 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] glass" style={{ overflow: "visible" }}>
+    <header className="sticky top-0 z-40 w-full glass" style={{ overflow: "visible" }}>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setView("home")}
-            className="flex items-center gap-2.5 transition-transform hover:scale-[1.02]"
+            className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1 transition-all duration-200 hover:bg-[var(--muted)]/60"
             aria-label="myfixpdf — home"
           >
-            <span className="relative flex size-9 items-center justify-center rounded-xl bg-white shadow-md overflow-hidden">
+            <span className="relative flex size-9 items-center justify-center rounded-xl bg-white overflow-hidden ring-1 ring-[var(--border)]/60 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:ring-[var(--brand)]/30">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="myfixpdf logo" className="size-9 object-cover" />
+              {/* Subtle top-edge highlight on the logo chip */}
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
             </span>
             <div className="flex flex-col leading-none">
-              <span className="text-[17px] font-bold tracking-tight text-[var(--foreground)]">
+              <span className="text-[17px] font-bold tracking-[-0.025em] text-[var(--foreground)]">
                 my<span className="brand-gradient-text">fixpdf</span>
               </span>
-              <span className="text-[10px] font-medium text-[var(--muted-foreground)]">
+              <span className="text-[10px] font-medium tracking-tight text-[var(--muted-foreground)]">
                 {t("nav.madeBy")}
               </span>
             </div>
@@ -123,19 +125,35 @@ export function Header() {
             >
               <button
                 onClick={() => setOpenMenu(openMenu === cat.id ? null : cat.id)}
-                className="flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium text-[var(--foreground)] transition-all duration-200 hover:bg-[var(--muted)]"
+                className={cn(
+                  "group relative flex items-center gap-1 rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200",
+                  openMenu === cat.id
+                    ? "bg-[var(--muted)] text-[var(--foreground)]"
+                    : "text-[var(--foreground)]/80 hover:bg-[var(--muted)]/70 hover:text-[var(--foreground)]",
+                )}
               >
                 {t(cat.labelKey)}
-                <ChevronDown className={cn("size-3.5 transition-transform", openMenu === cat.id && "rotate-180")} />
+                <ChevronDown className={cn("size-3.5 transition-transform duration-200", openMenu === cat.id ? "rotate-180 text-[var(--brand)]" : "text-[var(--muted-foreground)]")} />
+                {/* Tiny accent dot under the active menu */}
+                <span
+                  className={cn(
+                    "pointer-events-none absolute inset-x-3 -bottom-px h-px origin-center scale-x-0 transition-transform duration-200 group-hover:scale-x-100",
+                    openMenu === cat.id && "scale-x-100",
+                  )}
+                  style={{ background: cat.color, opacity: 0.7 }}
+                />
               </button>
               {openMenu === cat.id && (
-                <div className={cn("absolute top-full pt-2 z-50 animate-fade-up", menuPosition(cat))}>
+                <div className={cn("absolute top-full pt-3 z-50 animate-fade-up", menuPosition(cat))}>
                   <div
                     className={cn(
-                      "grid gap-1 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-2.5 shadow-xl",
+                      "grid gap-1 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-2 overflow-hidden",
                       cat.tools.length > 4 ? "grid-cols-2" : "grid-cols-1",
                     )}
-                    style={{ width: menuWidth(cat) }}
+                    style={{
+                      width: menuWidth(cat),
+                      boxShadow: "var(--shadow-lg), var(--edge-highlight)",
+                    }}
                   >
                     {cat.tools.map((tool) => (
                       <button
@@ -145,19 +163,22 @@ export function Header() {
                           setOpenMenu(null);
                         }}
                         className={cn(
-                          "flex items-start gap-3 rounded-xl p-2.5 text-left transition-all hover:bg-[var(--muted)]",
+                          "group relative flex items-start gap-3 rounded-xl p-2.5 text-left transition-all duration-200 hover:bg-[var(--muted)]",
                           view === tool.id && "bg-[var(--muted)]",
                         )}
                       >
                         <span
-                          className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg text-white shadow-sm"
-                          style={{ background: cat.color }}
+                          className="relative mt-0.5 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg text-white transition-transform duration-200 group-hover:scale-105"
+                          style={{
+                            background: `linear-gradient(180deg, ${cat.color} 0%, color-mix(in oklch, ${cat.color} 82%, black) 100%)`,
+                            boxShadow: `0 1px 2px ${cat.color}40, inset 0 1px 0 0 rgba(255, 255, 255, 0.22)`,
+                          }}
                         >
                           <ToolIcon id={tool.id} />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-[var(--foreground)]">{tool.label}</p>
-                          <p className="truncate text-xs text-[var(--muted-foreground)]">{tool.desc}</p>
+                          <p className="text-sm font-semibold leading-tight text-[var(--foreground)]">{tool.label}</p>
+                          <p className="truncate text-xs leading-snug text-[var(--muted-foreground)]">{tool.desc}</p>
                         </div>
                       </button>
                     ))}
@@ -174,10 +195,10 @@ export function Header() {
             href="https://mybeam.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-[var(--brand)]/30 bg-[var(--brand)]/5 px-3 py-2 text-sm font-semibold text-[var(--brand)] transition-all duration-200 hover:bg-[var(--brand)]/10 hover:shadow-sm hover:scale-105"
+            className="group hidden md:inline-flex items-center gap-1.5 rounded-lg border border-[var(--brand)]/30 bg-[var(--brand)]/[0.06] px-3 py-2 text-sm font-semibold text-[var(--brand)] transition-all duration-200 hover:bg-[var(--brand)]/10 hover:border-[var(--brand)]/50 hover:shadow-[var(--shadow-sm)] active:scale-95"
             title="Beam — transfer files by QR code or network search"
           >
-            <svg viewBox="0 0 24 24" fill="none" className="size-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" className="size-4 transition-transform duration-300 group-hover:-translate-y-px" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" />
             </svg>
             Beam
@@ -185,9 +206,9 @@ export function Header() {
           <button
             onClick={() => setView("home")}
             className={cn(
-              "hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+              "hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-95",
               view === "home"
-                ? "bg-gradient-to-br from-[#2563EB] to-[#60A5FA] text-white shadow-md"
+                ? "btn-primary"
                 : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
             )}
           >
@@ -198,7 +219,7 @@ export function Header() {
           {/* Mobile */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="lg:hidden inline-flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)]"
+            className="lg:hidden inline-flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] transition-all duration-200 hover:bg-[var(--muted)] active:scale-95"
             aria-label="Toggle menu"
           >
             {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}

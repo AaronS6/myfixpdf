@@ -77,9 +77,13 @@ export function ResultScreen() {
 
   if (!resultFile && !showMultiResults) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <p className="text-[var(--muted-foreground)]">{t("result.noResult")}</p>
-        <button onClick={() => setView("home")} className="mt-3 rounded-lg bg-[var(--brand)] px-4 py-2 text-white">
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center animate-fade-up">
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]">
+          <FileText className="size-7 text-[var(--muted-foreground)]" />
+        </div>
+        <p className="text-sm font-medium text-[var(--muted-foreground)]">{t("result.noResult")}</p>
+        <button onClick={() => setView("home")} className="btn-primary mt-5 inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold">
+          <ChevronLeft className="size-4" />
           {t("result.backHome")}
         </button>
       </div>
@@ -197,35 +201,35 @@ export function ResultScreen() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 overflow-hidden max-w-[100vw]">
       {/* Header row */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 animate-fade-up">
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
               pushHistory();
               setView("home");
             }}
-            className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+            className="group flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-200 hover:bg-[var(--muted)] hover:text-[var(--foreground)] active:scale-95"
             aria-label="Back"
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
           </button>
           <div>
             <input
               type="text"
               value={rename}
               onChange={(e) => setRename(e.target.value)}
-              className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-base font-bold sm:text-lg text-[var(--foreground)] outline-none hover:border-[var(--border)] focus:border-[var(--brand)]"
+              className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-base font-bold tracking-[-0.02em] sm:text-lg text-[var(--foreground)] outline-none transition-colors duration-200 hover:border-[var(--border)] focus:border-[var(--brand)] focus:bg-[var(--card)]"
               style={{ width: `${Math.max(20, rename.length + 2)}ch` }}
               aria-label="Edit filename"
             />
             <div className="mt-1 flex items-center gap-2 px-2">
-              <span className="inline-flex items-center gap-1 rounded-md bg-[var(--muted)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--muted-foreground)]">
+              <span className="inline-flex items-center gap-1 rounded-md bg-[var(--muted)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted-foreground)]">
                 {isPdf ? <FileText className="size-3" /> : isImage ? <ImageIcon className="size-3" /> : null}
                 {resultFile?.ext.toUpperCase().replace(".", "") || "FILE"}
               </span>
               <span className="text-sm font-semibold text-[var(--foreground)]">{formatBytes(resultFile?.size ?? 0)}</span>
               {saved && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--success)]/10 px-2 py-0.5 text-xs font-semibold text-[var(--success)]">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--success)]/10 px-2 py-0.5 text-xs font-semibold text-[var(--success)] ring-1 ring-[var(--success)]/20">
                   <RefreshCw className="size-3" />
                   {formatBytes(resultFile!.beforeSize!)} → {formatBytes(resultFile!.size)} (−{savedPct}%)
                 </span>
@@ -238,20 +242,20 @@ export function ResultScreen() {
             <button
               onClick={() => setCompareMode((v) => !v)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all",
+                "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all duration-200 active:scale-95",
                 compareMode
-                  ? "border-[var(--brand)] bg-[var(--brand)]/8 text-[var(--brand)]"
-                  : "border-[var(--border)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
+                  ? "border-[var(--brand)]/60 bg-[var(--brand)]/8 text-[var(--brand)] shadow-[var(--shadow-sm)]"
+                  : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] shadow-[var(--shadow-xs)]",
               )}
             >
               <Layers className="size-4" /> {compareMode ? t("result.compare.exit") : t("result.compare")}
             </button>
           )}
-          {/* Rotate button — for PDF bakes rotation into the current page; for images rotates via canvas */}
+          {/* Rotate button */}
           {(isPdf || isImage) && (
             <button
               onClick={handleRotate}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-all hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-all duration-200 hover:bg-[var(--muted)] hover:text-[var(--foreground)] hover:shadow-[var(--shadow-sm)] active:scale-95"
               aria-label={t("result.rotate")}
               title={t("result.rotate")}
             >
@@ -260,7 +264,7 @@ export function ResultScreen() {
           )}
           <button
             onClick={handleDownload}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-4 py-2 text-sm font-bold text-white shadow-sm transition-transform hover:scale-[1.03]"
+            className="btn-primary inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-bold"
           >
             <Download className="size-4" /> {t("result.download")}
           </button>
@@ -285,7 +289,10 @@ export function ResultScreen() {
 
       {/* Preview pane — stacks above sidebar on mobile */}
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-md)]">
+          {/* Subtle success glow around the preview pane */}
+          <div className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-[var(--brand)]/8 via-transparent to-[var(--brand-accent)]/8" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent" />
           {showMultiResults ? (
             <MultiResultsGallery results={resultFile!.results!} />
           ) : compareMode && saved && previewUrl && resultFile?.beforePreviewUrl ? (
@@ -323,9 +330,9 @@ export function ResultScreen() {
 
         {/* Action toolbar */}
         <div className="space-y-4">
-          {/* What you've done — operation history (moved to top so it's visible) */}
+          {/* What you've done — operation history */}
           {operations.length > 0 && (
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)]">
               <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
                 <History className="size-3.5 text-[var(--brand)]" />
                 {lang === "zh" ? "操作历史" : "What you've done"}
@@ -333,7 +340,10 @@ export function ResultScreen() {
               <div className="space-y-2">
                 {operations.map((op, i) => (
                   <div key={op.id} className="flex items-start gap-2.5">
-                    <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: op.color }}>
+                    <span
+                      className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm"
+                      style={{ background: `linear-gradient(180deg, ${op.color} 0%, color-mix(in oklch, ${op.color} 80%, black) 100%)` }}
+                    >
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -351,7 +361,7 @@ export function ResultScreen() {
             </div>
           )}
 
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)]">
             <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{t("result.continueWorking")}</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {isPdf && (
@@ -377,7 +387,7 @@ export function ResultScreen() {
           </div>
 
           {/* Tips */}
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm shadow-sm">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-sm shadow-[var(--shadow-sm)]">
             <p className="mb-1 flex items-center gap-1.5 font-semibold text-[var(--foreground)]">
               <Info className="size-4 text-[var(--brand)]" /> {t("result.didYouKnow")}
             </p>
@@ -386,13 +396,18 @@ export function ResultScreen() {
             </p>
           </div>
 
-          {/* Compare tip */}
+          {/* Compare tip — premium success glow */}
           {saved && (
-            <div className="rounded-2xl border border-[var(--success)]/30 bg-[var(--success)]/8 p-4 text-sm shadow-sm">
-              <p className="flex items-center gap-1.5 font-semibold text-[var(--success)]">
-                <CheckCircle2 className="size-4" /> {t("result.saved")} {savedPct}%
+            <div className="relative overflow-hidden rounded-2xl border border-[var(--success)]/30 bg-[var(--success)]/8 p-4 text-sm shadow-[var(--shadow-sm)]">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(22,163,74,0.10),transparent_60%)]" />
+              <p className="relative flex items-center gap-1.5 font-semibold text-[var(--success)]">
+                <span className="relative flex size-4 items-center justify-center">
+                  <span className="absolute inset-0 rounded-full bg-[var(--success)]/30 animate-pulse-glow" />
+                  <CheckCircle2 className="relative size-4" />
+                </span>
+                {t("result.saved")} {savedPct}%
               </p>
-              <p className="mt-1 text-xs text-[var(--foreground)]/70">
+              <p className="relative mt-1 text-xs text-[var(--foreground)]/70">
                 {lang === "zh"
                   ? `原文件 ${formatBytes(resultFile!.beforeSize!)} → 现在 ${formatBytes(resultFile!.size)}。可用上方「对比前后效果」按钮查看质量。`
                   : `Original ${formatBytes(resultFile!.beforeSize!)} → Now ${formatBytes(resultFile!.size)}. Use the “Compare before/after” button above to visually confirm quality.`}
@@ -407,7 +422,7 @@ export function ResultScreen() {
         <div className="mt-4 flex justify-center">
           <button
             onClick={handleDownloadAllZip}
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#2563EB] to-[#60A5FA] px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:scale-[1.02] transition-transform"
+            className="btn-primary inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold"
           >
             <Archive className="size-4" /> {t("result.downloadAllZip")}
           </button>
@@ -434,9 +449,16 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-start gap-1.5 rounded-xl border border-[var(--border)] p-3 text-left transition-all hover:border-[var(--brand)] hover:shadow-sm"
+      className="group flex flex-col items-start gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--brand)]/40 hover:shadow-[var(--shadow-sm)] active:scale-95"
     >
-      <span className="flex size-8 items-center justify-center rounded-lg text-white" style={{ background: color }}>
+      <span
+        className="relative flex size-8 items-center justify-center overflow-hidden rounded-lg text-white transition-transform duration-200 group-hover:scale-110"
+        style={{
+          background: `linear-gradient(180deg, ${color} 0%, color-mix(in oklch, ${color} 80%, black) 100%)`,
+          boxShadow: `0 1px 2px ${color}40, inset 0 1px 0 0 rgba(255, 255, 255, 0.24)`,
+        }}
+      >
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent" />
         <Icon className="size-4" />
       </span>
       <span className="text-xs font-semibold text-[var(--foreground)] leading-tight">{label}</span>

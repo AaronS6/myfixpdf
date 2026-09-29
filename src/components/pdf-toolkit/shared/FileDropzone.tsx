@@ -88,13 +88,13 @@ export function FileDropzone({
         compact ? "py-6" : "py-12",
         dragging
           ? "dropzone-active scale-[1.01]"
-          : "border-[var(--border)] hover:border-[var(--brand)] hover:shadow-lg",
+          : "border-[var(--border)] hover:border-[var(--brand)]/60 hover:shadow-[var(--shadow-lg)]",
         className,
       )}
       style={{
         boxShadow: dragging
           ? `0 16px 48px ${accentColor}26, 0 0 0 4px ${accentColor}15`
-          : "0 2px 12px rgba(15,23,42,0.04)",
+          : "var(--shadow-sm), var(--edge-highlight)",
       }}
     >
       {/* Animated gradient border overlay — visible on hover/drag */}
@@ -188,10 +188,13 @@ export function FileDropzone({
         )}
       </div>
 
-      {/* CTA button with smooth scale + shadow on hover */}
+      {/* CTA button — premium primary depth, with smooth hover lift */}
       <div
-        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 group-hover:shadow-lg"
-        style={{ background: accentColor }}
+        className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04] group-active:scale-95"
+        style={{
+          background: `linear-gradient(180deg, color-mix(in oklch, ${accentColor} 92%, white) 0%, ${accentColor} 60%, color-mix(in oklch, ${accentColor} 85%, black) 100%)`,
+          boxShadow: `0 1px 2px ${accentColor}30, 0 6px 16px ${accentColor}30, inset 0 1px 0 0 rgba(255, 255, 255, 0.28)`,
+        }}
       >
         <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" />
         {ctaText}

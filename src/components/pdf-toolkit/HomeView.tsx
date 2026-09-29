@@ -95,27 +95,30 @@ export function HomeView() {
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 grain" />
-        {/* Floating decorative orbs — larger, more visible */}
+        {/* Floating decorative orbs — layered + soft, premium mesh feel */}
         <div className="absolute -left-20 top-10 -z-10 size-80 rounded-full bg-gradient-to-br from-[var(--brand)]/12 to-[var(--brand-accent)]/8 blur-3xl animate-float-slow" />
         <div className="absolute -right-20 -top-5 -z-10 size-96 rounded-full bg-gradient-to-br from-[var(--cat-organize)]/8 to-[var(--brand)]/6 blur-3xl animate-float" />
         <div className="absolute bottom-0 left-1/3 -z-10 size-64 rounded-full bg-gradient-to-br from-[var(--cat-edit)]/6 to-[var(--cat-convert)]/6 blur-3xl animate-float-slow" style={{ animationDelay: "-4s" }} />
+        {/* Faint radial wash behind the headline — makes the hero feel lit */}
+        <div className="absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 size-[80vw] max-w-3xl rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.08),transparent_60%)]" />
 
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
             {/* Badge */}
-            <div className="mb-6 inline-flex sm:mb-8 items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up shadow-sm border border-[var(--border)]/50">
+            <div className="mb-6 inline-flex sm:mb-8 items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up border border-[var(--border)]/60 shadow-[var(--shadow-sm)]">
               <ShieldCheck className="size-3.5 text-[var(--success)]" />
               {t("hero.badge")}
+              <span className="ml-1 size-1 rounded-full bg-[var(--brand)] animate-pulse" />
             </div>
 
-            {/* Headline — big, bold, two-tone */}
-            <h1 className="text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-5xl md:text-6xl animate-fade-up leading-[1.15]" style={{ animationDelay: "60ms" }}>
+            {/* Headline — big, bold, two-tone. Tighter tracking + 800 weight for premium editorial feel. */}
+            <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl md:text-[4rem] animate-fade-up leading-[1.08]" style={{ animationDelay: "60ms", textWrap: "balance" }}>
               {t("hero.title1")}{" "}
               <span className="brand-gradient-text">{t("hero.titleAccent")}</span>
             </h1>
 
             {/* Subtitle — lighter weight, more breathing room */}
-            <p className="mx-auto mt-5 max-w-xl sm:mt-7 text-sm font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.65" }}>
+            <p className="mx-auto mt-5 max-w-xl sm:mt-6 text-sm font-normal text-[var(--muted-foreground)] sm:text-lg animate-fade-up leading-relaxed" style={{ animationDelay: "120ms", lineHeight: "1.65", textWrap: "pretty" }}>
               {t("hero.subtitle")}
             </p>
 
@@ -193,12 +196,9 @@ export function HomeView() {
 
           </div>
 
-          {/* Popular tools quick-access pills — wider container (max-w-5xl) so all 6 fit
-              on one line on desktop. Previously this row sat inside the hero's max-w-3xl
-              (768px), which wasn't wide enough for 6 pills + label, so the 6th pill
-              wrapped to a lonely second line (the "orphan pill" regression). Max 3 on mobile. */}
+          {/* Popular tools quick-access pills — premium chip rail */}
           <div className="mx-auto mt-6 max-w-5xl flex flex-wrap items-center justify-center gap-2 animate-fade-up sm:gap-2.5" style={{ animationDelay: "240ms" }}>
-              <span className="w-full text-center text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)] sm:w-auto sm:tracking-normal">
+              <span className="w-full text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]/80 sm:w-auto">
                 {lang === "zh" ? "常用:" : "Popular:"}
               </span>
               {popularTools.map((tool, idx) => (
@@ -206,13 +206,13 @@ export function HomeView() {
                   key={tool.id}
                   onClick={() => setView(tool.id)}
                   className={cn(
-                    "group items-center gap-1.5 rounded-full border border-[var(--border)]/60 bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-all duration-200 hover:border-[var(--brand)] hover:bg-[var(--brand)]/5 hover:shadow-sm hover:scale-105 active:scale-95",
+                    "group inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium chip-premium hover:bg-[var(--brand)]/5 hover:text-[var(--brand)]",
                     idx >= 3 ? "hidden sm:inline-flex" : "inline-flex",
                   )}
                 >
-                  <span className="size-1.5 rounded-full" style={{ background: tool.color }} />
+                  <span className="size-1.5 rounded-full shadow-[0_0_8px]" style={{ background: tool.color, boxShadow: `0 0 8px ${tool.color}` }} />
                   {tTool(tool.id).name}
-                  <ArrowRight className="size-3 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-0.5" />
+                  <ArrowRight className="size-3 text-[var(--muted-foreground)] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[var(--brand)]" />
                 </button>
               ))}
             </div>
@@ -234,10 +234,7 @@ export function HomeView() {
             </h2>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">{t("hero.allTools.subtitle")}</p>
           </div>
-          {/* Filter pills — scrollable chip rail on mobile (inset to page padding),
-              centered wrap on desktop. `w-full` constrains the rail to the parent's
-              width so overflow-x-auto actually scrolls (a shrink-to-fit flex child
-              would otherwise expand to its intrinsic content width and overflow). */}
+          {/* Filter pills — premium segmented chips */}
           <div className="flex w-full snap-x snap-mandatory items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
             {filterTabs.map((tab) => (
               <button
@@ -246,13 +243,13 @@ export function HomeView() {
                 className={cn(
                   "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-all duration-200 active:scale-95",
                   filter === tab.id
-                    ? "border-transparent bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-md shadow-[var(--brand)]/20"
-                    : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--brand)]/40 hover:text-[var(--foreground)] hover:shadow-sm",
+                    ? "btn-primary border-transparent"
+                    : "chip-premium text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
                 )}
               >
                 {tab.label}
                 <span className={cn(
-                  "inline-flex items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-4",
+                  "inline-flex items-center justify-center rounded-full px-1.5 text-[10px] font-bold leading-4 transition-colors",
                   filter === tab.id ? "bg-white/25 text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)]",
                 )}>
                   {tab.count}
@@ -282,12 +279,19 @@ export function HomeView() {
             href="https://mybeam.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border border-[var(--brand)]/20 sm:flex-row sm:items-center sm:gap-5 bg-gradient-to-r from-[var(--brand)]/5 to-[var(--brand-accent)]/5 p-6 card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:card-shadow-lg"
+            className="group relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border border-[var(--brand)]/20 sm:flex-row sm:items-center sm:gap-5 bg-gradient-to-r from-[var(--brand)]/5 to-[var(--brand-accent)]/5 p-6 card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:card-shadow-lg hover:border-[var(--brand)]/40"
           >
             {/* Floating gradient orb */}
-            <div className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-20" style={{ background: "var(--brand)" }} />
-            {/* Icon */}
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+            <div className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-20" style={{ background: "var(--brand)", filter: "blur(8px)" }} />
+            {/* Icon chip with premium depth */}
+            <span
+              className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+              style={{
+                background: "linear-gradient(180deg, #3B82F6 0%, #2563EB 60%, #1D4ED7 100%)",
+                boxShadow: "var(--shadow-brand), inset 0 1px 0 0 rgba(255, 255, 255, 0.28)",
+              }}
+            >
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent" />
               <svg viewBox="0 0 24 24" fill="none" className="size-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2 2 7l10 5 10-5-10-5z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" />
               </svg>
@@ -369,7 +373,7 @@ function TrustSection() {
             <div
               key={i}
               className={cn(
-                "group relative bg-[var(--card)] px-5 py-6 sm:px-8 sm:py-10 transition-all duration-500",
+                "group relative bg-[var(--card)] px-5 py-7 sm:px-8 sm:py-10 transition-all duration-500 hover:-translate-y-1",
                 inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
               )}
               style={{ transitionDelay: `${item.delay}ms` }}
@@ -377,14 +381,21 @@ function TrustSection() {
               {/* Hover gradient wash */}
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                style={{ background: `radial-gradient(circle at 50% 0%, ${item.color}10, transparent 70%)` }}
+                style={{ background: `radial-gradient(circle at 50% 0%, ${item.color}14, transparent 65%)` }}
               />
+              {/* Premium top-edge highlight on each tile */}
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
               <div className="relative z-10 flex flex-col items-center text-center">
-                <Icon
-                  className="size-8 transition-transform duration-500 group-hover:scale-110"
-                  style={{ color: item.color }}
-                />
-                <p className="mt-4 text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
+                <span
+                  className="mb-1 flex size-12 items-center justify-center rounded-2xl transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3"
+                  style={{
+                    background: `linear-gradient(180deg, ${item.color}22 0%, ${item.color}10 100%)`,
+                    boxShadow: `inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 0 4px 14px ${item.color}18`,
+                  }}
+                >
+                  <Icon className="size-6" style={{ color: item.color }} />
+                </span>
+                <p className="mt-3 text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
                 <p className="mt-1.5 text-xs leading-relaxed text-[var(--muted-foreground)] max-w-[220px]">{item.text}</p>
               </div>
             </div>
@@ -404,28 +415,37 @@ function ToolCard({
   return (
     <button
       onClick={onClick}
-      className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border border-[var(--border)]/60 bg-[var(--card)] p-4 text-left card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:card-shadow-lg hover-ring animate-fade-up sm:gap-3 sm:p-6 sm:rounded-2xl"
+      className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border border-[var(--border)]/60 bg-[var(--card)] p-4 text-left card-shadow transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1.5 hover:card-shadow-lg hover:border-[var(--brand)]/30 hover-ring animate-fade-up sm:gap-3 sm:p-6 sm:rounded-2xl"
       style={{ animationDelay: `${delay}ms`, minHeight: "160px" }}
     >
-      {/* Category-colored top accent bar */}
-      <div className="absolute inset-x-0 top-0 h-1 opacity-60 transition-opacity group-hover:opacity-100" style={{ background: tool.color }} />
+      {/* Category-colored top accent bar — thicker premium glow on hover */}
+      <div
+        className="absolute inset-x-0 top-0 h-1 origin-left scale-x-50 transition-all duration-300 group-hover:scale-x-100 group-hover:shadow-[0_2px_8px]"
+        style={{ background: tool.color, boxShadow: `0 0 0 0 ${tool.color}` }}
+      />
       {/* Floating gradient orb */}
       <div
-        className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-25"
-        style={{ background: tool.color }}
+        className="absolute -right-8 -top-8 size-24 rounded-full opacity-10 transition-all duration-500 group-hover:scale-150 group-hover:opacity-20"
+        style={{ background: tool.color, filter: "blur(8px)" }}
       />
       <span
-        className="flex size-8 items-center justify-center rounded-lg text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 sm:size-11 sm:rounded-xl"
-        style={{ background: tool.color }}
+        className="relative flex size-8 items-center justify-center overflow-hidden rounded-lg text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 sm:size-11 sm:rounded-xl"
+        style={{
+          background: `linear-gradient(180deg, ${tool.color} 0%, color-mix(in oklch, ${tool.color} 80%, black) 100%)`,
+          boxShadow: `0 2px 6px ${tool.color}38, inset 0 1px 0 0 rgba(255, 255, 255, 0.24)`,
+        }}
       >
+        {/* Top-edge highlight on icon chip */}
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent" />
         <ToolGlyph id={tool.id} />
       </span>
       <div className="relative z-10">
-        <p className="text-xs font-semibold text-[var(--foreground)] sm:text-sm">{name}</p>
+        <p className="text-xs font-semibold leading-snug text-[var(--foreground)] sm:text-sm">{name}</p>
         <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted-foreground)] line-clamp-2 sm:text-xs">{desc}</p>
       </div>
-      <div className="mt-auto flex items-center text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100" style={{ color: tool.color }}>
-        {t("common.openTool")} <ArrowRight className="size-3.5 ml-1 transition-transform group-hover:translate-x-1" />
+      <div className="mt-auto flex items-center text-xs font-semibold opacity-0 transition-all duration-200 group-hover:opacity-100" style={{ color: tool.color }}>
+        {t("common.openTool")}
+        <ArrowRight className="size-3.5 ml-1 transition-transform duration-200 group-hover:translate-x-1" />
       </div>
     </button>
   );

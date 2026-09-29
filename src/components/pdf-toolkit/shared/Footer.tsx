@@ -34,20 +34,23 @@ export function Footer() {
   ];
 
   return (
-    <footer className="mt-auto border-t border-[var(--border)] bg-[var(--card)]">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+    <footer className="relative mt-auto border-t border-[var(--border)] bg-[var(--card)]/60 backdrop-blur-xl">
+      {/* Subtle top-edge accent line so the footer reads as a distinct surface */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--brand)]/25 to-transparent" />
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex size-9 items-center justify-center rounded-xl bg-white shadow-md overflow-hidden">
+              <span className="relative flex size-9 items-center justify-center rounded-xl bg-white shadow-sm overflow-hidden ring-1 ring-[var(--border)]/60">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logo.png" alt="myfixpdf logo" className="size-9 object-cover" />
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
               </span>
               <div className="flex flex-col leading-none">
-                <span className="text-base font-bold text-[var(--foreground)]">
+                <span className="text-base font-bold tracking-[-0.025em] text-[var(--foreground)]">
                   my<span className="brand-gradient-text">fixpdf</span>
                 </span>
-                <span className="text-[10px] font-medium text-[var(--muted-foreground)]">
+                <span className="text-[10px] font-medium tracking-tight text-[var(--muted-foreground)]">
                   {t("nav.madeBy")}
                 </span>
               </div>
@@ -62,24 +65,24 @@ export function Footer() {
                 href="https://github.com/AaronS6"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] transition-all hover:border-[var(--foreground)] hover:text-[var(--foreground)] hover:scale-105"
+                className="group flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--foreground)]/40 hover:text-[var(--foreground)] hover:shadow-[var(--shadow-sm)] active:scale-95"
                 aria-label="GitHub — AaronS6"
                 title="GitHub @AaronS6"
               >
-                <Github className="size-4" />
+                <Github className="size-4 transition-transform duration-200 group-hover:scale-110" />
               </a>
               <a
                 href="mailto:aaronshansh@gmail.com"
-                className="flex size-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--muted-foreground)] transition-all hover:border-[var(--foreground)] hover:text-[var(--foreground)] hover:scale-105"
+                className="group flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--foreground)]/40 hover:text-[var(--foreground)] hover:shadow-[var(--shadow-sm)] active:scale-95"
                 aria-label="Email — aaronshansh@gmail.com"
                 title="aaronshansh@gmail.com"
               >
-                <Mail className="size-4" />
+                <Mail className="size-4 transition-transform duration-200 group-hover:scale-110" />
               </a>
             </div>
           </div>
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--foreground)]">
               {t("footer.product")}
             </p>
             <ul className="space-y-2">
@@ -87,8 +90,9 @@ export function Footer() {
                 <li key={l.tool}>
                   <button
                     onClick={() => setView(l.tool!)}
-                    className="text-left text-sm text-[var(--muted-foreground)] transition-colors hover:text-[var(--brand)]"
+                    className="group inline-flex items-center gap-1 text-left text-sm text-[var(--muted-foreground)] transition-colors duration-200 hover:text-[var(--brand)]"
                   >
+                    <span className="h-px w-0 bg-[var(--brand)] transition-all duration-200 group-hover:w-3" />
                     {tTool(l.tool!).name}
                   </button>
                 </li>
@@ -96,7 +100,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--foreground)]">
               {t("footer.tools")}
             </p>
             <ul className="space-y-2">
@@ -104,8 +108,9 @@ export function Footer() {
                 <li key={l.tool}>
                   <button
                     onClick={() => setView(l.tool!)}
-                    className="text-left text-sm text-[var(--muted-foreground)] transition-colors hover:text-[var(--brand)]"
+                    className="group inline-flex items-center gap-1 text-left text-sm text-[var(--muted-foreground)] transition-colors duration-200 hover:text-[var(--brand)]"
                   >
+                    <span className="h-px w-0 bg-[var(--brand)] transition-all duration-200 group-hover:w-3" />
                     {tTool(l.tool!).name}
                   </button>
                 </li>
@@ -113,7 +118,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--foreground)]">
               {lang === "zh" ? "更多" : "More"}
             </p>
             <ul className="space-y-2">
@@ -121,8 +126,9 @@ export function Footer() {
                 <li key={l.tool}>
                   <button
                     onClick={() => setView(l.tool!)}
-                    className="text-left text-sm text-[var(--muted-foreground)] transition-colors hover:text-[var(--brand)]"
+                    className="group inline-flex items-center gap-1 text-left text-sm text-[var(--muted-foreground)] transition-colors duration-200 hover:text-[var(--brand)]"
                   >
+                    <span className="h-px w-0 bg-[var(--brand)] transition-all duration-200 group-hover:w-3" />
                     {tTool(l.tool!).name}
                   </button>
                 </li>

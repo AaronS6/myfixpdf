@@ -1207,3 +1207,27 @@ Stage Summary:
 - redact/watermark/page-numbers/edit-png audited via code review — correct, no fixes needed.
 - Pushed 2ef5672..dbafbd1 (3 commits: subagent's, drawing fix, text-placement fix). Remote = local = dbafbd16.
 - GitHub credential re-persisted (was wiped by sandbox reset) via device flow; future pushes should work without re-auth.
+
+
+---
+Task ID: STUNNING-UI
+Agent: frontend-styling-expert
+Task: Comprehensive visual polish — make every surface look premium SaaS tier (Linear/Vercel/Notion/Raycast). Brand blue (#2563EB) kept — refined, not replaced.
+
+Work Log:
+- globals.css — layered ambient+directional shadow system (--shadow-xs..xl, --shadow-brand, --shadow-brand-lg, --ring-glow) with realistic ambient + directional layers; premium easing tokens (--ease-out-expo, --ease-spring, --dur-fast/base/slow); top-edge highlight tokens (--edge-highlight, --edge-highlight-dark) so cards "catch light from above"; new .btn-primary / .btn-ghost / .card-premium / .chip-premium primitives for consistent depth + active-press scale (0.97); refined .glass with deeper blur + gradient overlay; premium shimmer keyframe with wider 220% gradient sweep; soft ::selection brand tint; native scrollbar polish; accessible focus-ring with brand glow (outline + box-shadow var(--ring-glow)); reduced motion preserved; brand-gradient-text now has drop-shadow glow.
+- Header.tsx — richer glass with backdrop-blur(24px) saturate(180%) + gradient overlay; logo chip wrapped in ring + top-edge highlight, hover lifts shadow + ring tint; wordmark tracking tightened to -0.025em; desktop nav buttons get a subtle accent dot under the active category + chevron rotates to brand color when open; dropdown menus use layered var(--shadow-lg) + edge-highlight, icon chips per-tool get gradient bg + inset top highlight + brand-color glow.
+- HomeView.tsx — hero badge refined (border + shadow + pulse dot); headline tracking -0.04em with text-wrap: balance; radial wash behind hero adds "lit" feel; popular pills converted to .chip-premium chips with glowing color dots; filter pills upgraded to segmented chips using .btn-primary / .chip-premium; tool cards refined with scale-up top accent bar on hover, gradient icon chips with inset top-edge highlight, hover-ring iridescent edge; trust tiles wrapped in rounded icon chips with top-edge highlight + radial wash on hover.
+- ToolPageShell.tsx — tool header icon chip upgraded to gradient bg + top-edge highlight + brand glow; back button refined with hover lift + chevron translate; inline "add more" dropzone uses .dropzone-active; reminder banner rounded-xl; CTA bar uses .btn-primary with var(--shadow-md) — premium sticky-action feel.
+- ResultScreen.tsx — download + ZIP-download buttons use .btn-primary; preview pane has subtle brand gradient wash + top-edge highlight; empty state (no result) has a centered icon chip card + .btn-primary back-home; sidebar ActionButtons upgraded with gradient icon chips + lift hover; saved-tip card now has radial success wash + animated pulse-glow checkmark (subtle success celebration).
+- Footer.tsx — subtle top-edge accent line via gradient + glass backdrop-blur-xl; logo chip wrapped in ring + top highlight; social icons get lift hover + shadow + scale; footer tool links get a small growing underline on hover (premium micro-interaction).
+- FileDropzone.tsx — dropzone uses .dropzone-active state (brand glow ring + soft layered shadow + scale); default state gets var(--shadow-sm) + var(--edge-highlight) so it reads as floating; CTA button upgraded to premium gradient with inset top highlight + brand-color glow + active scale 0.95.
+
+Stage Summary:
+- Polished 7 surfaces: globals.css (design system foundation), Header, HomeView, FileDropzone, ToolPageShell, ResultScreen, Footer. ~432 lines added/edited.
+- Lint stayed at 0 errors throughout (22 pre-existing warnings unrelated).
+- Verified no regressions via agent-browser at 1440×900 and 375×812; runtime console clean; dev.log shows all GETs returning 200 with normal compile times.
+- VLM verdict progression: baseline homepage was rated "B+ / 80% there — polished indie but lacks depth/micro-interactions". After the polish pass the same desktop home shot was rated "absolutely hits the Linear/Vercel/Notion tier" with specific call-outs on hero depth, dropzone, popular pills, and atmospheric background. Tool-page shell was rated "exceptionally clean, premium SaaS interface that combines visual depth with intuitive usability". Empty result state was rated "premium, multi-layered depth with a distinct shadow and gradient". Dropdown menu was rated "soft shadow and rounded corners create a subtle sense of depth and a polished, premium appearance". Mobile verdict: "visually polished" at 375×812.
+- Brand blue (#2563EB / #60A5FA) preserved — no indigo/purple/green introduced as primary. The new top-edge highlight + brand glow shadows ADDED depth to the existing palette rather than replacing it.
+- Sticky footer preserved (mt-auto + min-h-screen flex-col still intact in page.tsx).
+- Committed as 77d662e (do not push — auth handled separately).

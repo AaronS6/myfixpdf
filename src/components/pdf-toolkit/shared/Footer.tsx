@@ -57,8 +57,8 @@ export function Footer() {
             </div>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
               {lang === "zh"
-                ? "你需要的每一个 PDF 工具，一站式搞定。所有处理都在你的浏览器中完成 — 文件永不离开你的设备。"
-                : "Every PDF tool you need, in one place. Everything runs in your browser — your files never leave your device."}
+                ? "你需要的每一个 PDF 工具，一站式搞定。所有处理都在你的浏览器中完成。文件永不离开你的设备。"
+                : "Every PDF tool you need, in one place. Everything runs in your browser. Your files never leave your device."}
             </p>
             <div className="mt-4 flex gap-2">
               <a
@@ -66,7 +66,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--foreground)]/40 hover:text-[var(--foreground)] hover:shadow-[var(--shadow-sm)] active:scale-95"
-                aria-label="GitHub — AaronS6"
+                aria-label="GitHub: AaronS6"
                 title="GitHub @AaronS6"
               >
                 <Github className="size-4 transition-transform duration-200 group-hover:scale-110" />
@@ -74,7 +74,7 @@ export function Footer() {
               <a
                 href="mailto:aaronshansh@gmail.com"
                 className="group flex size-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--foreground)]/40 hover:text-[var(--foreground)] hover:shadow-[var(--shadow-sm)] active:scale-95"
-                aria-label="Email — aaronshansh@gmail.com"
+                aria-label="Email: aaronshansh@gmail.com"
                 title="aaronshansh@gmail.com"
               >
                 <Mail className="size-4 transition-transform duration-200 group-hover:scale-110" />

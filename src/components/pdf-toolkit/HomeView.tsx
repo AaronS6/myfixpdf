@@ -104,13 +104,6 @@ export function HomeView() {
 
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            {/* Badge */}
-            <div className="mb-6 inline-flex sm:mb-8 items-center gap-2 rounded-full bg-[var(--card)] px-4 py-1.5 text-xs font-medium text-[var(--muted-foreground)] backdrop-blur-md animate-fade-up border border-[var(--border)]/60 shadow-[var(--shadow-sm)]">
-              <ShieldCheck className="size-3.5 text-[var(--success)]" />
-              {t("hero.badge")}
-              <span className="ml-1 size-1 rounded-full bg-[var(--brand)] animate-pulse" />
-            </div>
-
             {/* Headline — big, bold, two-tone. Tighter tracking + 800 weight for premium editorial feel. */}
             <h1 className="text-3xl font-bold tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl md:text-[4rem] animate-fade-up leading-[1.08]" style={{ animationDelay: "60ms", textWrap: "balance" }}>
               {t("hero.title1")}{" "}

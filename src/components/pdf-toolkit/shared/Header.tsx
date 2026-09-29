@@ -97,11 +97,13 @@ export function Header() {
             className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1 transition-all duration-200 hover:bg-[var(--muted)]/60"
             aria-label="myfixpdf — home"
           >
-            <span className="relative flex size-9 items-center justify-center rounded-xl bg-white overflow-hidden ring-1 ring-[var(--border)]/60 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:ring-[var(--brand)]/30">
+            <span className="relative flex size-10 items-center justify-center rounded-xl bg-white overflow-hidden ring-1 ring-[var(--brand)]/20 shadow-[var(--shadow-sm)] transition-all duration-200 group-hover:scale-[1.04] group-hover:shadow-[var(--shadow-brand)] group-hover:ring-[var(--brand)]/40">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="myfixpdf logo" className="size-9 object-cover" />
+              <img src="/logo.png" alt="myfixpdf logo" className="size-10 object-cover" />
               {/* Subtle top-edge highlight on the logo chip */}
-              <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/70" />
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/80" />
+              {/* Inner brand tint ring for depth */}
+              <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-[var(--brand)]/10" />
             </span>
             <div className="flex flex-col leading-none">
               <span className="text-[17px] font-bold tracking-[-0.025em] text-[var(--foreground)]">
@@ -227,12 +229,20 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile drawer — scrollable independently of the page */}
+      {/* Mobile drawer — FIXED overlay below the header so the page behind can't scroll.
+          Previously this was in-flow, so scrolling the page scrolled the drawer away
+          and revealed the homepage ('scroll out of it leads back to homepage').
+          Now: backdrop dims + closes on tap, drawer traps scroll via overscroll-contain. */}
       {mobileOpen && (
-        <div
-          className="lg:hidden border-t border-[var(--border)] bg-[var(--card)] animate-fade-in overflow-y-auto thin-scroll"
-          style={{ maxHeight: "calc(100vh - 4rem)" }}
-        >
+        <>
+          <div
+            className="lg:hidden fixed inset-0 top-16 z-30 bg-[var(--foreground)]/30 backdrop-blur-sm animate-fade-in"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--card)] animate-fade-in overflow-y-auto thin-scroll overscroll-contain shadow-[var(--shadow-lg)]"
+          >
           <div className="mx-auto max-w-7xl px-4 py-3">
             {CATS.map((cat) => (
               <div key={cat.id} className="mb-3">
@@ -266,6 +276,7 @@ export function Header() {
             ))}
           </div>
         </div>
+        </>
       )}
     </header>
   );

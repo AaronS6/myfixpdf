@@ -344,7 +344,7 @@ export function EditPdf() {
                 <button
                   key={c}
                   onClick={() => setPenColor(c)}
-                  className={cn("size-7 rounded-full border-2 transition-all hover:scale-110", penColor === c ? "border-[var(--brand)] scale-110" : "border-[var(--border)]")}
+                  className={cn("size-8 shrink-0 rounded-full border-2 transition-all hover:scale-110", penColor === c ? "border-[var(--brand)] scale-110" : "border-[var(--border)]")}
                   style={{ background: c }}
                   aria-label={`Pen color ${c}`}
                 />
@@ -356,12 +356,12 @@ export function EditPdf() {
                 step="0.5"
                 value={penWidth}
                 onChange={(e) => setPenWidth(parseFloat(e.target.value))}
-                className="w-12 accent-[var(--cat-edit)]"
+                className="w-14 shrink-0 accent-[var(--cat-edit)]"
                 title="Pen width"
               />
               <button
                 onClick={() => setStrokes((s) => s.filter((st) => st.pageIndex !== pageNum - 1))}
-                className="rounded-md border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+                className="shrink-0 rounded-md border border-[var(--border)] px-2 py-1 text-[10px] text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                 title="Clear strokes on this page"
               >
                 Clear

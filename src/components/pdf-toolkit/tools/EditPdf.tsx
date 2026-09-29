@@ -39,6 +39,25 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 
 const tool = getTool("edit-pdf")!;
 
+/**
+ * Resolve a color that might be a CSS variable (e.g. "var(--brand)") to an
+ * actual color value canvas 2D context can use. Canvas strokeStyle/fillStyle
+ * do NOT resolve CSS variables — passing "var(--brand)" silently falls back to
+ * the previous valid color (often black). So drawn strokes always came out
+ * black regardless of the picked color. This reads the computed value from
+ * :root at draw time, capturing the current theme (light/dark) correctly.
+ */
+function resolveColor(c: string): string {
+  if (typeof window === "undefined") return c;
+  const m = c.match(/var\((--[\w-]+)\)/);
+  if (m) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+    if (v) return v;
+    return "#1A1A1A"; // fallback if the var is somehow unset
+  }
+  return c;
+}
+
 type TextItem = {
   id: string;
   pageIndex: number;
@@ -478,7 +497,7 @@ function EditOverlay(props: {
       // Defensive: never crash on a malformed stroke entry.
       if (!s || typeof s.pageIndex !== "number" || !Array.isArray(s.points) || s.points.length === 0) continue;
       if (s.pageIndex !== pageIndex) continue;
-      ctx.strokeStyle = s.color;
+      ctx.strokeStyle = resolveColor(s.color);
       ctx.lineWidth = s.width * scale;
       ctx.beginPath();
       const pts = s.points;
@@ -505,7 +524,7 @@ function EditOverlay(props: {
     drawingRef.current.points.push({ x, y });
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-    ctx.strokeStyle = drawingRef.current.color;
+    ctx.strokeStyle = resolveColor(drawingRef.current.color);
     ctx.lineWidth = drawingRef.current.width * scale;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -622,7 +641,7 @@ async function strokeToPng(stroke: DrawStroke): Promise<{ bytes: Uint8Array; min
   ctx.clearRect(0, 0, w, h);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = stroke.color;
+  ctx.strokeStyle = resolveColor(stroke.color);
   ctx.lineWidth = stroke.width;
   ctx.beginPath();
   ctx.moveTo(pts[0].x - minX + pad, pts[0].y - minY + pad);

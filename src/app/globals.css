@@ -783,3 +783,63 @@ main, section, footer {
 .flex > *, .grid > * {
   min-width: 0;
 }
+
+/* ============================================================
+   Premium toasts (sonner) — clean white card + colored icon chip.
+   Replaces sonner's default richColors (heavy full-color backgrounds)
+   with a refined look: white card, soft layered shadow, a colored
+   icon chip on the left that signals the toast type. Themes correctly
+   in light/dark via the existing --success/--danger/--warning/--brand
+   tokens.
+   ============================================================ */
+[data-sonner-toast] {
+  position: relative;
+  overflow: hidden;
+}
+[data-sonner-toast] [data-icon] {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: color-mix(in oklch, var(--muted) 60%, transparent);
+  color: var(--muted-foreground);
+}
+[data-sonner-toast] [data-icon] svg {
+  width: 17px;
+  height: 17px;
+}
+[data-sonner-toast][data-type="success"] [data-icon] {
+  background: color-mix(in oklch, var(--success) 14%, transparent);
+  color: var(--success);
+}
+[data-sonner-toast][data-type="error"] [data-icon] {
+  background: color-mix(in oklch, var(--danger) 14%, transparent);
+  color: var(--danger);
+}
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  background: color-mix(in oklch, var(--warning) 16%, transparent);
+  color: var(--warning);
+}
+[data-sonner-toast][data-type="info"] [data-icon],
+[data-sonner-toast][data-type="loading"] [data-icon] {
+  background: color-mix(in oklch, var(--brand) 14%, transparent);
+  color: var(--brand);
+}
+[data-sonner-toast]::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--border);
+  border-radius: 3px 0 0 3px;
+}
+[data-sonner-toast][data-type="success"]::before { background: var(--success); }
+[data-sonner-toast][data-type="error"]::before { background: var(--danger); }
+[data-sonner-toast][data-type="warning"]::before { background: var(--warning); }
+[data-sonner-toast][data-type="info"]::before,
+[data-sonner-toast][data-type="loading"]::before { background: var(--brand); }
+.dark [data-sonner-toast] { background: var(--card); }

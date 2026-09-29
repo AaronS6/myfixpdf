@@ -71,7 +71,7 @@ export default function RootLayout({
           <I18nProvider>
             {children}
             <Toaster />
-            <SonnerToaster richColors position="top-right" />
+            <SonnerToaster position="bottom-right" />
           </I18nProvider>
         </ThemeProvider>
       </body>

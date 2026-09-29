@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useDocumentSession } from "@/store/document-session";
 import { Header } from "@/components/pdf-toolkit/shared/Header";
 import { Footer } from "@/components/pdf-toolkit/shared/Footer";
@@ -101,7 +102,7 @@ export default function Page() {
       window.scrollTo(0, 0);
       const main = document.querySelector("main");
       if (main) main.scrollTop = 0;
-    }, 50);
+    }, 300);
     return () => clearTimeout(timer);
   }, [view]);
 
@@ -119,6 +120,14 @@ export default function Page() {
       <div className="relative z-10 flex min-h-screen flex-col overflow-hidden max-w-[100vw]">
         <Header />
         <main className="flex-1 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={view}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
         {view === "home" && <HomeView />}
         {view === "compress-pdf" && <CompressPdf />}
         {view === "compress-png" && <CompressPng />}
@@ -142,6 +151,8 @@ export default function Page() {
         {view === "redact-pdf" && <RedactPdf />}
         {view === "edit-png" && <EditPng />}
         {view === "result" && <ResultScreen />}
+          </motion.div>
+        </AnimatePresence>
         </main>
         <Footer />
         <ProgressOverlay />

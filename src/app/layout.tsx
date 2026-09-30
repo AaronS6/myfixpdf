@@ -63,7 +63,7 @@ export default function RootLayout({
         />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Dancing+Script:wght@400;700&family=Geist+Mono:wght@400;500;600;700&family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Pacifico&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Dancing+Script:wght@400;700&family=Geist+Mono:wght@400;500;600;700&family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Pacifico&family=Sora:wght@600;700;800&display=swap"
         />
       </head>
       <body className="antialiased font-sans bg-background text-foreground">
@@ -71,7 +71,7 @@ export default function RootLayout({
           <I18nProvider>
             {children}
             <Toaster />
-            <SonnerToaster position="bottom-right" />
+            <SonnerToaster position="top-right" />
           </I18nProvider>
         </ThemeProvider>
       </body>

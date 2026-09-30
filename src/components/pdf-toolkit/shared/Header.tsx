@@ -97,16 +97,16 @@ export function Header() {
             className="group flex items-center gap-2.5 rounded-xl px-1.5 py-1 transition-all duration-200 hover:bg-[var(--muted)]/60"
             aria-label="myfixpdf — home"
           >
-            <span className="relative flex size-10 items-center justify-center rounded-xl bg-white overflow-hidden ring-1 ring-[var(--brand)]/20 shadow-[var(--shadow-sm)] transition-all duration-200 group-hover:scale-[1.04] group-hover:shadow-[var(--shadow-brand)] group-hover:ring-[var(--brand)]/40">
+            <span className="relative flex size-10 items-center justify-center rounded-full bg-white overflow-hidden ring-1 ring-[var(--brand)]/25 shadow-[var(--shadow-sm)] transition-all duration-200 group-hover:scale-[1.05] group-hover:shadow-[var(--shadow-brand)] group-hover:ring-[var(--brand)]/45">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="myfixpdf logo" className="size-10 object-cover" />
               {/* Subtle top-edge highlight on the logo chip */}
               <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/80" />
               {/* Inner brand tint ring for depth */}
-              <span className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-[var(--brand)]/10" />
+              <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-[var(--brand)]/10" />
             </span>
             <div className="flex flex-col leading-none">
-              <span className="text-[17px] font-bold tracking-[-0.025em] text-[var(--foreground)]">
+              <span className="text-[18px] font-bold tracking-[-0.04em] text-[var(--foreground)]" style={{ fontFamily: "var(--font-display)" }}>
                 my<span className="brand-gradient-text">fixpdf</span>
               </span>
               <span className="text-[10px] font-medium tracking-tight text-[var(--muted-foreground)]">

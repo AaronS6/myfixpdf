@@ -846,3 +846,11 @@ main, section, footer {
 }
 
 /* (toast icon-chip + accent CSS moved up to the consolidated block above) */
+
+/* Headings use the Sora display font (matches the logo wordmark).
+   Unlayered (outside @layer) so it beats Tailwind's @layer base
+   preflight + @layer utilities rules in the cascade — the @layer base
+   h1 rule above was being stripped during Turbopack compilation. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}

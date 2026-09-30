@@ -202,22 +202,45 @@ export async function isPdfEncrypted(blob: Blob): Promise<boolean> {
  * Extract text content from every page of a PDF. Returns an array of pages,
  * each with the recovered text (lines preserved heuristically).
  */
+/**
+ * Load tesseract.js from a CDN via a dynamic <script> tag (UMD build exposes
+ * window.Tesseract). We use the CDN script approach instead of `import("tesseract.js")`
+ * because the npm package's dynamic import doesn't resolve cleanly through
+ * Turbopack in the browser (Web Worker path + wasm path issues). The UMD CDN
+ * build self-configures its worker + core + lang-data URLs to the same CDN.
+ */
+function loadTesseractFromCdn(): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") return reject(new Error("not in browser"));
+    const w = window as any;
+    if (w.Tesseract) return resolve(w.Tesseract);
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@7/dist/tesseract.min.js";
+    s.async = true;
+    s.crossOrigin = "anonymous";
+    s.onload = () => {
+      if ((window as any).Tesseract) resolve((window as any).Tesseract);
+      else reject(new Error("Tesseract script loaded but window.Tesseract is not set"));
+    };
+    s.onerror = () => reject(new Error("Failed to load tesseract.js from CDN (cdn.jsdelivr.net)"));
+    document.head.appendChild(s);
+  });
+}
+
 export async function extractPdfText(
   blob: Blob,
   onProgress?: (pct: number, message: string) => void,
-): Promise<Array<{ pageNumber: number; text: string; lineCount: number }>> {
+): Promise<Array<{ pageNumber: number; text: string; lineCount: number; ocrUsed?: boolean }>> {
   const doc = await loadPdfFromBlob(blob);
   const total = doc.numPages;
-  const out: Array<{ pageNumber: number; text: string; lineCount: number }> = [];
-  for (let p = 1; p <= total; p++) {
-    const page = await doc.getPage(p);
-    let textContent;
-    try {
-      textContent = await page.getTextContent();
-    } catch {
-      textContent = { items: [] };
-    }
-    const items = textContent.items as Array<{ str?: string; transform?: number[] }>;
+  const out: Array<{ pageNumber: number; text: string; lineCount: number; ocrUsed?: boolean }> = [];
+
+  // Group pdfjs text items into lines by Y proximity (4px threshold).
+  // Items on the same visual line (Y diff <= 4px) are joined with spaces;
+  // larger Y gaps start a new line. Sorted top-to-bottom (PDF Y grows up,
+  // so descending Y = reading order), left-to-right within a line.
+  const groupItemsToLines = (rawItems: unknown[]): { text: string; lineCount: number } => {
+    const items = rawItems as Array<{ str?: string; transform?: number[] }>;
     const sorted = [...items]
       .filter((it) => it.transform && typeof it.str === "string")
       .map((it) => ({ str: it.str as string, x: it.transform![4], y: it.transform![5] }))
@@ -234,11 +257,76 @@ export async function extractPdfText(
       lastY = it.y;
     }
     if (buf.length) lines.push(buf.join(" ").trim());
-    const text = lines.join("\n");
-    out.push({ pageNumber: p, text, lineCount: lines.length });
-    if (onProgress) onProgress(Math.round((p / total) * 100), `Extracting page ${p}…`);
+    return { text: lines.join("\n"), lineCount: lines.length };
+  };
+
+  // Phase 1: fast pdfjs text extraction on every page (0-30% progress).
+  // For normal text PDFs this gets everything and we skip OCR entirely.
+  for (let p = 1; p <= total; p++) {
+    const page = await doc.getPage(p);
+    let textContent;
+    try {
+      textContent = await page.getTextContent();
+    } catch {
+      textContent = { items: [] };
+    }
+    const { text, lineCount } = groupItemsToLines(textContent.items);
+    out.push({ pageNumber: p, text, lineCount, ocrUsed: false });
     page.cleanup();
+    if (onProgress) onProgress(Math.round((p / total) * 30), `Extracting text from page ${p}…`);
   }
+
+  // Phase 2: OCR fallback for pages that got little/no text from pdfjs.
+  // This handles SCANNED / image-only PDFs (no text layer) and mixed PDFs
+  // (some text pages + some image pages). tesseract.js is loaded from CDN
+  // (UMD build → window.Tesseract) — the npm package's dynamic import doesn't
+  // resolve cleanly through Turbopack in the browser (worker path issues).
+  // We render each sparse page to a 2x-DPI canvas and OCR it, keeping whichever
+  // result is longer.
+  const SPARSE_THRESHOLD = 30; // chars below which a page is considered "sparse"
+  const sparsePages = out.filter((p) => p.text.trim().length < SPARSE_THRESHOLD);
+  if (sparsePages.length > 0) {
+    try {
+      const Tesseract = await loadTesseractFromCdn();
+      const worker = await Tesseract.createWorker("eng");
+      try {
+        let done = 0;
+        for (let p = 1; p <= total; p++) {
+          const existing = out[p - 1];
+          if (existing.text.trim().length >= SPARSE_THRESHOLD) continue; // page already has text
+          const page = await doc.getPage(p);
+          const viewport = page.getViewport({ scale: 2 });
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(viewport.width);
+          canvas.height = Math.round(viewport.height);
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            // No { alpha: false } + no pre-fill — matches PdfPreview's working
+            // render pattern. (With alpha:false pdfjs compositing drew nothing.)
+            // @ts-expect-error pdfjs legacy render context
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            const { data: { text: ocrText } } = await worker.recognize(canvas);
+            if (ocrText && ocrText.trim().length > existing.text.trim().length) {
+              const ocrLines = ocrText.split("\n").filter((l) => l.trim().length > 0);
+              existing.text = ocrLines.join("\n");
+              existing.lineCount = ocrLines.length;
+              existing.ocrUsed = true;
+            }
+          }
+          page.cleanup();
+          done++;
+          if (onProgress) onProgress(30 + Math.round((done / sparsePages.length) * 70), `OCR on page ${p} of ${total}…`);
+        }
+      } finally {
+        await worker.terminate();
+      }
+    } catch (e) {
+      // OCR failed (CDN unreachable, worker init error, pdfjs couldn't render
+      // the page, etc.) — keep the pdfjs results. Log so it's debuggable.
+      console.warn("[extractPdfText] OCR fallback failed:", e);
+    }
+  }
+
   try {
     await (doc as any).cleanup?.();
   } catch {

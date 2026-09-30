@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 const tool = getTool("extract-text")!;
 
-type PageText = { pageNumber: number; text: string; lineCount: number };
+type PageText = { pageNumber: number; text: string; lineCount: number; ocrUsed?: boolean };
 
 export function ExtractText() {
   const { sourceFiles, startProgress, updateProgress, stopProgress, addOperation } = useDocumentSession();
@@ -35,10 +35,13 @@ export function ExtractText() {
       setExtracted(true);
       stopProgress();
       const totalChars = result.reduce((a, b) => a + b.text.length, 0);
+      const ocrPages = result.filter((p) => p.ocrUsed).length;
       if (totalChars === 0) {
-        toast.info("No text found — this PDF may be image-only / scanned.");
+        toast.error("No text found — the PDF has no text layer and OCR couldn't read it either.");
+      } else if (ocrPages > 0) {
+        toast.success(`Extracted ${totalChars.toLocaleString()} characters from ${result.length} page${result.length > 1 ? "s" : ""} (${ocrPages} via OCR)`);
       } else {
-        toast.success(`Extracted ${totalChars.toLocaleString()} characters from ${result.length} pages`);
+        toast.success(`Extracted ${totalChars.toLocaleString()} characters from ${result.length} page${result.length > 1 ? "s" : ""}`);
       }
     } catch (e) {
       stopProgress();
@@ -111,6 +114,9 @@ export function ExtractText() {
                         {p.pageNumber}
                       </span>
                       Page {p.pageNumber}
+                      {p.ocrUsed && (
+                        <span className="rounded-full bg-[var(--cat-convert)]/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--cat-convert)]">OCR</span>
+                      )}
                       <span className="ml-auto text-xs font-normal text-[var(--muted-foreground)]">
                         {p.lineCount} lines · {p.text.length.toLocaleString()} chars
                       </span>
@@ -126,7 +132,7 @@ export function ExtractText() {
             <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)] p-6 text-center text-sm text-[var(--muted-foreground)]">
               <FileText className="mx-auto mb-2 size-8 text-[var(--cat-convert)]" />
               Click <b className="text-[var(--foreground)]">Extract Text</b> to pull all text content out of your PDF.
-              <p className="mt-2 text-xs">Uses pdf.js text-content extraction. Image-only / scanned PDFs may return empty results.</p>
+              <p className="mt-2 text-xs">Uses pdf.js text extraction with automatic OCR fallback for scanned / image-only pages.</p>
             </div>
           )}
         </div>
